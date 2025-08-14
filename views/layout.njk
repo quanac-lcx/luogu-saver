@@ -31,7 +31,7 @@
             margin-left: 9px;
             text-align: left !important;
         }
-        .item > i {
+        .item > i, img {
             display: inline-block !important;
         }
         .item > span {
@@ -51,12 +51,12 @@
         }
     </style>
 </head>
-<body style="width: calc(100% - 90px); height: calc(100% - 20px); margin-left: 100px; background-color: #f8fafc">
+<body style="width: calc(100% - 90px); height: calc(100% - 20px); margin-left: 100px; background-color: #f8fafc; position: relative;">
     <div class="ui left hover vertical sidebar borderless labeled icon menu fixed visible">
         <a class="item" href="/">
             <i class="ui icon home"></i> <span>主页</span>
         </a>
-        <a class="item" href="/">
+        <a class="item" href="/search">
             <i class="ui icon search"></i> <span>搜索</span>
         </a>
         <a class="item" href="/">
@@ -71,29 +71,53 @@
         <a class="item" href="/">
             <i class="ui icon cloud download"></i> <span>批量保存</span>
         </a>
+        <a class="item" href="/" style="position: absolute; bottom: 0; width: 100%;">
+            <!-- Could you tell my why here should set the width to 100%? -->
+            <img class="ui mini circular image" src="https://cdn.luogu.com.cn/upload/usericon/381949.png" alt="usericon">
+            <span>登出账号</span>
+        </a>
     </div>
     <div class="ui main container" style="min-height: calc(100vh - 20px);">
         {% block content %}{% endblock %}
     </div>
     <div class="ui divider"></div>
 
-    <div class="ui vertical footer segment" style="padding-top: 10px; padding-bottom: 32px;">
+    <div class="ui vertical footer segment" style="padding-top: 10px; padding-bottom: 28px;">
         <div class="ui container">
             <div class="ui grid">
-                <div class="sixteen wide column">
+                <div class="eight wide column firacode">
                     <p>
-                        © 2025 洛谷保存站 (<a href="https://www.luogu.me" target="_blank" style="color: inherit;">www.luogu.me</a>)
+                        <i class="fa fa-copyright"></i> 2025 洛谷保存站 (<a href="https://www.luogu.me" target="_blank" style="color: inherit;">www.luogu.me</a>)
                     </p>
                     <p>
-                        <a href="https://github.com/tbd" target="_blank" style="color: inherit; margin: 0 8px;">
+                        <a href="https://github.com/Ark-Aak/luogu-saver" target="_blank" style="color: inherit;">
                             <i class="fab fa-github"></i> GitHub
                         </a>
-                        <span style="color: inherit; margin: 0 8px;">
-                            <i class="fas fa-code-branch"></i> (git abcdef1)
+                        <span>
+                            <i class="fa fa-code-branch"></i> (git c50e86c)
                         </span>
                     </p>
                     <p>
-                        本站已运行 <span id="site-days">0</span> 天
+                        <i class="fa fa-clock"></i> 本站已运行 <span id="site-days">0</span> 天
+                    </p>
+                </div>
+                <div class="right floated five wide column firacode">
+                    <p>
+                        <i class="fa fa-code"></i> 开发者：Federico2903 & CuteMurasame
+                    </p>
+                    <p>
+                        <a href="/privacy" style="color: inherit; margin-right: 15px;">
+                            <i class="fa fa-user-shield"></i> 隐私协议
+                        </a>
+                        <a href="/deletion" style="color: inherit; margin-right: 15px;">
+                            <i class="fa fa-trash-alt"></i> 数据删除政策
+                        </a>
+                        <a href="/disclaimer" style="color: inherit;">
+                            <i class="fa fa-exclamation-circle"></i> 免责声明
+                        </a>
+                    </p>
+                    <p>
+                        <i class="fab fa-qq"></i> 洛谷保存站用户群：1017248143
                     </p>
                 </div>
             </div>

@@ -1,0 +1,45 @@
+{% extends "layout.njk" %}
+
+{% block content %}
+    <div class="ui grid">
+        <div class="sixteen wide column">
+            <div class="card shadow">
+                <h1 class="ui center aligned header">
+                    <span><i class="ui search icon colored"></i>专栏搜索</span>
+                    <div class="sub header" style="margin-top: 10px;">搜索标题、内容、UID · 文章数据每小时同步一次</div>
+                </h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="ui grid">
+        <div class="sixteen wide column">
+            <div class="card shadow outline">
+                <div class="ui icon fluid input">
+                    <input type="text" id="searchInput" placeholder="标题 / 内容 / 作者 UID" onkeypress="handleKeyPress(event)">
+                    <i class="inverted circular search link icon" onclick="performSearch()"></i>
+                </div>
+            </div>
+
+            <div id="searchResults" class="card shadow outline" style="display: none;">
+                <h3 class="ui dividing header">
+                    <i class="list icon"></i>
+                    搜索结果
+                </h3>
+                <div id="resultsContent"></div>
+            </div>
+
+            <div id="pagination" class="card shadow padding-10" style="display: none; text-align: center;">
+                <div id="paginationContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/self/js/search.js"></script>
+    <style>
+        em {
+            color: #dc2626;
+            font-style: normal;
+        }
+    </style>
+{% endblock %}

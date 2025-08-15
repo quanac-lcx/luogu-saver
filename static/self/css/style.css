@@ -1,3 +1,51 @@
+.ui.menu .ui.container > .item.header {
+    font-size: 1.2em;
+}
+
+.main.container {
+    margin-top: 20px;
+}
+
+* {
+    tab-size: 4;
+}
+
+.ui.left.hover.sidebar.labeled.icon.menu {
+    padding-top: 10px;
+    width: 70px;
+    overflow-x: hidden;
+    white-space: nowrap;
+    transition: width 0.3s ease;
+}
+
+.item {
+    margin-left: 9px;
+    text-align: left !important;
+}
+
+.item > i, img {
+    display: inline-block !important;
+}
+
+.item > span {
+    opacity: 0;
+    margin-left: 8px;
+    transition: opacity 0.3s ease;
+}
+
+.ui.left.hover.sidebar.labeled.icon.menu .item {
+    padding-left: 0.8em;
+}
+
+.ui.left.hover.sidebar.labeled.icon.menu:hover {
+    width: 170px;
+}
+
+.ui.left.hover.sidebar.labeled.icon.menu:hover .item > span {
+    opacity: 1;
+    display: inline;
+}
+
 .card {
     border-radius: 10px;
     background: white;

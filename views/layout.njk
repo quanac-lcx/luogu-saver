@@ -10,46 +10,7 @@
     <link rel="stylesheet" href="/static/semantic/semantic.min.css">
     <link rel="stylesheet" href="/static/self/css/style.css">
     <script src="/static/semantic/semantic.min.js"></script>
-    <style>
-        .ui.menu .ui.container > .item.header {
-            font-size: 1.2em;
-        }
-        .main.container {
-            margin-top: 20px;
-        }
-        * {
-            tab-size: 4;
-        }
-        .ui.left.hover.sidebar.labeled.icon.menu {
-            padding-top: 10px;
-            width: 70px;
-            overflow-x: hidden;
-            white-space: nowrap;
-            transition: width 0.3s ease;
-        }
-        .item {
-            margin-left: 9px;
-            text-align: left !important;
-        }
-        .item > i, img {
-            display: inline-block !important;
-        }
-        .item > span {
-            opacity: 0;
-            margin-left: 8px;
-            transition: opacity 0.3s ease;
-        }
-        .ui.left.hover.sidebar.labeled.icon.menu .item {
-            padding-left: 0.8em;
-        }
-        .ui.left.hover.sidebar.labeled.icon.menu:hover {
-            width: 170px;
-        }
-        .ui.left.hover.sidebar.labeled.icon.menu:hover .item > span {
-            opacity: 1;
-            display: inline;
-        }
-    </style>
+    {% block extra_header %}{% endblock %}
 </head>
 <body style="width: calc(100% - 90px); height: calc(100% - 20px); margin-left: 100px; background-color: #f8fafc; position: relative;">
     <div class="ui left hover vertical sidebar borderless labeled icon menu fixed visible">

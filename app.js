@@ -1,24 +1,26 @@
-const express = require('express');
-const nunjucks = require('nunjucks');
-const { filterIPs } = require('./middleware/rate_limit');
-require('dotenv').config();
+import express from 'express';
+import nunjucks from 'nunjucks';
+import { filterIPs } from './middleware/rate_limit.js';
+import 'dotenv/config';
 
 const app = express();
 const port = process.env.PORT || 55086;
+import logger from './logger.js';
 
-const articleRouter = require('./routes/article');
-
+import articleRouter from './routes/article.js';
 nunjucks.configure("views", { autoescape: true, express: app, watch: true });
 
+app.set('trust proxy', true);
 app.use('/static', express.static('static'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use(filterIPs);
+
 app.use((req, res, next) => {
-	req.ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress || '').split(',')[0].trim();
+	logger.info(`${req.ip} ${req.method} ${req.originalUrl} ${(!req.body || JSON.stringify(req.body) === '{}') ? '' : JSON.stringify(req.body)}`);
 	next();
 });
-app.use(filterIPs);
 
 app.get('/', (req, res) => {
 	res.render('index.njk', { title: "首页", paste_count: 35289, article_count: 63294 });
@@ -30,6 +32,11 @@ app.get('/search', (req, res) => {
 
 app.use('/article', articleRouter);
 
+app.use((err, req, res, next) => {
+	logger.error(err.message);
+	res.status(500).render('error.njk', { title: "错误", error_message: err.message });
+});
+
 app.listen(port, () => {
-	console.log("Server started on port: " + port);
+	logger.info("Server is running on port " + port);
 })

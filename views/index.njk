@@ -1,5 +1,9 @@
 {% extends "layout.njk" %}
 
+{% block extra_header %}
+<script src="/static/self/js/propaganda.js"></script>
+{% endblock %}
+
 {% block content %}
 <div class="ui grid">
     <div class="sixteen wide column">
@@ -56,5 +60,4 @@
         </div>
     </div>
 </div>
-<script src="/static/self/js/propaganda.js"></script>
 {% endblock %}

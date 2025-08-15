@@ -1,4 +1,4 @@
-require('dotenv').config();
+import logger from '../logger.js';
 
 let bannedIPs = {};
 let requestHistory = {};
@@ -17,6 +17,7 @@ const filterIPs = (req, res, next) => {
 		if (bannedIPs[req.ip] || requestHistory[req.ip].length > process.env.RATE_LIMIT) {
 			if (!bannedIPs[req.ip]) {
 				bannedIPs[req.ip] = now + process.env.BAN_DURATION;
+				logger.warn(`IP ${req.ip} is banned until ${new Date(bannedIPs[req.ip]).toLocaleString('zh-CN')}`);
 			}
 			const pardonTime = new Date(bannedIPs[req.ip]).toLocaleString('zh-CN');
 			res.status(429).json({
@@ -29,4 +30,4 @@ const filterIPs = (req, res, next) => {
 	next();
 }
 
-module.exports = { filterIPs };
+export { filterIPs };

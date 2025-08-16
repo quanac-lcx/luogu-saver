@@ -1,3 +1,5 @@
+/* semantic ui 优化 */
+
 .ui.menu .ui.container > .item.header {
     font-size: 1.2em;
 }
@@ -27,10 +29,15 @@
     display: inline-block !important;
 }
 
+.item > img {
+    margin-left: -3px;
+    /* 不是，我服了爹，好吧，神秘修正。 */
+}
+
 .item > span {
     opacity: 0;
     margin-left: 8px;
-    transition: opacity 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 .ui.left.hover.sidebar.labeled.icon.menu .item {
@@ -43,8 +50,20 @@
 
 .ui.left.hover.sidebar.labeled.icon.menu:hover .item > span {
     opacity: 1;
+    margin-left: 12px;
     display: inline;
 }
+
+.ui.icon.colored, .fa.colored, .fas.colored, .fab.colored {
+    color: #667eea;
+}
+
+.ui.header [class^="fa-"],
+.ui.header [class*="fa-"] {
+    margin-right: 0.75rem;
+}
+
+/* card classes */
 
 .card {
     border-radius: 10px;
@@ -61,8 +80,8 @@
     box-shadow: 2px 2px 4px #e4e4e4;
 }
 
-.ui.icon.colored {
-    color: #667eea;
+.card .card {
+    background: #f8fafc;
 }
 
 .card.propaganda {
@@ -77,6 +96,16 @@
 .card.padding-10 {
     padding: 10px !important;
 }
+
+.card.padding-15 {
+    padding: 15px !important;
+}
+
+.card.padding-20 {
+    padding: 20px !important;
+}
+
+/* Ads */
 
 .ad-slide {
     position: absolute;
@@ -156,9 +185,33 @@
     right: 15px;
 }
 
+/* Sweet Alert 2 优化 */
+
 img.swal2-image {
     margin: 0;
 }
+
+/* 信息 */
+
+.meta.gray {
+    color: gray;
+}
+
+.meta.small {
+    font-size: 12px;
+    display: block;
+}
+
+.meta.user {
+    display: flex;
+    align-items: center;
+}
+
+.meta.user > img {
+    border: 2px solid #e2e8f0;
+}
+
+/* Misc */
 
 .firacode {
     font-family: "Fira Code", "Microsoft YaHei", serif;

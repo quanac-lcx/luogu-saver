@@ -30,6 +30,18 @@ app.get('/search', (req, res) => {
 	res.render('search.njk', { title: "搜索" });
 });
 
+app.get('/privacy', (req, res) => {
+	res.render('privacy.njk', { title: "隐私协议" });
+});
+
+app.get('/disclaimer', (req, res) => {
+	res.render('disclaimer.njk', { title: "免责声明" });
+});
+
+app.get('/deletion', (req, res) => {
+	res.render('deletion.njk', { title: "数据移除政策" });
+});
+
 app.use('/article', articleRouter);
 
 app.use((err, req, res, next) => {

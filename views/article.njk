@@ -1,5 +1,56 @@
 {% extends "layout.njk" %}
 
-{% block content %}
+{% block extra_header %}
+<script src="/static/self/js/display_utils.js"></script>
+{% endblock %}
 
+{% block content %}
+<div class="ui grid">
+    <div class="sixteen wide column">
+        <div class="card shadow outline">
+            <h1 class="ui header">{{ article.title }}</h1>
+            <span class="meta gray"><i class="ui icon calendar colored"></i> 最后更新于 {{ article.updated_at }}</span>
+            <div class="ui grid">
+                <div class="eight wide column">
+                    <div class="card shadow outline padding-15" style="height: 90%;">
+                        <span class="meta gray small">作者</span>
+                        <div class="meta user" style="margin-top: 5px;">
+                            <img class="ui mini circular image"
+                                 src="https://cdn.luogu.com.cn/upload/usericon/{{ article.author.id }}.png"
+                                 alt="user_icon">
+                            <a href="/user/{{ article.author.id }}"
+                               style="color: {{ article.author.color }}; margin-left: 5px; font-weight: 550;">{{ article.author.name }}</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="eight wide column">
+                    <div class="card shadow outline padding-15" style="height: 90%; display: flex; flex-direction: column;">
+                        <span class="meta gray small">分类</span>
+                        <span style="margin-top: 5px; display: flex; flex: 1; align-items: center; justify-content: flex-start;">
+                        {% if article.category == 1 %}
+                            <i class="fas fa-user" style="margin-right: 6px; color: #667eea;"></i>个人记录
+                        {% elif article.category == 2 %}
+                            <i class="fas fa-lightbulb" style="margin-right: 6px; color: #667eea;"></i>题解
+                        {% elif article.category == 3 %}
+                            <i class="fas fa-cogs" style="margin-right: 6px; color: #667eea;"></i>科技·工程
+                        {% elif article.category == 4 %}
+                            <i class="fas fa-brain" style="margin-right: 6px; color: #667eea;"></i>算法·理论
+                        {% elif article.category == 5 %}
+                            <i class="fas fa-camera" style="margin-right: 6px; color: #667eea;"></i>生活·游记
+                        {% elif article.category == 6 %}
+                            <i class="fas fa-graduation-cap" style="margin-right: 6px; color: #667eea;"></i>学习·文化课
+                        {% elif article.category == 7 %}
+                            <i class="fas fa-gamepad" style="margin-right: 6px; color: #667eea;"></i>休闲·娱乐
+                        {% elif article.category == 8 %}
+                            <i class="fas fa-comments" style="margin-right: 6px; color: #667eea;"></i>闲话
+                        {% else %}
+                            <i class="fas fa-question" style="margin-right: 6px; color: #667eea;"></i>未知分类
+                        {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

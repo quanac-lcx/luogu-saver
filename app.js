@@ -8,6 +8,7 @@ const port = process.env.PORT || 55086;
 import logger from './logger.js';
 
 import articleRouter from './routes/article.js';
+import pasteRouter from './routes/paste.js';
 nunjucks.configure("views", { autoescape: true, express: app, watch: true });
 
 app.set('trust proxy', true);
@@ -43,6 +44,7 @@ app.get('/deletion', (req, res) => {
 });
 
 app.use('/article', articleRouter);
+app.use('/paste', pasteRouter);
 
 app.use((err, req, res, next) => {
 	logger.error(err.message);

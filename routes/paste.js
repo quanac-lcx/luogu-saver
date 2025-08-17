@@ -5,28 +5,28 @@ import { createMarkdownRenderer } from "../renderer.js";
 
 const router = express.Router();
 
-async function loadRelationships(article) {
-	const [rows] = await db.query('SELECT * FROM users WHERE id = ?', [article.author_uid]);
+async function loadRelationships(paste) {
+	const [rows] = await db.query('SELECT * FROM users WHERE id = ?', [paste.author_uid]);
 	if (rows.length === 0) {
 		throw new Error('Author not found');
 	}
-	article.author = rows[0];
-	return article;
+	paste.author = rows[0];
+	return paste;
 }
 
 router.get('/:id', async (req, res, next) => {
 	try {
-		const [rows] = await db.query('SELECT * FROM articles WHERE id = ?', [req.params.id]);
+		const [rows] = await db.query('SELECT * FROM pastes WHERE id = ?', [req.params.id]);
 		if (rows.length === 0) {
-			throw new Error('Article not found');
+			throw new Error('Paste not found');
 		}
-		const article = await loadRelationships({
+		const paste = await loadRelationships({
 			...rows[0],
 			updated_at: formatDate(rows[0].updated_at),
 			created_at: formatDate(rows[0].created_at),
 		});
-		if (article.deleted) {
-			throw new Error(article.deleted_reason);
+		if (paste.deleted) {
+			throw new Error(paste.deleted_reason);
 		}
 		function sanitizeLatex(src) {
 			return src.replace(/\$\$([\s\S]*?)\$\$|\$([^\$]+)\$/g, (match, block, inline) => {
@@ -38,9 +38,9 @@ router.get('/:id', async (req, res, next) => {
 				return match;
 			});
 		}
-		const sanitized = sanitizeLatex(article.content);
+		const sanitized = sanitizeLatex(paste.content);
 		const renderedContent = createMarkdownRenderer().renderMarkdown(sanitized);
-		res.render('article.njk', { article, renderedContent });
+		res.render('paste.njk', { paste, renderedContent });
 	} catch (error) {
 		next(error);
 	}

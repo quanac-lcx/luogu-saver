@@ -1,0 +1,38 @@
+{% extends "layout.njk" %}
+
+{% block extra_header %}
+<script src="/static/self/js/display_utils.js"></script>
+<link rel="stylesheet" href="/static/self/css/markdown.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js" integrity="sha384-cMkvdD8LoxVzGF/RPUKAcvmm49FQ0oxwDF3BGKtDXcEc+T1b2N+teh/OJfpU0jr6" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js" integrity="sha384-hCXGrW6PitJEwbkoStFjeJxv+fSOOQKOPbJxSfM6G5sWZjAyWhXiTIIAmQqnlLlh" crossorigin="anonymous"></script>
+<script type="module" src="/static/self/js/render.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="ui grid">
+    <div class="sixteen wide column">
+        <div class="card shadow outline">
+            <h1 class="ui header">剪贴板 - {{ paste.id }}</h1>
+            <span class="meta gray"><i class="ui icon calendar colored"></i> 最后更新于 {{ paste.updated_at }}</span>
+            <div class="ui grid">
+                <div class="sixteen wide column">
+                    <div class="card shadow outline padding-15" style="height: 90%;">
+                        <span class="meta gray small">作者</span>
+                        <div class="meta user" style="margin-top: 5px;">
+                            <img class="ui mini circular image"
+                                 src="https://cdn.luogu.com.cn/upload/usericon/{{ paste.author.id }}.png"
+                                 alt="user_icon">
+                            <a href="/user/{{ paste.author.id }}"
+                               style="color: {{ article.author.color }}; margin-left: 5px; font-weight: 550;">{{ paste.author.name }}</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card shadow outline md-container">
+            {{ renderedContent | safe }}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -21,9 +21,9 @@ document.addEventListener("DOMContentLoaded", () => {
 				const response = await fetch(`/${type}/save/` + encodeURIComponent(id));
 				const data = await response.json();
 				if (!data.success) {
-					throw new Error(data.message || "保存请求失败");
+					throw new Error(data.data.message || "保存请求失败");
 				}
-				const tid = data.result;
+				const tid = data.data.result;
 				Swal.fire({
 					title: "请求已入队",
 					text: "您的请求已加入队列，任务 ID: " + tid,

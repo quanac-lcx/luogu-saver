@@ -3,7 +3,7 @@ import {generateRandomString, makeStandardResponse} from './utils.js';
 import "dotenv/config";
 import axios from "axios";
 import * as cheerio from 'cheerio';
-import logger from "./logger.js";
+import logger, {debug} from "./logger.js";
 import {createTask, updateTask} from "./taskManager.js";
 
 let queue = [];
@@ -14,14 +14,14 @@ export async function processTask() {
 	if (!queue.length) return;
 	running++;
 	const task = queue.shift();
-	logger.debug(`Start to process task #${task.id}`);
+	logger.debug(`Start to process task #${task.id}. Type: ${task.type}`);
 	await updateTask(task.id, 1, "Processing");
 	const url = task.url;
 	const headers = task.headers;
 	const aid = task.aid;
 	const response = await sendContentRequest(url, headers, task.type);
 	if (!response.success) {
-		logger.warn("An error occurred when processing task #${task.id}");
+		logger.warn(`An error occurred when processing task #${task.id}`);
 		await updateTask(task.id, 3, response.message);
 		return;
 	}
@@ -70,10 +70,11 @@ export async function processTask() {
 	logger.debug(`Finish processing task #${task.id}`);
 }
 
-export async function c3vk(response, headers) {
+export async function c3vk(response, url, headers) {
 	if (typeof response.data === 'string') {
 		const c3vkMatch = response.data.match(/C3VK=([a-zA-Z0-9]+);/);
 		if (c3vkMatch) {
+			logger.debug(`Processing C3VK cookie for ${url.split('?')[0]}`);
 			response = await axios.get(url, {
 				headers: { ...headers, Cookie: `C3VK=${c3vkMatch[1]}` }
 			});
@@ -116,8 +117,8 @@ function getResponseUser(response) {
 
 export async function sendContentRequest(url, headers, type = 0) {
 	try {
-		let response = await axios.get(url, headers);
-		if (type) response = await c3vk(response, headers);
+		let response = await axios.get(url + "?_contentOnly=1", headers);
+		if (type) response = await c3vk(response, url, headers);
 		const obj = getResponseObject(response, type);
 		if (!obj) throw new Error("Invalid response structure.");
 		const max_length = 524288;

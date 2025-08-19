@@ -1,7 +1,8 @@
 import express from 'express';
 import db from '../db.js';
-import { formatDate } from '../utils.js';
+import {formatDate, makeStandardResponse} from '../utils.js';
 import { createMarkdownRenderer } from "../renderer.js";
+import {pushQueue} from "../request.js";
 
 const router = express.Router();
 
@@ -47,7 +48,18 @@ router.get('/:id', async (req, res, next) => {
 });
 
 router.get('/save/:id', async (req, res) => {
-
+	try {
+		const s = req.params.id;
+		if (s.length !== 8) throw new Error('Invalid paste ID.');
+		const url = `https://www.luogu.com/paste/${s}`;
+		const headers = {
+			'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36'
+		};
+		const id = await pushQueue({ url, headers, aid: s, type: 1 });
+		res.send(makeStandardResponse(true, { message: "Request queued.", result: id })).end();
+	} catch (error) {
+		res.status(500).send(makeStandardResponse(false, { message: error.message })).end();
+	}
 });
 
 export default router;

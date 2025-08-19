@@ -8,6 +8,17 @@
         font-style: normal;
     }
 </style>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+		const params = new URLSearchParams(window.location.search);
+		const query = params.get("q") || "";
+		if (query) {
+			const input = document.getElementById("search-input");
+			input.value = query;
+			performSearch();
+		}
+	});
+</script>
 {% endblock %}
 
 {% block content %}
@@ -25,19 +36,19 @@
         <div class="sixteen wide column">
             <div class="card shadow outline">
                 <div class="ui icon fluid input">
-                    <input type="text" id="searchInput" placeholder="标题 / 内容 / 作者 UID" onkeypress="handleKeyPress(event)">
+                    <input type="text" id="search-input" placeholder="标题 / 内容 / 作者 UID" onkeypress="handleKeyPress(event)">
                     <i class="inverted circular search link icon" onclick="performSearch()"></i>
                 </div>
             </div>
-            <div id="searchResults" class="card shadow outline" style="display: none;">
+            <div id="search-results" class="card shadow outline" style="display: none;">
                 <h3 class="ui dividing header">
                     <i class="list icon"></i>
                     搜索结果
                 </h3>
-                <div id="resultsContent"></div>
+                <div id="results-content"></div>
             </div>
             <div id="pagination" class="card shadow padding-10" style="display: none; text-align: center;">
-                <div id="paginationContent"></div>
+                <div id="pagination-content"></div>
             </div>
         </div>
     </div>

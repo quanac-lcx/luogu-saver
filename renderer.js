@@ -1,21 +1,12 @@
 import markdownit from "markdown-it";
 import markdownItAttrs from "markdown-it-attrs";
 import markdownItContainer from "markdown-it-container";
-import hljs from "highlight.js";
 
 export function createMarkdownRenderer() {
 	const md = markdownit({
 		html: true,
 		linkify: true,
-		typographer: true,
-		highlight: (str, lang) => {
-			try {
-				if (lang && hljs.getLanguage(lang)) {
-					return hljs.highlight(str, { language: lang }).value;
-				}
-			} catch (e) { }
-			return md.utils.escapeHtml(str);
-		},
+		typographer: true
 	}).use(markdownItAttrs)
 	
 	md.use(markdownItContainer, "align", {
@@ -52,7 +43,11 @@ export function createMarkdownRenderer() {
 					const openMatch = info.match(/\{(.*?)\}/);
 					const title = titleMatch ? titleMatch[1] : name.toUpperCase();
 					const open = (tokens[idx].attrs ? (tokens[idx].attrs[0]?.length ? tokens[idx].attrs[0][0] : "") : "") === "open";
-					return `<div class="md-block ${name}"><div class="md-block-title"><span>${title}</span><i class="toggle-btn fa fa-caret-right"></i></div><div class="md-block-body"${open ? "" : ' style="display:none"'}>`;
+					let icon = "fa fa-";
+					if (name === "success") icon = icon + "check-circle";
+					else if (name === "warning") icon = icon + "warning";
+					else icon = icon + "info-circle";
+					return `<div class="md-block ${name}"><div class="md-block-title"><span>${title}</span><i class="toggle-btn fa fa-caret-${open ? "down" : "right"}"></i></div><div class="md-block-body"${open ? "" : ' style="display:none"'}>`;
 				} else {
 					return `</div></div>`;
 				}

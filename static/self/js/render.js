@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			const btn = title.querySelector(".toggle-btn");
 			const open = body.style.display !== "none";
 			body.style.display = open ? "none" : "block";
-			btn.className = !open ? "fa fa-caret-down" : "fa fa-caret-right";
+			btn.className = !open ? "fa fa-caret-down toggle-btn" : "fa fa-caret-right toggle-btn";
 		});
 	});
 });

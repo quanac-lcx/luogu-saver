@@ -1,7 +1,7 @@
 # Luogu-Saver
 
 
-![](https://img.shields.io/badge/node-v18.20.5-brightgreen)
+![](https://img.shields.io/badge/node-v22.18.0-brightgreen)
 ![](https://img.shields.io/github/last-commit/ark-aak/luogu-saver)
 ![](https://www.codefactor.io/repository/github/ark-aak/luogu-saver/badge)
 ![](https://img.shields.io/github/license/ark-aak/luogu-saver)
@@ -10,7 +10,7 @@
 
 ## 特性
 
-- 基于 NodeJS 18 实现
+- 基于 NodeJS 22 实现
 - 前端采用 Nunjucks + SemanticUI
 - 后端使用 Express + MySQL
 

@@ -9,6 +9,8 @@ import logger from './logger.js';
 
 import articleRouter from './routes/article.js';
 import pasteRouter from './routes/paste.js';
+import {processQueue, requestPointTick} from "./request.js";
+import db from "./db.js";
 nunjucks.configure("views", { autoescape: true, express: app, watch: true });
 
 app.set('trust proxy', true);
@@ -50,6 +52,19 @@ app.use((err, req, res, next) => {
 	logger.error(err.message);
 	res.status(500).render('error.njk', { title: "错误", error_message: err.message });
 });
+
+requestPointTick();
+processQueue();
+
+import {scheduleJob} from "node-schedule";
+
+scheduleJob('0 * * * *', async () => {
+	try {
+		await db.execute("DELETE FROM tasks WHERE expire_time <= NOW()");
+	} catch (error) {
+		console.error('Sync error:', error)
+	}
+})
 
 app.listen(port, () => {
 	logger.info("Server is running on port " + port);

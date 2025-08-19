@@ -9,7 +9,7 @@ function handleKeyPress(event) {
 }
 
 function performSearch() {
-	const query = document.getElementById('searchInput').value.trim();
+	const query = document.getElementById('search-input').value.trim();
 	if (!query) {
 		Swal.fire('提示', '请输入搜索关键词', 'info');
 		return;
@@ -20,8 +20,8 @@ function performSearch() {
 }
 
 function executeSearch() {
-	const resultsSection = document.getElementById('searchResults');
-	const resultsContent = document.getElementById('resultsContent');
+	const resultsSection = document.getElementById('search-results');
+	const resultsContent = document.getElementById('results-content');
 	
 	resultsSection.style.display = 'block';
 	resultsContent.innerHTML = `
@@ -46,7 +46,7 @@ function executeSearch() {
 }
 
 function renderResults(results) {
-	const container = document.getElementById('resultsContent');
+	const container = document.getElementById('results-content');
 	
 	if (results.length === 0) {
 		container.innerHTML = `
@@ -93,7 +93,7 @@ function renderResults(results) {
 
 function renderPagination() {
 	const paginationSection = document.getElementById('pagination');
-	const paginationContent = document.getElementById('paginationContent');
+	const paginationContent = document.getElementById('pagination-content');
 	
 	if (totalPages <= 1) {
 		paginationSection.style.display = 'none';
@@ -121,7 +121,7 @@ function changePage(page) {
 }
 
 function showError(message) {
-	const resultsContent = document.getElementById('resultsContent');
+	const resultsContent = document.getElementById('results-content');
 	resultsContent.innerHTML = `
         <div class="ui negative message">
             <i class="exclamation triangle icon"></i>

@@ -23,10 +23,15 @@
 .item {
     margin-left: 9px;
     text-align: left !important;
+    color: #555 !important;
 }
 
 .item > i, img {
     display: inline-block !important;
+}
+
+.item > span {
+    color: #2c3e50 !important;
 }
 
 .item > img {

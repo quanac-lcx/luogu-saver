@@ -2,6 +2,7 @@
 
 {% block extra_header %}
 <script src="/static/self/js/propaganda.js"></script>
+<script src="/static/self/js/request_utils.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -23,8 +24,8 @@
                 <i class="ui icon search colored"></i> 搜索专栏
             </h3>
             <div class="ui icon fluid input">
-                <input type="text" placeholder="标题 / 内容 / 作者 UID">
-                <i class="inverted circular search link icon"></i>
+                <input type="text" id="search-input" placeholder="标题 / 内容 / 作者 UID">
+                <i class="inverted circular search link icon" id="search-btn"></i>
             </div>
         </div>
         <div class="card outline shadow">
@@ -33,9 +34,9 @@
             </h3>
             <div class="ui fluid left icon input">
                 <i class="ui icon linkify"></i>
-                <input type="text" id="url" placeholder="请输入洛谷专栏或剪贴板链接...">
-                <button class="ui teal button" style="margin-left: 10px;">保存</button>
-                <button class="ui blue button">查看</button>
+                <input type="text" id="url" placeholder="请输入洛谷专栏或剪贴板链接（完整版，带 https）...">
+                <button class="ui teal button" id="save-btn" style="margin-left: 10px;">保存</button>
+                <button class="ui blue button" id="view-btn">查看</button>
             </div>
         </div>
     </div>

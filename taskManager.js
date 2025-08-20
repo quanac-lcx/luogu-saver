@@ -5,7 +5,7 @@ export async function createTask() {
 	const id = generateRandomString();
 	await db.execute(`
 		INSERT INTO tasks (id, status, info, expire_time)
-		VALUES (?, 0, 'In queue', DATE_ADD(NOW(), INTERVAL 7 DAY))
+		VALUES (?, 0, 'Your task is in the queue.', DATE_ADD(NOW(), INTERVAL 7 DAY))
 		ON DUPLICATE KEY UPDATE status = 0
 	`, [id]);
 	return id;

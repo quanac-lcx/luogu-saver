@@ -9,6 +9,7 @@ import logger from './logger.js';
 
 import articleRouter from './routes/article.js';
 import pasteRouter from './routes/paste.js';
+import taskRouter from './routes/task.js';
 import {processQueue, requestPointTick} from "./request.js";
 import db from "./db.js";
 nunjucks.configure("views", { autoescape: true, express: app, watch: true });
@@ -21,7 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(filterIPs);
 
 app.use((req, res, next) => {
-	logger.info(`${req.ip} ${req.method} ${req.originalUrl} ${(!req.body || JSON.stringify(req.body) === '{}') ? '' : JSON.stringify(req.body)}`);
+	logger.info(`${req.ip.split(':')[0] || req.ip} ${req.method} ${req.originalUrl} ${(!req.body || JSON.stringify(req.body) === '{}') ? '' : JSON.stringify(req.body)}`);
 	next();
 });
 
@@ -47,6 +48,7 @@ app.get('/deletion', (req, res) => {
 
 app.use('/article', articleRouter);
 app.use('/paste', pasteRouter);
+app.use('/task', taskRouter);
 
 app.use((err, req, res, next) => {
 	logger.error(err.message);
@@ -62,7 +64,7 @@ scheduleJob('0 * * * *', async () => {
 	try {
 		await db.execute("DELETE FROM tasks WHERE expire_time <= NOW()");
 	} catch (error) {
-		console.error('Sync error:', error)
+		logger.warn("An error occurred while cleaning up expired tasks: " + error.message);
 	}
 })
 

@@ -47,7 +47,7 @@ router.get('/:id', async (req, res, next) => {
 		const renderedContent = createMarkdownRenderer().renderMarkdown(sanitized);
 		const end_2 = Date.now();
 		logger.debug(`Article ${article.id} loaded in ${end_2 - start}ms.`);
-		res.render('article.njk', { article, renderedContent });
+		res.render('article.njk', { title: `${article.title}`,article, renderedContent });
 	} catch (error) {
 		next(error);
 	}

@@ -15,7 +15,7 @@ export async function processTask() {
 	running++;
 	const task = queue.shift();
 	logger.debug(`Start to process task #${task.id}. Type: ${task.type}`);
-	await updateTask(task.id, 1, "Processing");
+	await updateTask(task.id, 1, "We are processing your task.");
 	const url = task.url;
 	const headers = task.headers;
 	const aid = task.aid;
@@ -65,7 +65,7 @@ export async function processTask() {
 		await updateTask(task.id, 3, error.message);
 		return;
 	}
-	await updateTask(task.id, 2, "Done");
+	await updateTask(task.id, 2, "Your task has been completed successfully.");
 	running--;
 	logger.debug(`Finish processing task #${task.id}`);
 }
@@ -160,11 +160,20 @@ export function requestPointTick() {
 	}, 10000);
 }
 
+export function getQueuePosition(id) {
+	for (let i = 0; i < queue.length; i++) {
+		if (queue[i].id === id) {
+			return i + 1;
+		}
+	}
+	return -1;
+}
+
 export async function pushQueue(task) {
 	if (queue.length > process.env.QUEUE_MAX_LENGTH)
 		throw new Error('The queue is full. Please try again later.');
 	task.id = await createTask();
-	logger.debug(`Task #${task.id} queued. Task: ${JSON.stringify(task)}`);
+	logger.debug(`Task #${task.id} queued.`);
 	queue.push(task);
 	return task.id;
 }

@@ -1,0 +1,106 @@
+{% extends "layout.njk" %}
+
+{% block extra_header %}
+<style>
+.content > *:nth-child(2) {
+    margin-top: 6px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="ui grid">
+        <div class="sixteen wide column">
+            <div class="card shadow">
+                <h1 class="ui center aligned header">
+                    <span><i class="ui info icon colored"></i> 任务详情 - {{ task.id }}</span>
+                    <div class="sub header" style="margin-top: 10px;">
+                        入队时间：{{ task.created_at }}
+                    </div>
+                </h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="ui grid">
+        <div class="sixteen wide column">
+            <div class="card shadow outline">
+                <h3 class="ui dividing header">
+                    <i class="list icon"></i>
+                    任务详情
+                </h3>
+
+                <div class="ui list" style="margin-top: 1em;">
+                    <div class="item">
+                        <div class="content">
+                            <div class="header">
+                                <i class="info circle icon"></i>
+                                信息
+                            </div>
+                            <div id="task-info">{{ task.info }}</div>
+                        </div>
+                    </div>
+                    <div class="item">
+                        <div class="content">
+                            <div class="header">
+                                <i class="clock outline icon"></i>
+                                过期时间
+                            </div>
+                            <div id="task-expire">{{ task.expire_time }}</div>
+                        </div>
+                    </div>
+                    <div class="item">
+                        <div class="content">
+                            <div class="header">
+                                <i class="flag icon"></i>
+                                状态
+                            </div>
+                            <span id="task-status" class="ui label {{ 'blue' if task.status=='Pending' else ('yellow' if task.status=='Processing' else ('green' if task.status=='Completed' else 'red'))}}">
+                                {{ task.status }} / {{ task.position if task.status == 'Pending' else '' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+		document.addEventListener("DOMContentLoaded", () => {
+			const statusLabel = document.getElementById("task-status");
+			const infoEl = document.getElementById("task-info");
+			const expireEl = document.getElementById("task-expire");
+
+			function setStatus(status, position) {
+				statusLabel.className = "ui label";
+				if (status === "Pending") {
+					statusLabel.classList.add("blue");
+				} else if (status === "Processing") {
+					statusLabel.classList.add("yellow");
+				} else if (status === "Completed") {
+					statusLabel.classList.add("green");
+				} else if (status === "Failed") {
+					statusLabel.classList.add("red");
+				}
+				statusLabel.textContent = status + (status === "Pending" ? ` / ${position}` : "");
+			}
+
+			async function fetchTask() {
+				try {
+					const res = await fetch(`/task/query?id={{ task.id }}`);
+					if (!res.ok) return;
+					const data = await res.json();
+					infoEl.textContent = data.data.tasks[0].info;
+					expireEl.textContent = data.data.tasks[0].expire_time;
+					setStatus(data.data.tasks[0].status, data.data.tasks[0].position);
+					if (data.data.tasks[0].status === "Completed") {
+                        clearInterval(id);
+                    }
+				} catch (e) {
+					console.error(`Failed to update task status: ${e.message}`);
+				}
+			}
+			let id = setInterval(fetchTask, 3000);
+		});
+    </script>
+{% endblock %}

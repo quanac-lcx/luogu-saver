@@ -41,7 +41,7 @@ router.get('/:id', async (req, res, next) => {
 		}
 		const sanitized = sanitizeLatex(paste.content);
 		const renderedContent = createMarkdownRenderer().renderMarkdown(sanitized);
-		res.render('paste.njk', { paste, renderedContent });
+		res.render('paste.njk', { title: `剪贴板 ${paste.id}`, paste, renderedContent });
 	} catch (error) {
 		next(error);
 	}

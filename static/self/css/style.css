@@ -20,11 +20,25 @@
     transition: width 0.3s ease;
 }
 
+.ui.icon.menu .item i.icon {
+    font-size: 1em;
+    vertical-align: middle;
+    margin-right: 8px;
+    margin-top: 3px;
+}
+
+/* ------ By quanac-lcx：31-40行，使侧栏图标下沉、文字上浮，造福强迫症患者 ------ */
+.ui.left.hover.sidebar.labeled.icon.menu .item > span {
+    position: relative;
+    top: -1px;
+}
+
 .item {
     margin-left: 9px;
     text-align: left !important;
     color: #555 !important;
 }
+/* -------- End --------*/
 
 .item > i, img {
     display: inline-block !important;

@@ -34,14 +34,19 @@
 }
 
 .item {
-    margin-left: 9px;
+    margin-left: 10px;
     text-align: left !important;
     color: #555 !important;
 }
 /* -------- End --------*/
 
-.item > i, img {
+.item > i, .item > img {
     display: inline-block !important;
+}
+
+.ui.left.hover.vertical.sidebar.borderless.labeled.icon.menu.fixed.visible > .item > i {
+    /* 你大坝的，Semantic UI 的 CSS 优先级太高了打不过，只能这么写了 */
+    font-size: 1.5em !important;
 }
 
 .item > span {

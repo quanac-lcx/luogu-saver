@@ -55,8 +55,8 @@
                                 <i class="flag icon"></i>
                                 状态
                             </div>
-                            <span id="task-status" class="ui label {{ 'blue' if task.status=='Pending' else ('yellow' if task.status=='Processing' else ('green' if task.status=='Completed' else 'red'))}}">
-                                {{ task.status }} / {{ task.position if task.status == 'Pending' else '' }}
+                            <span id="task-status" class="ui label {{ 'blue' if task.status == 'Pending' else ('yellow' if task.status == 'Processing' else ('green' if task.status == 'Completed' else 'red'))}}">
+                                {{ task.status }} {{ "/" if task.status == "Pending" }} {{ task.position if task.status == 'Pending' else '' }}
                             </span>
                         </div>
                     </div>

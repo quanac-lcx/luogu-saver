@@ -1,24 +1,24 @@
-[English Version](README_en.md)
+
+[中文版本](README.md)
 
 # Luogu-Saver
-
 
 ![](https://img.shields.io/badge/node-v22.18.0-brightgreen)
 ![](https://img.shields.io/github/last-commit/luogu-saver-dev/luogu-saver)
 ![](https://www.codefactor.io/repository/github/luogu-saver-dev/luogu-saver/badge)
 ![](https://img.shields.io/github/license/luogu-saver-dev/luogu-saver)
 
-洛谷保存站**新前端**开源代码。
+Luogu Saver **New Front-End** Open Source Code
 
-旧保存站反馈：<https://github.com/luogu-saver-dev/Old-Saver-Feedback>
+Feedback on the old save site: <https://github.com/luogu-saver-dev/Old-Saver-Feedback>
 
-## 特性
+## Features
 
-- 基于 NodeJS 22 实现
-- 前端采用 Nunjucks + SemanticUI
-- 后端使用 Express + MySQL
+- Implemented in NodeJS 22
+- Front-end using Nunjucks + SemanticUI
+- Back-end using Express + MySQL
 
-### 使用
+### Usage
 
 ```bash
 git clone https://www.github.com/luogo-saver-dev/luogu-saver.git

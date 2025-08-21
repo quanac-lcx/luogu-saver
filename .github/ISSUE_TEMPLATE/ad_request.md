@@ -2,12 +2,12 @@
 name: 公益广告位申请
 about: 公益广告位申请（免费）
 title: ''
-labels: '广告位申请'
+labels: 'advertising application'
 assignees: ''
 
 ---
 
-你已经了解：
+我已经了解：
 - 我不需要向保存站支付费用
 - 广告位随时可能会被撤下
 - 不得用于商业项目

@@ -8,6 +8,8 @@
 
 洛谷保存站**新前端**开源代码。
 
+旧保存站反馈：<https://github.com/luogu-saver-dev/Old-Saver-Feedback>
+
 ## 特性
 
 - 基于 NodeJS 22 实现

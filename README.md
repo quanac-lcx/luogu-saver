@@ -2,9 +2,9 @@
 
 
 ![](https://img.shields.io/badge/node-v22.18.0-brightgreen)
-![](https://img.shields.io/github/last-commit/luogo-saver-dev/luogu-saver)
-![](https://www.codefactor.io/repository/github/luogo-saver-dev/luogu-saver/badge)
-![](https://img.shields.io/github/license/luogo-saver-dev/luogu-saver)
+![](https://img.shields.io/github/last-commit/luogu-saver-dev/luogu-saver)
+![](https://www.codefactor.io/repository/github/luogu-saver-dev/luogu-saver/badge)
+![](https://img.shields.io/github/license/luogu-saver-dev/luogu-saver)
 
 洛谷保存站**新前端**开源代码。
 

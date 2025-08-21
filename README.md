@@ -1,4 +1,4 @@
-> Due to unspecified circumstances, luogu.me will temporarily suspend operations starting August 21, 2025.
+> Due to unspecified circumstances, luogu.me will temporarily suspend operations starting2025年8月21日.
 >
 > The resumption date is yet to be determined.
 > 
@@ -18,7 +18,7 @@
 ![](https://www.codefactor.io/repository/github/ark-aak/luogu-saver/badge)
 ![](https://img.shields.io/github/license/ark-aak/luogu-saver)
 
-洛谷保存站开源代码。
+洛谷保存站**新前端**开源代码。
 
 ## 特性
 

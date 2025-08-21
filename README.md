@@ -22,3 +22,6 @@ cd luogu-saver
 npm install
 node app.js
 ```
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=luogu-saver-dev/luogu-saver&type=Date)](https://www.star-history.com/#luogu-saver-dev/luogu-saver&Date)

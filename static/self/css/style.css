@@ -1,3 +1,13 @@
+/* Font */
+
+@font-face {
+    font-family: "Fira Code";
+    src: url("/static/self/fonts/FiraCode-Regular.woff2") format("woff2"),
+         url("/static/self/fonts/FiraCode-Regular.woff") format("woff");
+    font-weight: normal;
+    font-style: normal;
+}
+
 /* semantic ui 优化 */
 
 .ui.menu .ui.container > .item.header {
@@ -239,4 +249,37 @@ img.swal2-image {
 
 .firacode {
     font-family: "Fira Code", "Microsoft YaHei", serif;
+}
+
+.ui.glowing-gold.label {
+    color: white;
+    background: linear-gradient(135deg,
+    rgba(255, 215, 0, 1) 43%,
+    rgba(255, 215, 0, 0.3) 50%,
+    rgba(255, 215, 0, 1) 57%);
+    animation: glowing-background 3s ease-in-out infinite;
+    background-size: 250% 250%;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+    transition: box-shadow 0.3s ease-in-out, background 0.3s ease-in-out;
+}
+
+.ui.glowing-gold.label:hover {
+    color: white;
+    background: linear-gradient(135deg,
+    rgb(245, 208, 0) 43%,
+    rgba(245, 208, 0, 0.3) 50%,
+    rgb(245, 208, 0) 57%);
+    animation: glowing-background 3s ease-in-out infinite;
+    background-size: 250% 250%;
+    box-shadow: 0 0 30px rgba(245, 208, 0, 0.8);
+    transition: box-shadow 0.3s ease-in-out, background 0.3s ease-in-out;
+}
+
+@keyframes glowing-background {
+    0% {
+        background-position: 0% 0%;
+    }
+    100% {
+        background-position: 100% 100%;
+    }
 }

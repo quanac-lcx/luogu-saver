@@ -1,0 +1,118 @@
+{% extends "layout.njk" %}
+
+{% block extra_header %}
+    <style>
+        .article-title {
+            color: #2c3e50;
+            font-size: 1.4em;
+            font-weight: 700;
+        }
+        .article-author {
+            margin-top: 10px;
+            font-size: 1.15em;
+        }
+        .article-meta {
+            margin-top: 3px;
+        }
+        .article-summary {
+            margin-top: 12px;
+        }
+        .article-tags {
+            margin-top: 10px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="ui grid">
+        <div class="sixteen wide column">
+            <div class="card shadow">
+                <h1 class="ui center aligned header">
+                    <span><i class="ui history icon colored"></i> 最近更新</span>
+                    <div class="sub header" style="margin-top: 10px;">
+                        最新更新的文章（含置顶文章）
+                    </div>
+                </h1>
+            </div>
+        </div>
+    </div>
+    <div class="ui grid">
+        <div class="sixteen wide column">
+            {% for article in articles %}
+                <div class="card shadow outline">
+                    <div style="display: flex; flex: 1;">
+                        <div>
+                            <div style="width: 70px;" class="meta user">
+                                <img class="ui circular image" src="https://cdn.luogu.com.cn/upload/usericon/{{ article.author_uid }}.png"
+                                     alt="{{ article.author_name }}"
+                                >
+                            </div>
+                        </div>
+                        <div style="margin-left: 20px;">
+                            <a class="article-title" href="/article/{{ article.id }}">{{ article.title }}</a>
+                            <div class="article-author">
+                                @<a href="/user/{{ article.author_uid }}" class="user-{{ article.author_color }}">{{ article.author_name }}</a>
+                            </div>
+                            <div class="article-meta meta gray">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>最后更新于 {{ article.updated_at }}</span>
+                            </div>
+
+                            {% if article.summary %}
+                                <div class="article-summary">
+                                    {{ article.summary }}
+                                </div>
+                            {% endif %}
+
+                            <div class="article-tags">
+                                {% if article.priority > 0 %}
+                                    <span class="ui red label">
+                                        <i class="fas fa-angle-double-up"></i>
+                                        置顶
+                                    </span>
+                                {% endif %}
+
+                                <span class="ui orange label">
+                                    <i class="fas fa-th"></i>
+                                    {% if article.category == 1 %}
+                                        个人记录
+                                        {% elif article.category == 2 %}
+                                        题解
+                                        {% elif article.category == 3 %}
+                                        科技·工程
+                                        {% elif article.category == 4 %}
+                                        算法·理论
+                                        {% elif article.category == 5 %}
+                                        生活·游记
+                                        {% elif article.category == 6 %}
+                                        学习·文化课
+                                        {% elif article.category == 7 %}
+                                        休闲·娱乐
+                                        {% elif article.category == 8 %}
+                                        闲话
+                                    {% else %}
+                                        未知分类
+                                    {% endif %}
+                                </span>
+
+                                {% if article.solutionFor_pid %}
+                                    <a href="https://www.luogu.com.cn/problem/{{ article.solutionFor_pid }}" class="ui green label">
+                                        <i class="fas fa-paper-plane"></i>
+                                        {{ article.solutionFor_pid }}
+                                    </a>
+                                {% endif %}
+
+                                {% for tag in article.tags %}
+                                    <span class="ui label glowing-gold">
+                                        <i class="fas fa-tag"></i>
+                                        {{ tag }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

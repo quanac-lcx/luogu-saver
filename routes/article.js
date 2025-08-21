@@ -16,6 +16,31 @@ async function loadRelationships(article) {
 	return article;
 }
 
+router.get('/recent', async (req, res, next) => {
+	try {
+		const count = 20;
+		const [rows] = await db.execute(
+			`SELECT a.*, u.name AS author_name, u.color AS author_color
+             FROM articles a
+                      LEFT JOIN users u ON a.author_uid = u.id
+             WHERE deleted = false
+             ORDER BY priority DESC, updated_at DESC LIMIT ?`,
+			[count]
+		);
+		let articles = rows;
+		articles.map((article) => {
+			article.updated_at = formatDate(article.updated_at);
+			article.created_at = formatDate(article.created_at);
+			article.summary = article.content.slice(0, 200);
+			article.tags = JSON.parse(article.tags);
+			return article;
+		});
+		res.render('article_recent.njk', { title: "最近更新", articles });
+	} catch (error) {
+		next(error);
+	}
+});
+
 router.get('/:id', async (req, res, next) => {
 	try {
 		const start = Date.now();

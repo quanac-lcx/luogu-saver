@@ -2,7 +2,7 @@
 name: 报告错误
 about: 创建一个错误报告以帮助我们改进
 title: ''
-labels: 'bug'
+labels: 'bug,backlog'
 assignees: ''
 
 ---

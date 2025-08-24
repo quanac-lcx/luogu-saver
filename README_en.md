@@ -7,24 +7,26 @@
 ![](https://www.codefactor.io/repository/github/luogu-saver-dev/luogu-saver/badge)
 ![](https://img.shields.io/github/license/luogu-saver-dev/luogu-saver)
 
-Source code of the new frontend of Luogu Saver.
+Open source code for Luogu Saver's new frontend.
 
-Feedback on the old saver frontend: <https://github.com/luogu-saver-dev/Old-Saver-Feedback>
+> For feedback regarding the legacy save site, please visit:  
+> [Old-Saver-Feedback Repository](https://github.com/luogu-saver-dev/Old-Saver-Feedback)
 
-## Features
+## Highlights
 
-- Implemented in NodeJS 22
-- Frontend using Nunjucks + SemanticUI
-- Backend using Express + MySQL
+- Built with Node.js 22
+- Frontend: Nunjucks + SemanticUI
+- Backend: Express + MySQL
 
 ### Getting Started
 
 ```bash
-git clone https://www.github.com/luogo-saver-dev/luogu-saver.git
+git clone https://github.com/luogu-saver-dev/luogu-saver.git
 cd luogu-saver
 npm install
 node app.js
 ```
+
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=luogu-saver-dev/luogu-saver&type=Date)](https://www.star-history.com/#luogu-saver-dev/luogu-saver&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=luogu-saver-dev/luogu-saver&type=Date)](https://star-history.com/#luogu-saver-dev/luogu-saver&Date)

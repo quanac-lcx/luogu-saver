@@ -9,7 +9,7 @@
 
 Open source code for Luogu Saver's new frontend.
 
-> For feedback regarding the legacy save site, please visit:  
+> For feedback regarding the legacy saver site, please visit:  
 > [Old-Saver-Feedback Repository](https://github.com/luogu-saver-dev/Old-Saver-Feedback)
 
 ## Highlights

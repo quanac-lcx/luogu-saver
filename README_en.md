@@ -1,5 +1,4 @@
-
-[中文版本](README.md)
+[中文](README.md) | English
 
 # Luogu-Saver
 
@@ -8,17 +7,17 @@
 ![](https://www.codefactor.io/repository/github/luogu-saver-dev/luogu-saver/badge)
 ![](https://img.shields.io/github/license/luogu-saver-dev/luogu-saver)
 
-Luogu Saver **New Front-End** Open Source Code
+Source code of the new frontend of Luogu Saver.
 
-Feedback on the old save site: <https://github.com/luogu-saver-dev/Old-Saver-Feedback>
+Feedback on the old saver frontend: <https://github.com/luogu-saver-dev/Old-Saver-Feedback>
 
 ## Features
 
 - Implemented in NodeJS 22
-- Front-end using Nunjucks + SemanticUI
-- Back-end using Express + MySQL
+- Frontend using Nunjucks + SemanticUI
+- Backend using Express + MySQL
 
-### Usage
+### Getting Started
 
 ```bash
 git clone https://www.github.com/luogo-saver-dev/luogu-saver.git

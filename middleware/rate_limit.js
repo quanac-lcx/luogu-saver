@@ -1,4 +1,6 @@
 import logger from '../logger.js';
+import 'dotenv/config';
+import {formatDate, makeStandardResponse} from "../utils.js";
 
 let bannedIPs = {};
 let requestHistory = {};
@@ -8,24 +10,21 @@ const filterIPs = (req, res, next) => {
 	if (bannedIPs[req.ip] && now > bannedIPs[req.ip]) {
 		delete bannedIPs[req.ip];
 	}
-	if (req.path.startsWith('/api/save/article/') || req.path.startsWith('/api/save/pastes/')) {
+	if (req.path.startsWith('/article/save') || req.path.startsWith('/paste/save')) {
 		if (!requestHistory[req.ip]) {
 			requestHistory[req.ip] = [];
 		}
 		requestHistory[req.ip] = requestHistory[req.ip].filter(ts => now - ts < 60000);
-		requestHistory[req.ip].push(now);
-		if (bannedIPs[req.ip] || requestHistory[req.ip].length > process.env.RATE_LIMIT) {
+		if (bannedIPs[req.ip] || requestHistory[req.ip].length >= process.env.RATE_LIMIT) {
 			if (!bannedIPs[req.ip]) {
-				bannedIPs[req.ip] = now + process.env.BAN_DURATION;
-				logger.warn(`IP ${req.ip} is banned until ${new Date(bannedIPs[req.ip]).toLocaleString('zh-CN')}`);
+				bannedIPs[req.ip] = now + parseInt(process.env.BAN_DURATION);
+				logger.warn(`IP ${req.ip} is banned until ${formatDate(new Date(bannedIPs[req.ip]))}`);
 			}
-			const pardonTime = new Date(bannedIPs[req.ip]).toLocaleString('zh-CN');
-			res.status(429).json({
-				success: false,
-				message: "Your IP address is blocked until" + pardonTime.toLocaleString() + "."
-			});
+			const pardonTime = formatDate(new Date(bannedIPs[req.ip]));
+			res.json(makeStandardResponse(false, { message: "Your IP address is blocked until " + pardonTime + "." }));
 			return;
 		}
+		requestHistory[req.ip].push(now);
 	}
 	next();
 }

@@ -36,12 +36,17 @@
         <a class="item" href="https://luogu.me">
             <i class="ui icon code"></i> <span>返回旧前端</span>
         </a>
-        <!--
-        <a class="item" href="/" style="position: absolute; bottom: 0; width: 100%;">
-            <img class="ui mini circular image" src="https://cdn.luogu.com.cn/upload/usericon/381949.png" alt="usericon">
-            <span>登出账号</span>
+        {% if user %}
+        <a class="item" href="/user/logout" style="position: absolute; bottom: 0; width: 100%;">
+            <img class="ui mini circular image" src="https://cdn.luogu.com.cn/upload/usericon/{{ user.id }}.png" alt="usericon">
+            <span style="top: 2px;">登出账号</span>
         </a>
-        -->
+        {% else %}
+        <a class="item" href="/user/login" style="position: absolute; bottom: 0; width: 100%;">
+            <i class="ui icon sign-in"></i>
+            <span>登录账号</span>
+        </a>
+        {% endif %}
     </div>
     <div class="ui main container" style="min-height: calc(100vh - 20px);">
         {% block content %}{% endblock %}
@@ -112,5 +117,32 @@
 		const now = new Date();
 		const daysRunning = Math.floor((now - siteStartDate) / (1000 * 60 * 60 * 24));
 		document.getElementById("site-days").textContent = daysRunning;
+		$(function () {
+			$("a[href='/user/login']").on("click", function (e) {
+				e.preventDefault();
+				Swal.fire({
+					title: "请输入 Token",
+					input: "text",
+					inputPlaceholder: "输入你的登录凭据喵！",
+					confirmButtonText: "就是这个喵！",
+					cancelButtonText: "不是这个喵...",
+					showCancelButton: true
+				}).then(result => {
+					$.post("/user/login", { token: result.value })
+						.done(res => {
+							if (!res.success) {
+								Swal.fire("登录失败", res.data.message || "Token 无效", "error");
+							}
+							else {
+								console.log("???");
+								location.reload();
+							}
+						})
+						.fail(() => {
+							Swal.fire("错误", "网络或服务器异常", "error");
+						});
+				});
+			});
+		});
     </script>
 </body>

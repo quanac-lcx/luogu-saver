@@ -1,5 +1,6 @@
 import express from 'express';
 import nunjucks from 'nunjucks';
+import cookieParser from 'cookie-parser';
 import { filterIPs } from './middleware/rate_limit.js';
 import 'dotenv/config';
 
@@ -11,16 +12,21 @@ import articleRouter from './routes/article.js';
 import pasteRouter from './routes/paste.js';
 import taskRouter from './routes/task.js';
 import tokenRouter from './routes/token.js';
+import userRouter from './routes/user.js';
 import {processQueue, requestPointTick} from "./request.js";
 import db from "./db.js";
+import auth from "./middleware/auth.js";
 nunjucks.configure("views", { autoescape: true, express: app, watch: true });
 
+app.use(cookieParser());
 app.set('trust proxy', true);
 app.use('/static', express.static('static'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(filterIPs);
+app.use(auth);
+app.use((req, res, next) => { res.locals.user = req.user; next(); });
 
 app.use((req, res, next) => {
 	logger.info(`${req.ip.split(':')[0] || req.ip} ${req.method} ${req.originalUrl} ${(!req.body || JSON.stringify(req.body) === '{}') ? '' : JSON.stringify(req.body)}`);
@@ -51,6 +57,7 @@ app.use('/article', articleRouter);
 app.use('/paste', pasteRouter);
 app.use('/task', taskRouter);
 app.use('/token', tokenRouter);
+app.use('/user', userRouter);
 
 app.use((err, req, res, next) => {
 	logger.error(err.message);

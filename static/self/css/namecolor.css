@@ -1,23 +1,27 @@
-.user-Red {
+.user-Red, .user-Red:hover {
     color: #FE4C61;
 }
 
-.user-Orange {
+.user-Orange, .user-Orange:hover {
     color: #F39C11;
 }
 
-.user-Green {
+.user-Green, .user-Green:hover {
     color: #52C41A;
 }
 
-.user-Blue {
+.user-Blue, .user-Blue:hover {
     color: #3498DB;
 }
 
-.user-Gray {
+.user-Gray, .user-Gray:hover {
     color: #BFBFBF;
 }
 
-.user-Cheater {
+.user-Purple, .user-Purple:hover {
+    color: #9D3DCF;
+}
+
+.user-Cheater, .user-Cheater:hover {
     color: #AD8B00;
 }

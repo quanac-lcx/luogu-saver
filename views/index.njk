@@ -3,6 +3,26 @@
 {% block extra_header %}
 <script src="/static/self/js/propaganda.js"></script>
 <script src="/static/self/js/request_utils.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const searchInput = document.getElementById("search-input");
+        const searchBtn = document.getElementById("search-btn");
+        searchInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                searchBtn.click();
+            }
+        });
+        const urlInput = document.getElementById("url");
+        const viewBtn = document.getElementById("view-btn");
+        urlInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                viewBtn.click();
+            }
+        });
+    });
+</script>
 {% endblock %}
 
 {% block content %}
@@ -33,7 +53,7 @@
             </h3>
             <div class="ui fluid left icon input">
                 <i class="ui icon linkify"></i>
-                <input type="text" id="url" placeholder="请输入洛谷专栏或剪贴板链接（完整链接，带 https）">
+                <input type="text" id="url" placeholder="请输入洛谷专栏或剪贴板链接">
                 <button class="ui teal button" id="save-btn" style="margin-left: 10px;">保存</button>
                 <button class="ui blue button" id="view-btn">查看</button>
             </div>

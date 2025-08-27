@@ -13,6 +13,7 @@ import pasteRouter from './routes/paste.js';
 import taskRouter from './routes/task.js';
 import tokenRouter from './routes/token.js';
 import userRouter from './routes/user.js';
+import apiRouter from './routes/api.js';
 import {processQueue, requestPointTick} from "./request.js";
 import db from "./db.js";
 import auth from "./middleware/auth.js";
@@ -33,8 +34,12 @@ app.use((req, res, next) => {
 	next();
 });
 
-app.get('/', (req, res) => {
-	res.render('index.njk', { title: "首页", paste_count: 35289, article_count: 63294 });
+app.get('/', async (req, res) => {
+	const [articlesCountResult] = await db.query('SELECT COUNT(*) as count FROM articles');
+	const [pastesCountResult] = await db.query('SELECT COUNT(*) as count FROM pastes');
+	const articlesCount = articlesCountResult[0].count;
+	const pastesCount = pastesCountResult[0].count;
+	res.render('index.njk', { title: "首页", paste_count: pastesCount, article_count: articlesCount });
 });
 
 app.get('/search', (req, res) => {
@@ -53,11 +58,16 @@ app.get('/deletion', (req, res) => {
 	res.render('deletion.njk', { title: "数据移除政策" });
 });
 
+app.get('/statistic', (req, res) => {
+	res.render('statistic.njk', { title: "统计" });
+});
+
 app.use('/article', articleRouter);
 app.use('/paste', pasteRouter);
 app.use('/task', taskRouter);
 app.use('/token', tokenRouter);
 app.use('/user', userRouter);
+app.use('/api', apiRouter);
 
 app.use((err, req, res, next) => {
 	logger.error(err.message);

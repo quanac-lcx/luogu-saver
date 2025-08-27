@@ -1,0 +1,139 @@
+{% extends "layout.njk" %}
+
+{% block extra_header %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <style>
+        .change {
+            color: #27ae60;
+            font-size: 0.9rem;
+            margin-top: 25px;
+        }
+        .number {
+            font-size: 2.3rem;
+            font-weight: 520;
+            margin-top: 25px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="ui center aligned grid">
+        <div class="five wide column">
+            <div class="card outline shadow padding-10" style="text-align: center;">
+                <div style="margin-top: 12px;"><i class="ui icon newspaper colored"></i>专栏文章</div>
+                <div id="article-total" class="number">0</div>
+                <div class="change" id="today-articles"><i class="fas fa-arrow-up"></i> 今日新增 0 篇</div>
+            </div>
+        </div>
+        <div class="five wide column">
+            <div class="card outline shadow padding-10" style="text-align: center;">
+                <div style="margin-top: 12px;"><i class="ui icon paste colored"></i>剪贴板内容</div>
+                <div id="paste-total" class="number">0</div>
+                <div class="change" id="today-pastes"><i class="fas fa-arrow-up"></i> 今日新增 0 个</div>
+            </div>
+        </div>
+        <div class="five wide column">
+            <div class="card outline shadow padding-10" style="text-align: center;">
+                <div style="margin-top: 12px;"><i class="ui icon database colored"></i>数据总量</div>
+                <div id="total" class="number">0</div>
+                <div class="change" id="today-total"><i class="fas fa-arrow-up"></i> 今日新增 0 条</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ui grid" style="margin-top:20px;">
+        <div class="sixteen wide column">
+            <div class="card outline shadow">
+                <div class="chart-header">
+                    <h3 class="ui header">总量趋势</h3>
+                </div>
+                <canvas id="totalChart" style="touch-action: none;"></canvas>
+            </div>
+        </div>
+        <div class="sixteen wide column" style="margin-top:20px;">
+            <div class="card outline shadow">
+                <div class="chart-header">
+                    <h3 class="ui header">每日新增</h3>
+                </div>
+                <canvas id="deltaChart" style="touch-action: none;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+		function showError(msg) {
+		    Swal.fire({
+                icon: 'error',
+                title: '错误',
+                text: msg
+            });
+		}
+		function updateCards(data) {
+			$("#article-total").text(`${data.articles_total}`);
+			$("#paste-total").text(`${data.pastes_total}`);
+			$("#total").text(`${data.articles_total + data.pastes_total}`);
+			$("#today-articles").html(`<i class="fas fa-arrow-up"></i> 今日新增 ${data.today_articles} 篇`);
+			$("#today-pastes").html(`<i class="fas fa-arrow-up"></i> 今日新增 ${data.today_pastes} 个`);
+			$("#today-total").html(`<i class="fas fa-arrow-up"></i> 今日新增 ${data.today_articles + data.today_pastes} 条`);
+		}
+		function createLineChart(ctx, datasets, title) {
+			return new Chart(ctx, {
+				type: 'line',
+				data: { datasets },
+				options: {
+					responsive: true,
+					interaction: { mode: 'index', intersect: false },
+					plugins: {
+						title: { display: true, text: title },
+						legend: { position: 'top' }
+					},
+					scales: {
+						x: {
+							type: 'time',
+							time: { unit: 'day' }
+						}
+					}
+				}
+			});
+		}
+		$(async function () {
+			try {
+				const res = await fetch("/api/statistic");
+				const json = await res.json();
+				if (!json.success) {
+					showError("接口返回失败");
+					return;
+				}
+				const data = json.data;
+				updateCards(data);
+				const articlesSeries = data.time_series.articles;
+				const pastesSeries   = data.time_series.pastes;
+				const totalDatasets = [
+					{
+						label: "文章总量",
+						data: articlesSeries.map(d => ({ x: d.date, y: d.total }))
+					},
+					{
+						label: "剪贴板总量",
+						data: pastesSeries.map(d => ({ x: d.date, y: d.total }))
+					}
+				];
+				const deltaDatasets = [
+					{
+						label: "文章新增",
+						data: articlesSeries.map(d => ({ x: d.date, y: d.delta }))
+					},
+					{
+						label: "剪贴板新增",
+						data: pastesSeries.map(d => ({ x: d.date, y: d.delta }))
+					}
+				];
+				createLineChart(document.getElementById("totalChart"), totalDatasets, "总量趋势");
+				createLineChart(document.getElementById("deltaChart"), deltaDatasets, "每日新增趋势");
+			} catch (err) {
+				showError(err.message);
+			}
+		});
+    </script>
+{% endblock %}

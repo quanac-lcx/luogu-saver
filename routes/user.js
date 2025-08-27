@@ -5,12 +5,12 @@ import logger from "../logger.js";
 
 const router = express.Router();
 
-router.get('/logout', async (req, res, next) => {
+router.post('/logout', async (req, res, next) => {
 	try {
 		res.clearCookie('token');
-		res.redirect("/");
+		res.json(makeStandardResponse(true));
 	} catch (error) {
-		next(error);
+		res.json(makeStandardResponse(false));
 	}
 });
 
@@ -26,6 +26,11 @@ router.post('/login', async (req, res, next) => {
 	} catch (error) {
 		res.json(makeStandardResponse(false, {message: error.message}));
 	}
+});
+
+router.get('/:id',  (req, res) => {
+	const {id} = req.params;
+	res.redirect(`https://www.luogu.com.cn/user/${id}`);
 });
 
 export default router;

@@ -24,16 +24,18 @@
         <a class="item" href="/article/recent">
             <i class="ui icon history"></i> <span>最近更新</span>
         </a>
-        <a class="item" href="/">
+        <a class="item" href="/statistic">
             <i class="ui icon chart bar"></i> <span>统计数据</span>
         </a>
         <a class="item" href="/token/apply">
             <i class="ui icon key"></i> <span>申请密钥</span>
         </a>
+        <!--
         <a class="item" href="/">
             <i class="ui icon cloud download"></i> <span>批量保存</span>
         </a>
-        <a class="item" href="https://luogu.me">
+        -->
+        <a class="item" href="https://old.luogu.me">
             <i class="ui icon code"></i> <span>返回旧前端</span>
         </a>
         {% if user %}
@@ -134,7 +136,6 @@
 								Swal.fire("登录失败", res.data.message || "Token 无效", "error");
 							}
 							else {
-								console.log("???");
 								location.reload();
 							}
 						})
@@ -142,6 +143,18 @@
 							Swal.fire("错误", "网络或服务器异常", "error");
 						});
 				});
+			});
+		});
+		$(function () {
+			$("a[href='/user/logout']").on("click", function (e) {
+				e.preventDefault();
+                $.post("/user/logout")
+                    .done(res => {
+                        location.reload();
+                    })
+                    .fail(() => {
+                        Swal.fire("错误", "网络或服务器异常", "error");
+                    });
 			});
 		});
     </script>

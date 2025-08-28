@@ -4,6 +4,10 @@ name: Auto Assign
 on:
   issues:
     types: [opened, labeled]
+
+permissions:
+  issues: write 
+
 jobs:
   assign-issue:
     runs-on: ubuntu-latest
@@ -16,11 +20,16 @@ jobs:
           script: |
             const issue = context.issue;
             
-            await github.rest.issues.addAssignees({
-              owner: issue.owner,
-              repo: issue.repo,
-              issue_number: issue.number,
-              assignees: ['quanac-lcx']
-            });
-            
-            console.log('ok');
+            const currentAssignees = context.issue.assignees.map(assignee => assignee.login);
+            if (!currentAssignees.includes('quanac-lcx')) {
+              await github.rest.issues.addAssignees({
+                owner: issue.owner,
+                repo: issue.repo,
+                issue_number: issue.number,
+                assignees: ['quanac-lcx']
+              });
+              console.log('ok');
+            } else {
+              console.log('error');
+            }
+

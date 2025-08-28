@@ -1,0 +1,26 @@
+# 作用：当有新的广告位申请时，自动指派给 quanac-lcx
+name: Auto Assign
+
+on:
+  issues:
+    types: [opened, labeled]
+jobs:
+  assign-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assign issue to quanac-lcx
+        if: contains(github.event.issue.labels.*.name, 'advertising application')
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue = context.issue;
+            
+            await github.rest.issues.addAssignees({
+              owner: issue.owner,
+              repo: issue.repo,
+              issue_number: issue.number,
+              assignees: ['quanac-lcx']
+            });
+            
+            console.log('ok');

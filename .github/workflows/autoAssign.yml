@@ -6,7 +6,10 @@ on:
     types: [opened, labeled]
 
 permissions:
-  issues: write 
+  issues: write
+  pull-requests: write
+  repository-projects: write
+  contents: read  
 
 jobs:
   assign-issue:
@@ -19,17 +22,25 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const issue = context.issue;
+            const assignee = 'quanac-lcx';
             
-            const currentAssignees = context.issue.assignees.map(assignee => assignee.login);
-            if (!currentAssignees.includes('quanac-lcx')) {
+            try {
+              const currentAssignees = context.issue.assignees.map(a => a.login);
+              
+              if (currentAssignees.includes(assignee)) {
+                console.log(`Issue #${issue.number} is already assigned to ${assignee}`);
+                return;
+              }
+              
               await github.rest.issues.addAssignees({
                 owner: issue.owner,
                 repo: issue.repo,
                 issue_number: issue.number,
-                assignees: ['quanac-lcx']
+                assignees: [assignee]
               });
-              console.log('ok');
-            } else {
-              console.log('error');
+              
+              console.log(`Successfully assigned issue #${issue.number} to ${assignee}`);
+            } catch (error) {
+              console.error(`Failed to assign issue:`, error);
+              throw error;
             }
-

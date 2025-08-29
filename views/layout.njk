@@ -88,13 +88,13 @@
                         <i class="fa fa-code"></i> 开发者：Federico2903 & Murasame & quanac-lcx
                     </p>
                     <p>
-                        <a href="/privacy" class="footer-link" style="margin-right: 15px;">
+                        <a href="https://help.luogu.me/docs/license/privacy" class="footer-link" style="margin-right: 15px;">
                             <i class="fa fa-user-shield"></i> 隐私协议
                         </a>
-                        <a href="/disclaimer" class="footer-link" style="margin-right: 15px;">
+                        <a href="https://help.luogu.me/docs/license/disclaimer" class="footer-link" style="margin-right: 15px;">
                             <i class="fa fa-exclamation-circle"></i> 免责声明
                         </a>
-                        <a href="/deletion" class="footer-link">
+                        <a href="https://help.luogu.me/docs/license/deletion" class="footer-link">
                             <i class="fa fa-trash-alt"></i> 数据移除政策
                         </a>
                     </p>
@@ -126,9 +126,9 @@
 				Swal.fire({
 					title: "请输入 Token",
 					input: "text",
-					inputPlaceholder: "输入你的登录凭据喵！",
-					confirmButtonText: "就是这个喵！",
-					cancelButtonText: "不是这个喵...",
+					inputPlaceholder: "输入你的 Token",
+					confirmButtonText: "确认",
+					cancelButtonText: "取消",
 					showCancelButton: true
 				}).then(result => {
 					$.post("/user/login", { token: result.value })

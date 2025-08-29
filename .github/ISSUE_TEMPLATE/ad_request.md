@@ -3,7 +3,7 @@ name: 公益广告位申请
 about: 公益广告位申请（免费）
 title: ''
 labels: 'advertising application'
-assignees: ''
+assignees: 'quanac-lcx'
 
 ---
 

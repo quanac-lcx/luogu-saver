@@ -9,9 +9,11 @@
 
 Open source code for Luogu Saver's new frontend.
 
-> For feedback regarding the legacy saver site, please visit:  
-> [Old-Saver-Feedback Repository](https://github.com/luogu-saver-dev/Old-Saver-Feedback)
+> ~~For feedback regarding the legacy saver site, please visit:  
+> [Old-Saver-Feedback Repository](https://github.com/luogu-saver-dev/Old-Saver-Feedback)~~
 
+> [!WARNING]
+> Note: The old frontend has stopped maintenance.
 ## Highlights
 
 - Built with Node.js 22

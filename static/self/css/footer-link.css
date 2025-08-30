@@ -1,7 +1,7 @@
 /* #25 增强页脚超链接 */
 .footer-link {
   color: #000;
-  transition: color 0.0s; /* 去你大爷平滑过渡，老子不要了 */
+  transition: color 0.2s;
   text-decoration: none;
 }
 .footer-link:hover {

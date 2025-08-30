@@ -10,7 +10,10 @@
 
 洛谷保存站**新前端**开源代码。
 
-旧保存站反馈：<https://github.com/luogu-saver-dev/Old-Saver-Feedback>
+~~旧保存站反馈：<https://github.com/luogu-saver-dev/Old-Saver-Feedback>~~
+
+> [!WARNING]
+> 注意：旧前端已经停止维护。
 
 ## 特性
 

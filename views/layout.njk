@@ -126,9 +126,9 @@
 				Swal.fire({
 					title: "请输入 Token",
 					input: "text",
-					inputPlaceholder: "输入你的 Token",
-					confirmButtonText: "确认",
-					cancelButtonText: "取消",
+					inputPlaceholder: "输入你的登录凭据喵！♥️",
+					confirmButtonText: "就是这个喵！",
+					cancelButtonText: "不是这个喵...",
 					showCancelButton: true
 				}).then(result => {
 					$.post("/user/login", { token: result.value })

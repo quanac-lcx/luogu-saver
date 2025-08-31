@@ -1,11 +1,8 @@
 import express from 'express';
 import nunjucks from 'nunjucks';
 import cookieParser from 'cookie-parser';
-import { filterIPs } from './middleware/rate_limit.js';
+import {filterIPs} from './middleware/rate_limit.js';
 import 'dotenv/config';
-
-const app = express();
-const port = process.env.PORT || 55086;
 import logger from './logger.js';
 
 import articleRouter from './routes/article.js';
@@ -17,6 +14,10 @@ import apiRouter from './routes/api.js';
 import {processQueue, requestPointTick} from "./request.js";
 import db from "./db.js";
 import auth from "./middleware/auth.js";
+import {scheduleJob} from "node-schedule";
+
+const app = express();
+const port = process.env.PORT || 55086;
 nunjucks.configure("views", { autoescape: true, express: app, watch: true });
 
 app.use(cookieParser());
@@ -24,13 +25,16 @@ app.set('trust proxy', true);
 app.use('/static', express.static('static'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+app.use((req, res, next) => {
+	req.realIP = req.headers['ali-cdn-real-ip'] || req.ip;
+	next();
+});
 app.use(filterIPs);
 app.use(auth);
 app.use((req, res, next) => { res.locals.user = req.user; next(); });
 
 app.use((req, res, next) => {
-	logger.info(`${req.ip.split(':')[0] || req.ip} ${req.method} ${req.originalUrl} ${(!req.body || JSON.stringify(req.body) === '{}') ? '' : JSON.stringify(req.body)}`);
+	logger.info(`${req.realIP.split(':')[0] || req.realIP} ${req.method} ${req.originalUrl} ${(!req.body || JSON.stringify(req.body) === '{}') ? '' : JSON.stringify(req.body)}`);
 	next();
 });
 
@@ -76,8 +80,6 @@ app.use((err, req, res, next) => {
 
 requestPointTick();
 processQueue();
-
-import {scheduleJob} from "node-schedule";
 
 scheduleJob('0 * * * *', async () => {
 	try {

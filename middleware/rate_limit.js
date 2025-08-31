@@ -7,24 +7,24 @@ let requestHistory = {};
 
 const filterIPs = (req, res, next) => {
 	const now = Date.now();
-	if (bannedIPs[req.ip] && now > bannedIPs[req.ip]) {
-		delete bannedIPs[req.ip];
+	if (bannedIPs[req.realIP] && now > bannedIPs[req.realIP]) {
+		delete bannedIPs[req.realIP];
 	}
 	if (req.path.startsWith('/article/save') || req.path.startsWith('/paste/save')) {
-		if (!requestHistory[req.ip]) {
-			requestHistory[req.ip] = [];
+		if (!requestHistory[req.realIP]) {
+			requestHistory[req.realIP] = [];
 		}
-		requestHistory[req.ip] = requestHistory[req.ip].filter(ts => now - ts < 60000);
-		if (bannedIPs[req.ip] || requestHistory[req.ip].length >= process.env.RATE_LIMIT) {
-			if (!bannedIPs[req.ip]) {
-				bannedIPs[req.ip] = now + parseInt(process.env.BAN_DURATION);
-				logger.warn(`IP ${req.ip} is banned until ${formatDate(new Date(bannedIPs[req.ip]))}`);
+		requestHistory[req.realIP] = requestHistory[req.realIP].filter(ts => now - ts < 60000);
+		if (bannedIPs[req.realIP] || requestHistory[req.realIP].length >= process.env.RATE_LIMIT) {
+			if (!bannedIPs[req.realIP]) {
+				bannedIPs[req.realIP] = now + parseInt(process.env.BAN_DURATION);
+				logger.warn(`IP ${req.realIP} is banned until ${formatDate(new Date(bannedIPs[req.realIP]))}`);
 			}
-			const pardonTime = formatDate(new Date(bannedIPs[req.ip]));
+			const pardonTime = formatDate(new Date(bannedIPs[req.realIP]));
 			res.json(makeStandardResponse(false, { message: "Your IP address is blocked until " + pardonTime + "." }));
 			return;
 		}
-		requestHistory[req.ip].push(now);
+		requestHistory[req.realIP].push(now);
 	}
 	next();
 }

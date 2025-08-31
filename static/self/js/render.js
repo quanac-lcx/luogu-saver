@@ -1,4 +1,4 @@
-import {createHighlighter} from 'https://gcore.jsdelivr.net/npm/shiki@latest/+esm';
+import {createHighlighter} from 'https://esm.sh/shiki@latest';
 
 document.addEventListener("DOMContentLoaded", function() {
 	renderMathInElement(document.body, {

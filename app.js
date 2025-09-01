@@ -15,6 +15,9 @@ import {processQueue, requestPointTick} from "./request.js";
 import db from "./db.js";
 import auth from "./middleware/auth.js";
 import {scheduleJob} from "node-schedule";
+import fs from "fs/promises";
+import path from "path";
+import axios from "axios";
 
 const app = express();
 const port = process.env.PORT || 55086;
@@ -80,6 +83,31 @@ app.use((err, req, res, next) => {
 
 requestPointTick();
 processQueue();
+
+async function updateBeacon() {
+	const url = "https://static.cloudflareinsights.com/beacon.min.js";
+	const dest = path.join(process.cwd(), "static", "cloudflare", "beacon.min.js");
+	logger.debug("Updating beacon.min.js from " + url);
+	try {
+		const startTime = Date.now();
+		const response = await axios.get(url, { responseType: "text" });
+		await fs.mkdir(path.dirname(dest), { recursive: true });
+		await fs.writeFile(dest, response.data, "utf-8");
+		const endTime = Date.now();
+		logger.debug(`beacon.min.js updated in ${(endTime - startTime)} ms`);
+		logger.info("Updated beacon.min.js successfully");
+	} catch (err) {
+		logger.warn("Beacon update failed: " + err.message);
+	}
+}
+
+updateBeacon().then(() => {
+	logger.info("Initial beacon.min.js update completed");
+}).catch((err) => {
+	logger.warn("Initial beacon.min.js update failed: " + err.message);
+});
+
+scheduleJob('0 * * * *', updateBeacon);
 
 scheduleJob('0 * * * *', async () => {
 	try {

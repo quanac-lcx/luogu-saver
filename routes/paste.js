@@ -3,6 +3,7 @@ import db from '../db.js';
 import {formatDate, makeStandardResponse} from '../utils.js';
 import { createMarkdownRenderer } from "../renderer.js";
 import {pushQueue} from "../request.js";
+import logger from "../logger.js";
 
 const router = express.Router();
 
@@ -17,9 +18,21 @@ async function loadRelationships(paste) {
 
 router.get('/:id', async (req, res, next) => {
 	try {
-		const [rows] = await db.query('SELECT * FROM pastes WHERE id = ?', [req.params.id]);
+		const { id } = req.params;
+		if (id.length !== 8) throw new Error('Invalid article ID.');
+		const [rows] = await db.query('SELECT * FROM pastes WHERE id = ?', [id]);
 		if (rows.length === 0) {
-			throw new Error('Paste not found');
+			res.render('paste.njk', {
+				title: "保存剪贴板",
+				paste: {
+					title: `剪贴板 ${id}`,
+					id,
+					updated_at: "尚未保存"
+				},
+				renderedContent: null,
+				empty: true
+			});
+			return next();
 		}
 		const paste = await loadRelationships({
 			...rows[0],
@@ -58,6 +71,7 @@ router.get('/save/:id', async (req, res) => {
 		const id = await pushQueue({ url, headers, aid: s, type: 1 });
 		res.send(makeStandardResponse(true, { message: "Request queued.", result: id })).end();
 	} catch (error) {
+		logger.warn('An error occurred when saving paste: ' + error.message);
 		res.send(makeStandardResponse(false, { message: error.message })).end();
 	}
 });

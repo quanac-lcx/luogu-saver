@@ -1,14 +1,19 @@
 {% extends "layout.njk" %}
 
 {% block extra_header %}
-<style>
-.content > *:nth-child(2) {
-    margin-top: 6px;
-}
-</style>
+    <style>
+    .content > *:nth-child(2) {
+        margin-top: 6px;
+    }
+    .list .item {
+        margin-top: 10px;
+    }
+    </style>
+    <script src="/static/self/js/request_utils.js"></script>
 {% endblock %}
 
 {% block content %}
+    <input type="hidden" id="url" value="{{ 'paste' if task.type else 'article' }}/{{ task.oid }}">
     <div class="ui grid">
         <div class="sixteen wide column">
             <div class="card shadow">
@@ -23,7 +28,7 @@
     </div>
 
     <div class="ui grid">
-        <div class="sixteen wide column">
+        <div class="eight wide column">
             <div class="card shadow outline">
                 <h3 class="ui dividing header">
                     <i class="list icon"></i>
@@ -63,6 +68,49 @@
                 </div>
             </div>
         </div>
+        <div class="eight wide column">
+            <div class="card shadow outline">
+                <h3 class="ui dividing header">
+                    <i class="list icon"></i>
+                    任务详情
+                </h3>
+
+                <div class="ui list" style="margin-top: 1em;">
+                    <div class="item">
+                        <div class="content">
+                            <div class="header">
+                                <i class="info circle icon"></i>
+                                任务类型
+                            </div>
+                            <div>{{ '剪贴板保存 (Type = 1)' if task.type else '专栏文章保存 (Type = 0)' }}</div>
+                        </div>
+                    </div>
+                    <div class="item">
+                        <div class="content">
+                            <div class="header">
+                                <i class="paperclip icon"></i>
+                                任务目标 ID
+                            </div>
+                            <div>{{ task.oid }}</div>
+                        </div>
+                    </div>
+                    <div class="item">
+                        <div class="content">
+                            <div class="header">
+                                <i class="cog icon"></i>
+                                操作
+                            </div>
+                            <button id="goto-btn" class="ui mini positive button" {{ '' if task.status == 'Completed' else 'disabled' }} onclick="window.location.href='/{{ 'paste' if task.type else 'article' }}/{{ task.oid }}'">
+                                <i class="ui icon paper plane"></i> 跳转
+                            </button>
+                            <button id="save-btn" class="ui mini teal button" style="display: {{ 'inline-block' if task.status == 'Failed' else 'none' }};">
+                                <i class="ui icon redo alternate"></i> 重试
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -81,6 +129,7 @@
 					statusLabel.classList.add("green");
 				} else if (status === "Failed") {
 					statusLabel.classList.add("red");
+					document.getElementById("save-btn").style.display = "inline-block";
 				}
 				statusLabel.textContent = status + (status === "Pending" ? ` / ${position}` : "");
 			}
@@ -95,6 +144,7 @@
 					setStatus(data.data.tasks[0].status, data.data.tasks[0].position);
 					if (data.data.tasks[0].status === "Completed") {
                         clearInterval(id);
+                        document.getElementById("goto-btn").disabled = false;
                     }
 				} catch (e) {
 					console.error(`Failed to update task status: ${e.message}`);

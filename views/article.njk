@@ -24,11 +24,17 @@
                         <span class="meta gray small">作者</span>
                         <div class="meta user" style="margin-top: 5px;">
                             <img class="ui mini circular image"
-                                 src="https://cdn.luogu.com.cn/upload/usericon/{{ article.author.id }}.png"
+                                 src="https://cdn.luogu.com.cn/upload/usericon/{{ article.author.id if article.author.id else 3 }}.png"
                                  alt="user_icon">
+                            {% if empty %}
+                            <a href="javascript:void(0)"
+                               class="user-Purple"
+                               style="margin-left: 5px; font-weight: 550;">未知用户</a>
+                            {% else %}
                             <a href="/user/{{ article.author.id }}"
                                class="user-{{ article.author.color }}"
                                style="margin-left: 5px; font-weight: 550;">{{ article.author.name }}</a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -59,20 +65,30 @@
                     </div>
                 </div>
                 <div class="sixteen wide column">
+                    {% if not empty %}
                     <a href="https://www.luogu.com/article/{{ article.id }}" class="ui button">
                         <i class="ui icon share square"></i> 查看原专栏
                     </a>
                     <a href="javascript:void(0)" onclick="copyMarkdown()" class="ui button">
                         <i class="ui icon copy"></i> 复制原文
                     </a>
+                    {% endif %}
                     <a href="javascript:void(0)" id="save-btn" class="ui positive button">
-                        <i class="ui icon redo alternate"></i> 更新内容
+                        <i class="ui icon sync alternate"></i> 更新内容
                     </a>
                 </div>
             </div>
         </div>
         <div class="card shadow outline md-container">
-            {{ renderedContent | safe }}
+            {% if not empty %}
+                {{ renderedContent | safe }}
+            {% else %}
+                <div style="text-align: center; padding: 50px 0;">
+                    <i class="ui icon info circle" style="font-size: 3rem; color: gray;"></i>
+                    <div style="font-size: 1.5rem; color: gray; margin-top: 10px;">尚未保存内容</div>
+                    <div style="margin-top: 10px;">请点击上方的“更新内容”按钮以保存专栏内容</div>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>

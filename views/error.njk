@@ -1,14 +1,14 @@
 {% extends "layout.njk" %}
 
 {% block content %}
-<div class="ui grid">
-    <div class="sixteen wide column">
-        <div class="card shadow">
-            <h1 class="ui center aligned header">
-                <span><i class="ui icon exclamation triangle colored"></i> 错误</span>
-                <div class="sub header" style="margin-top: 10px;">{{ error_message }}</div>
-            </h1>
+    <div class="ui grid">
+        <div class="sixteen wide column">
+            <div class="card shadow">
+                <h1 class="ui center aligned header">
+                    <span><i class="ui icon exclamation triangle colored"></i> 错误</span>
+                    <div class="sub header" style="margin-top: 10px;">{{ error_message }}</div>
+                </h1>
+            </div>
         </div>
     </div>
-</div>
 {% endblock %}

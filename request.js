@@ -160,7 +160,7 @@ export function requestPointTick() {
 		if (requestPoint >= process.env.INITIAL_REQ_POINT) return;
 		requestPoint = requestPoint + 1
 		logger.debug(`One request point has been restored. Now point: ${requestPoint}`);
-	}, 10000);
+	}, 1000);
 }
 
 export function getQueuePosition(id) {

@@ -7,9 +7,12 @@
 <script defer src="/static/katex/katex.min.js"></script>
 <script defer src="/static/katex/contrib/auto-render.min.js"></script>
 <script type="module" src="/static/self/js/render.js"></script>
+<script src="/static/self/js/request_utils.js"></script>
 {% endblock %}
 
 {% block content %}
+<input type="hidden" id="url" value="article/{{ article.id }}">
+<input type="hidden" id="markdown-content" value="{{ article.content }}">
 <div class="ui grid">
     <div class="sixteen wide column">
         <div class="card shadow outline">
@@ -54,6 +57,17 @@
                         {% endif %}
                         </span>
                     </div>
+                </div>
+                <div class="sixteen wide column">
+                    <a href="https://www.luogu.com/article/{{ article.id }}" class="ui button">
+                        <i class="ui icon share square"></i> 查看原专栏
+                    </a>
+                    <a href="javascript:void(0)" onclick="copyMarkdown()" class="ui button">
+                        <i class="ui icon copy"></i> 复制原文
+                    </a>
+                    <a href="javascript:void(0)" id="save-btn" class="ui positive button">
+                        <i class="ui icon redo alternate"></i> 更新内容
+                    </a>
                 </div>
             </div>
         </div>

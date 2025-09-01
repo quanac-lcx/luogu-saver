@@ -4,7 +4,7 @@ import "dotenv/config";
 import axios from "axios";
 import * as cheerio from 'cheerio';
 import logger, {debug} from "./logger.js";
-import {createTask, updateTask} from "./taskManager.js";
+import {createTask, updateTask} from "./task_manager.js";
 
 let queue = [];
 let requestPoint = process.env.INITIAL_REQ_POINT;
@@ -21,8 +21,8 @@ export async function processTask() {
 	const aid = task.aid;
 	const response = await sendContentRequest(url, headers, task.type);
 	if (!response.success) {
-		logger.warn(`An error occurred when processing task #${task.id}`);
-		await updateTask(task.id, 3, response.message);
+		logger.warn(`An error occurred when processing task #${task.id}: ${response.data.message}`);
+		await updateTask(task.id, 3, response.data.message);
 		return;
 	}
 	const obj = response.data;
@@ -142,6 +142,7 @@ export async function sendContentRequest(url, headers, type = 0) {
 		return makeStandardResponse(true, obj);
 	}
 	catch(error) {
+		logger.warn(`Error fetching content from ${url.split('?')[0]}: ${error.message}`);
 		return makeStandardResponse(false, { message: error.message });
 	}
 }
@@ -175,7 +176,7 @@ export function getQueuePosition(id) {
 export async function pushQueue(task) {
 	if (queue.length > process.env.QUEUE_MAX_LENGTH)
 		throw new Error('The queue is full. Please try again later.');
-	task.id = await createTask();
+	task.id = await createTask(task);
 	logger.debug(`Task #${task.id} queued.`);
 	queue.push(task);
 	return task.id;

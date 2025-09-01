@@ -1,39 +1,69 @@
 {% extends "layout.njk" %}
 
 {% block extra_header %}
-<script src="/static/self/js/display_utils.js"></script>
-<link rel="stylesheet" href="/static/self/css/markdown.css" />
-<link rel="stylesheet" href="/static/katex/katex.min.css">
-<script defer src="/static/katex/katex.min.js"></script>
-<script defer src="/static/katex/contrib/auto-render.min.js"></script>
-<script type="module" src="/static/self/js/render.js"></script>
+    <script src="/static/self/js/display_utils.js"></script>
+    <link rel="stylesheet" href="/static/self/css/markdown.css" />
+    <link rel="stylesheet" href="/static/katex/katex.min.css">
+    <script defer src="/static/katex/katex.min.js"></script>
+    <script defer src="/static/katex/contrib/auto-render.min.js"></script>
+    <script type="module" src="/static/self/js/render.js"></script>
+    <script src="/static/self/js/request_utils.js"></script>
 {% endblock %}
 
 {% block content %}
-<div class="ui grid">
-    <div class="sixteen wide column">
-        <div class="card shadow outline">
-            <h1 class="ui header">剪贴板 - {{ paste.id }}</h1>
-            <span class="meta gray"><i class="ui icon calendar colored"></i> 最后更新于 {{ paste.updated_at }}</span>
-            <div class="ui grid">
-                <div class="sixteen wide column">
-                    <div class="card shadow outline padding-15" style="height: 90%;">
-                        <span class="meta gray small">作者</span>
-                        <div class="meta user" style="margin-top: 5px;">
-                            <img class="ui mini circular image"
-                                 src="https://cdn.luogu.com.cn/upload/usericon/{{ paste.author.id }}.png"
-                                 alt="user_icon">
-                            <a href="/user/{{ paste.author.id }}"
-                               class="user-{{ paste.author.color }}"
-                               style="margin-left: 5px; font-weight: 550;">{{ paste.author.name }}</a>
+    <input type="hidden" id="url" value="paste/{{ paste.id }}">
+    <input type="hidden" id="markdown-content" value="{{ paste.content }}">
+    <div class="ui grid">
+        <div class="sixteen wide column">
+            <div class="card shadow outline">
+                <h1 class="ui header">剪贴板 - {{ paste.id }}</h1>
+                <span class="meta gray"><i class="ui icon calendar colored"></i> 最后更新于 {{ paste.updated_at }}</span>
+                <div class="ui grid">
+                    <div class="sixteen wide column">
+                        <div class="card shadow outline padding-15" style="height: 90%;">
+                            <span class="meta gray small">作者</span>
+                            <div class="meta user" style="margin-top: 5px;">
+                                <img class="ui mini circular image"
+                                     src="https://cdn.luogu.com.cn/upload/usericon/{{ paste.author.id if paste.author.id else 3 }}.png"
+                                     alt="user_icon">
+                                {% if empty %}
+                                <a href="javascript:void(0)"
+                                   class="user-Purple"
+                                   style="margin-left: 5px; font-weight: 550;">未知用户</a>
+                                {% else %}
+                                <a href="/user/{{ paste.author.id }}"
+                                   class="user-{{ paste.author.color }}"
+                                   style="margin-left: 5px; font-weight: 550;">{{ paste.author.name }}</a>
+                                {% endif %}
+                            </div>
                         </div>
+                    </div>
+                    <div class="sixteen wide column">
+                        {% if not empty %}
+                        <a href="https://www.luogu.com/paste/{{ paste.id }}" class="ui button">
+                            <i class="ui icon share square"></i> 查看原剪贴板
+                        </a>
+                        <a href="javascript:void(0)" onclick="copyMarkdown()" class="ui button">
+                            <i class="ui icon copy"></i> 复制原文
+                        </a>
+                        {% endif %}
+                        <a href="javascript:void(0)" id="save-btn" class="ui positive button">
+                            <i class="ui icon redo alternate"></i> 更新内容
+                        </a>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="card shadow outline md-container">
-            {{ renderedContent | safe }}
+            <div class="card shadow outline md-container">
+                {% if not empty %}
+                    {{ renderedContent | safe }}
+                {% else %}
+                    <div style="text-align: center; padding: 50px 0;">
+                        <i class="ui icon info circle" style="font-size: 3rem; color: gray;"></i>
+                        <div style="font-size: 1.5rem; color: gray; margin-top: 10px;">尚未保存内容</div>
+                        <div style="margin-top: 10px;">请点击上方的“更新内容”按钮以保存专栏内容</div>
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </div>
-</div>
 {% endblock %}

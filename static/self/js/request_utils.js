@@ -1,11 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
-	document.getElementById("search-btn").addEventListener("click", () => {
+	document.getElementById("search-btn")?.addEventListener("click", () => {
 		const q = document.getElementById("search-input").value.trim();
 		if (q) {
 			window.location.href = "/search?q=" + encodeURIComponent(q);
 		}
 	});
-	document.getElementById("save-btn").addEventListener("click", async () => {
+	document.getElementById("save-btn")?.addEventListener("click", async () => {
 		let url = document.getElementById("url").value.trim();
 		if (url) {
 			try {
@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			}
 		}
 	});
-	document.getElementById("view-btn").addEventListener("click", () => {
+	document.getElementById("view-btn")?.addEventListener("click", () => {
 		let url = document.getElementById("url").value.trim();
 		if (url) {
 			try {

@@ -43,10 +43,22 @@ router.get('/recent', async (req, res, next) => {
 
 router.get('/:id', async (req, res, next) => {
 	try {
+		const { id } = req.params;
+		if (id.length !== 8) throw new Error('Invalid article ID.');
 		const start = Date.now();
-		const [rows] = await db.query('SELECT * FROM articles WHERE id = ?', [req.params.id]);
+		const [rows] = await db.query('SELECT * FROM articles WHERE id = ?', [id]);
 		if (rows.length === 0) {
-			throw new Error('Article not found.');
+			res.render('article.njk', {
+				title: "保存文章",
+				article: {
+					title: `文章 - ${id}`,
+					id,
+					updated_at: "尚未保存"
+				},
+				renderedContent: null,
+				empty: true
+			});
+			return next();
 		}
 		const article = await loadRelationships({
 			...rows[0],
@@ -72,7 +84,7 @@ router.get('/:id', async (req, res, next) => {
 		const renderedContent = createMarkdownRenderer().renderMarkdown(sanitized);
 		const end_2 = Date.now();
 		logger.debug(`Article ${article.id} loaded in ${end_2 - start}ms.`);
-		res.render('article.njk', { title: `${article.title}`,article, renderedContent });
+		res.render('article.njk', { title: `${article.title}`, article, renderedContent, empty: false });
 	} catch (error) {
 		next(error);
 	}
@@ -89,6 +101,7 @@ router.get('/save/:id', async (req, res) => {
 		const id = await pushQueue({ url, headers, aid: s, type: 0 });
 		res.send(makeStandardResponse(true, { message: "Request queued.", result: id })).end();
 	} catch (error) {
+		logger.warn('An error occurred when saving article: ' + error.message);
 		res.send(makeStandardResponse(false, { message: error.message })).end();
 	}
 });

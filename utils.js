@@ -25,3 +25,14 @@ export function generateRandomString(length = 8) {
 	}
 	return result;
 }
+
+export function sanitizeLatex(src) {
+	return src.replace(/\$\$([\s\S]*?)\$\$|\$([^\$]+)\$/g, (match, block, inline) => {
+		const content = block ?? inline;
+		if (/\\rule\s*{[^}]*(em|px)\s*}{[^}]*(em|px)}/.test(content))
+			return inline ?
+				'$\\color{red}\\text{\\textbackslash rule haven\'t supported yet.}$' :
+				'$$\\color{red}\\text{\\textbackslash rule haven\'t supported yet.}$$';
+		return match;
+	});
+}

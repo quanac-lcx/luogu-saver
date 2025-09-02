@@ -15,6 +15,9 @@ router.post('/logout', async (req, res, next) => {
 });
 
 router.post('/login', async (req, res, next) => {
+	if (!req.body || !req.body.token) {
+		throw new Error('Token is required.');
+	}
 	const {token} = req.body;
 	try {
 		const [rows] = await db.query('SELECT * FROM token WHERE id = ?', [token]);

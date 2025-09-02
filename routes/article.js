@@ -1,6 +1,6 @@
 import express from 'express';
 import db from '../db.js';
-import {formatDate, makeStandardResponse} from '../utils.js';
+import {formatDate, makeStandardResponse, sanitizeLatex} from '../utils.js';
 import { createMarkdownRenderer } from "../renderer.js";
 import {pushQueue} from "../request.js";
 import logger from "../logger.js";
@@ -68,18 +68,9 @@ router.get('/:id', async (req, res, next) => {
 		if (article.deleted) {
 			throw new Error(article.deleted_reason);
 		}
+		//const versions = await db.query('SELECT * FROM article_versions WHERE origin_id = ? ORDER BY version DESC', [article.id]);
 		const end_1 = Date.now();
 		logger.debug(`Article ${article.id} loaded from database in ${end_1 - start}ms.`);
-		function sanitizeLatex(src) {
-			return src.replace(/\$\$([\s\S]*?)\$\$|\$([^\$]+)\$/g, (match, block, inline) => {
-				const content = block ?? inline;
-				if (/\\rule\s*{[^}]*(em|px)\s*}{[^}]*(em|px)}/.test(content))
-					return inline ?
-						'$\\color{red}\\text{\\textbackslash rule haven\'t supported yet.}$' :
-						'$$\\color{red}\\text{\\textbackslash rule haven\'t supported yet.}$$';
-				return match;
-			});
-		}
 		const sanitized = sanitizeLatex(article.content);
 		const renderedContent = createMarkdownRenderer().renderMarkdown(sanitized);
 		const end_2 = Date.now();

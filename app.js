@@ -37,7 +37,7 @@ app.use(auth);
 app.use((req, res, next) => { res.locals.user = req.user; next(); });
 
 app.use((req, res, next) => {
-	logger.info(`${req.realIP.split(':')[0] || req.realIP} ${req.method} ${req.originalUrl} ${(!req.body || JSON.stringify(req.body) === '{}') ? '' : JSON.stringify(req.body)}`);
+	logger.info(`${req.realIP} ${req.method} ${req.originalUrl} ${(!req.body || JSON.stringify(req.body) === '{}') ? '' : JSON.stringify(req.body)}`);
 	next();
 });
 
@@ -77,7 +77,7 @@ app.use('/user', userRouter);
 app.use('/api', apiRouter);
 
 app.use((err, req, res, next) => {
-	logger.error(err.message);
+	logger.warn(`An error occurred while processing ${req.method} ${req.originalUrl}: ${err.message}`);
 	res.render('error.njk', { title: "错误", error_message: err.message });
 });
 

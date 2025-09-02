@@ -1,15 +1,5 @@
 import {createHighlighter} from 'https://esm.sh/shiki@latest';
 
-document.addEventListener("DOMContentLoaded", function() {
-	renderMathInElement(document.body, {
-		delimiters: [
-			{left: '$$', right: '$$', display: true},
-			{left: '$', right: '$', display: false},
-		],
-		throwOnError : false
-	});
-});
-
 async function renderShiki() {
 	try {
 		const highlighter = await createHighlighter({
@@ -69,4 +59,29 @@ document.addEventListener("DOMContentLoaded", () => {
 	});
 });
 
-window.addEventListener("DOMContentLoaded", () => { renderShiki(); });
+async function renderAll() {
+	try {
+		renderMathInElement(document.body, {
+			delimiters: [
+				{left: '$$', right: '$$', display: true},
+				{left: '$', right: '$', display: false},
+			],
+			throwOnError : false
+		});
+		$('.ui.text.loader').text("渲染 Shiki 中...");
+		await renderShiki();
+		
+	} catch (err) {
+		console.error("渲染失败：", err);
+	} finally {
+		const loader = document.getElementById("render-loader");
+		if (loader) loader.classList.remove("active");
+		const content = document.getElementById("render-content");
+		const container = document.getElementById("render-container");
+		content.style.display = "block";
+		container.style.minHeight = "auto";
+		$(content).transition('fade in');
+	}
+}
+
+window.addEventListener("DOMContentLoaded", () => { renderAll(); });

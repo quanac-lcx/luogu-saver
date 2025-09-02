@@ -3,12 +3,17 @@ import {generateRandomString, makeStandardResponse} from './utils.js';
 import "dotenv/config";
 import axios from "axios";
 import * as cheerio from 'cheerio';
-import logger, {debug} from "./logger.js";
+import logger from "./logger.js";
 import {createTask, updateTask} from "./task_manager.js";
+import { createHash } from 'crypto';
 
 let queue = [];
 let requestPoint = process.env.INITIAL_REQ_POINT;
 let running = 0;
+
+function hashContent(content) {
+	return createHash('sha256').update(content, 'utf8').digest('hex');
+}
 
 export async function processTask() {
 	if (!queue.length) return;
@@ -20,38 +25,90 @@ export async function processTask() {
 	const headers = task.headers;
 	const aid = task.aid;
 	const response = await sendContentRequest(url, headers, task.type);
+	await updateTask(task.id, 1, "Content fetched. Updating database...");
 	if (!response.success) {
 		logger.warn(`An error occurred when processing task #${task.id}: ${response.data.message}`);
 		await updateTask(task.id, 3, response.data.message);
-		running--
+		running--;
 		return;
 	}
 	const obj = response.data;
 	try {
 		if (task.type === 0) {
+			const [originalData] = await db.query('SELECT * FROM articles WHERE id = ?', [aid]);
+			const newHash = hashContent(obj.content);
+			if (!originalData.length) {
+				await db.execute(`
+                            INSERT INTO articles (id, title, content, author_uid,
+                                                  category, solutionFor_pid, content_hash)
+                            VALUES (?, ?, ?, ?, ?, ?, ?)
+                            ON DUPLICATE KEY UPDATE title           = VALUES(title),
+                                                    content         = VALUES(content),
+                                                    author_uid      = VALUES(author_uid),
+                                                    category        = VALUES(category),
+                                                    solutionFor_pid = VALUES(solutionFor_pid),
+                                                    content_hash    = VALUES(content_hash)`,
+					[
+						aid,
+						obj.title,
+						obj.content,
+						obj.userData.uid,
+						obj.category,
+						obj.category === 2 ? (obj.solutionFor?.pid || null) : null,
+						newHash
+					]
+				);
+			} else {
+				let oldHash = originalData[0].content_hash;
+				if (!oldHash) {
+					oldHash = hashContent(originalData[0].content);
+					await db.execute(
+						'UPDATE articles SET content_hash = ? WHERE id = ?',
+						[oldHash, aid]
+					);
+				}
+				if (originalData[0].title === obj.title && oldHash === newHash) {
+					await updateTask(task.id, 2, "The article is already up-to-date.");
+					return;
+				}
+				await db.execute(`
+                            INSERT INTO articles (id, title, content, author_uid,
+                                                  category, solutionFor_pid, content_hash)
+                            VALUES (?, ?, ?, ?, ?, ?, ?)
+                            ON DUPLICATE KEY UPDATE title           = VALUES(title),
+                                                    content         = VALUES(content),
+                                                    author_uid      = VALUES(author_uid),
+                                                    category        = VALUES(category),
+                                                    solutionFor_pid = VALUES(solutionFor_pid),
+                                                    content_hash    = VALUES(content_hash)`,
+					[
+						aid,
+						obj.title,
+						obj.content,
+						obj.userData.uid,
+						obj.category,
+						obj.category === 2 ? (obj.solutionFor?.pid || null) : null,
+						newHash
+					]
+				);
+			}
+			await updateTask(task.id, 1, "Article data updated. Updating version history...");
+			const [latestVersion] = await db.query(
+				'SELECT * FROM article_versions WHERE origin_id = ? ORDER BY version DESC LIMIT 1',
+				[aid]
+			);
+			const nextVersion = latestVersion.length ? latestVersion[0].version + 1 : 1;
 			await db.execute(`
-                        INSERT INTO articles (id, title, content, author_uid,
-                                              category, upvote, favorCount, solutionFor_pid)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                        ON DUPLICATE KEY UPDATE title           = VALUES(title),
-                                                content         = VALUES(content),
-                                                author_uid      = VALUES(author_uid),
-                                                category        = VALUES(category),
-                                                upvote          = VALUES(upvote),
-                                                favorCount      = VALUES(favorCount),
-                                                solutionFor_pid = VALUES(solutionFor_pid)`,
-				[
-					aid,
-					obj.title,
-					obj.content,
-					obj.userData.uid,
-					obj.category,
-					obj.upvote,
-					obj.favorCount,
-					obj.category === 2 ? (obj.solutionFor?.pid || null) : null
-				]
+                        INSERT INTO article_versions (origin_id, version, title, content)
+                        VALUES (?, ?, ?, ?)`,
+				[aid, nextVersion, obj.title, obj.content]
 			);
 		} else {
+			const [originalData] = await db.query('SELECT * FROM pastes WHERE id = ?', [aid]);
+			if (originalData.length && originalData[0].content === obj.content) {
+				await updateTask(task.id, 2, "The paste is already up-to-date.");
+				return;
+			}
 			await db.execute(
 				`INSERT INTO pastes (id, title, content, author_uid)
                  VALUES (?, ?, ?, ?)
@@ -61,15 +118,14 @@ export async function processTask() {
 				[aid, aid, obj.content, obj.userData.uid]
 			);
 		}
+		await updateTask(task.id, 2, "Your task has been completed successfully.");
 	} catch (error) {
 		logger.warn(`An error occurred when upserting data for task #${task.id}: ${error.message}`);
 		await updateTask(task.id, 3, error.message);
-		running--
-		return;
+	} finally {
+		running--;
+		logger.debug(`Finish processing task #${task.id}`);
 	}
-	await updateTask(task.id, 2, "Your task has been completed successfully.");
-	running--;
-	logger.debug(`Finish processing task #${task.id}`);
 }
 
 export async function c3vk(response, url, headers) {

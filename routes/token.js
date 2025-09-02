@@ -15,6 +15,9 @@ router.get('/apply', async (req, res, next) => {
 });
 
 router.post('/generate', async (req, res) => {
+	if (!req.body || !req.body.pasteId || !req.body.uid) {
+		throw new Error("Missing required parameters.");
+	}
 	const { pasteId, uid } = req.body;
 	const url = `https://www.luogu.com/paste/${pasteId}`;
 	const headers = {

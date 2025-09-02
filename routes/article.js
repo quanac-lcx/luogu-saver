@@ -68,6 +68,7 @@ router.get('/:id', async (req, res, next) => {
 		if (article.deleted) {
 			throw new Error(article.deleted_reason);
 		}
+		//const versions = await db.query('SELECT * FROM article_versions WHERE origin_id = ? ORDER BY version DESC', [article.id]);
 		const end_1 = Date.now();
 		logger.debug(`Article ${article.id} loaded from database in ${end_1 - start}ms.`);
 		const sanitized = sanitizeLatex(article.content);

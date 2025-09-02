@@ -53,16 +53,24 @@
                     </div>
                 </div>
             </div>
-            <div class="card shadow outline md-container">
-                {% if not empty %}
-                    {{ renderedContent | safe }}
-                {% else %}
-                    <div style="text-align: center; padding: 50px 0;">
-                        <i class="ui icon info circle" style="font-size: 3rem; color: gray;"></i>
-                        <div style="font-size: 1.5rem; color: gray; margin-top: 10px;">尚未保存内容</div>
-                        <div style="margin-top: 10px;">请点击上方的“更新内容”按钮以保存剪贴板内容</div>
+            <div class="card shadow outline md-container" id="render-container" style="min-height: 200px; position: relative;">
+                <div class="ui active inverted dimmer" id="render-loader">
+                    <div class="ui text loader">
+                        渲染 LaTeX 中...
                     </div>
-                {% endif %}
+                </div>
+
+                <div id="render-content" class="ui transition hidden" style="display: none;">
+                    {% if not empty %}
+                        {{ renderedContent | safe }}
+                    {% else %}
+                        <div style="text-align: center; padding: 50px 0;">
+                            <i class="ui icon info circle" style="font-size: 3rem; color: gray;"></i>
+                            <div style="font-size: 1.5rem; color: gray; margin-top: 10px;">尚未保存内容</div>
+                            <div style="margin-top: 10px;">请点击上方的“更新内容”按钮以保存剪贴板内容</div>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>

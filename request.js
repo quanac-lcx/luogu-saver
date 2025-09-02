@@ -63,6 +63,7 @@ export async function processTask() {
 	} catch (error) {
 		logger.warn(`An error occurred when upserting data for task #${task.id}: ${error.message}`);
 		await updateTask(task.id, 3, error.message);
+		running--
 		return;
 	}
 	await updateTask(task.id, 2, "Your task has been completed successfully.");

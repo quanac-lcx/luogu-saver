@@ -231,6 +231,25 @@ export function getQueuePosition(id) {
 	return -1;
 }
 
+export async function restoreQueue() {
+	const [tasks] = await db.query('SELECT * FROM tasks WHERE status = 0 OR status = 1 ORDER BY id');
+	for (const task of tasks) {
+		if (task.status === 0) {
+			queue.push({
+				id: task.id,
+				url: `https://www.luogu.com/${task.type === 0 ? 'article' : 'paste'}/${task.oid}`,
+				headers: {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36'},
+				aid: task.oid,
+				type: task.type
+			});
+			logger.debug(`Task #${task.id} restored to queue.`);
+		} else if (task.status === 1) {
+			await updateTask(task.id, 3, "The server was restarted while processing this task. Please try again.");
+			logger.debug(`Task #${task.id} was being processed during shutdown. Marked as failed.`);
+		}
+	}
+}
+
 export async function pushQueue(task) {
 	if (queue.length > process.env.QUEUE_MAX_LENGTH)
 		throw new Error('The queue is full. Please try again later.');

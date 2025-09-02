@@ -23,6 +23,7 @@ export async function processTask() {
 	if (!response.success) {
 		logger.warn(`An error occurred when processing task #${task.id}: ${response.data.message}`);
 		await updateTask(task.id, 3, response.data.message);
+		running--
 		return;
 	}
 	const obj = response.data;

@@ -1,4 +1,4 @@
-import {createHighlighter} from 'https://esm.sh/shiki@latest';
+import {createHighlighter} from 'https://fastly.jsdelivr.net/npm/shiki@latest/+esm';
 
 async function renderShiki() {
 	try {

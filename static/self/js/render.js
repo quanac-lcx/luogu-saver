@@ -4,7 +4,29 @@ async function renderShiki() {
 	try {
 		const highlighter = await createHighlighter({
 			themes: ['github-light'],
-			langs: ['cpp', 'c', 'javascript', 'python', 'html', 'css', 'java', 'typescript', 'markdown', 'json', 'sql', 'bash', 'diff', 'text']
+			langs: [
+				'cpp',
+				'c',
+				'javascript',
+				'python',
+				'html',
+				'css',
+				'java',
+				'typescript',
+				'markdown',
+				'json',
+				'sql',
+				'bash',
+				'diff',
+				'text',
+				'go',
+				'rust',
+				'haskell',
+				'php',
+				'kotlin',
+				'swift',
+				'ruby'
+			]
 		});
 		
 		document.querySelectorAll('pre').forEach(pre => {

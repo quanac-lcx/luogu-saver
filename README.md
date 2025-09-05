@@ -4,16 +4,11 @@
 
 
 ![](https://img.shields.io/badge/node-v22.18.0-brightgreen)
-![](https://img.shields.io/github/last-commit/luogu-saver-dev/luogu-saver)
-![](https://www.codefactor.io/repository/github/luogu-saver-dev/luogu-saver/badge)
-![](https://img.shields.io/github/license/luogu-saver-dev/luogu-saver)
+![](https://img.shields.io/github/last-commit/laikit-dev/luogu-saver)
+![](https://www.codefactor.io/repository/github/laikit-dev/luogu-saver/badge)
+![](https://img.shields.io/github/license/laikit-dev/luogu-saver)
 
-洛谷保存站**新前端**开源代码。
-
-~~旧保存站反馈：<https://github.com/luogu-saver-dev/Old-Saver-Feedback>~~
-
-> [!WARNING]
-> 注意：旧前端已经停止维护。
+洛谷保存站开源代码。
 
 ## 特性
 
@@ -24,11 +19,11 @@
 ### 使用
 
 ```bash
-git clone https://www.github.com/luogo-saver-dev/luogu-saver.git
+git clone https://www.github.com/laikit-dev/luogu-saver.git
 cd luogu-saver
 npm install
 node app.js
 ```
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=luogu-saver-dev/luogu-saver&type=Date)](https://www.star-history.com/#luogu-saver-dev/luogu-saver&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=laikit-dev/luogu-saver&type=Date)](https://www.star-history.com/#laikit-dev/luogu-saver&Date)

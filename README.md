@@ -1,29 +1,42 @@
-中文 | [English](README_en.md)
+<div align="center">
+  <h1>Luogu Saver</h1>
+  <p>简体中文 | <a href="README.en.md">English</a></p>
+  <p>
+    <img src="https://img.shields.io/badge/node-v22.18.0-brightgreen" />
+    <img src="https://img.shields.io/github/last-commit/laikit-dev/luogu-saver" />
+    <img src="https://www.codefactor.io/repository/github/laikit-dev/luogu-saver/badge" />
+    <img src="https://img.shields.io/github/license/laikit-dev/luogu-saver" />
+  </p>
+</div>
 
-# Luogu-Saver
-
-
-![](https://img.shields.io/badge/node-v22.18.0-brightgreen)
-![](https://img.shields.io/github/last-commit/laikit-dev/luogu-saver)
-![](https://www.codefactor.io/repository/github/laikit-dev/luogu-saver/badge)
-![](https://img.shields.io/github/license/laikit-dev/luogu-saver)
+## 简介
 
 洛谷保存站开源代码。
 
 ## 特性
 
-- 基于 NodeJS 22 实现
+- 基于 Node.js 22 实现
 - 前端采用 Nunjucks + SemanticUI
 - 后端使用 Express + MySQL
 
-### 使用
+## 使用
 
 ```bash
-git clone https://www.github.com/laikit-dev/luogu-saver.git
+git clone https://github.com/laikit-dev/luogu-saver.git
 cd luogu-saver
 npm install
 node app.js
 ```
+
+## 许可协议
+
+本项目遵循 [GPL-3.0 许可协议](LICENSE)。
+
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=laikit-dev/luogu-saver&type=Date)](https://www.star-history.com/#laikit-dev/luogu-saver&Date)
+<a href="https://www.star-history.com/#laikit-dev/luogu-saver&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=laikit-dev/luogu-saver&type=Date&theme=dark">
+    <img src="https://api.star-history.com/svg?repos=laikit-dev/luogu-saver&type=Date&theme=light" alt="Star History Chart">
+  </picture>
+</a>

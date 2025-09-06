@@ -9,6 +9,8 @@
   </p>
 </div>
 
+![](https://xland.eu.org/autoupload/f/go0xDZuFmGNrsTWJ7puX4UseuoJKLu4FmQh0o6csZq4/saver/homePage.png)
+
 ## Introduction
 
 Open source code for Luogu Saver's frontend.

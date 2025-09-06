@@ -7,13 +7,8 @@
 ![](https://www.codefactor.io/repository/github/luogu-saver-dev/luogu-saver/badge)
 ![](https://img.shields.io/github/license/luogu-saver-dev/luogu-saver)
 
-Open source code for Luogu Saver's new frontend.
+Open source code for Luogu Saver's frontend.
 
-> ~~For feedback regarding the legacy saver site, please visit:  
-> [Old-Saver-Feedback Repository](https://github.com/luogu-saver-dev/Old-Saver-Feedback)~~
-
-> [!WARNING]
-> Note: The old frontend has stopped maintenance.
 ## Highlights
 
 - Built with Node.js 22

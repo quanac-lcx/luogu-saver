@@ -13,7 +13,7 @@
 
 Open source code for Luogu Saver's frontend.
 
-## Highlights
+## Features
 
 - Built with Node.js 22
 - Frontend: Nunjucks + SemanticUI
@@ -35,8 +35,9 @@ This project licensed under [GPL-3.0 license](LICENSE).
 ## Star History
 
 <a href="https://www.star-history.com/#laikit-dev/luogu-saver&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=laikit-dev/luogu-saver&type=Date&theme=dark">
-    <img src="https://api.star-history.com/svg?repos=laikit-dev/luogu-saver&type=Date&theme=light" alt="Star History Chart">
-  </picture>
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=laikit-dev/luogu-saver&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=laikit-dev/luogu-saver&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=laikit-dev/luogu-saver&type=Date" />
+ </picture>
 </a>

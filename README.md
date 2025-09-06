@@ -19,7 +19,7 @@
 - 前端采用 Nunjucks + SemanticUI
 - 后端使用 Express + MySQL
 
-## 使用
+## 开始
 
 ```bash
 git clone https://github.com/laikit-dev/luogu-saver.git

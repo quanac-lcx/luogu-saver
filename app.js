@@ -37,7 +37,7 @@ app.use(auth);
 app.use((req, res, next) => { res.locals.user = req.user; next(); });
 
 app.use((req, res, next) => {
-	logger.info(`${req.realIP} ${req.method} ${req.originalUrl} ${(!req.body || JSON.stringify(req.body) === '{}') ? '' : JSON.stringify(req.body)}`);
+	logger.info(`${req.realIP} ${req.user.id ? req.user.id + ' ' : ''}${req.method} ${req.originalUrl} ${(!req.body || JSON.stringify(req.body) === '{}') ? '' : JSON.stringify(req.body)}`);
 	next();
 });
 

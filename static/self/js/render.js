@@ -89,7 +89,7 @@ async function renderAll() {
 			],
 			throwOnError : false
 		});
-		$('.ui.text.loader').text("渲染 Shiki 中...");
+		$('.ui.text.loader').text("渲染代码块中...");
 		await renderShiki();
 		
 	} catch (err) {

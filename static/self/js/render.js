@@ -18,12 +18,10 @@ async function renderShiki() {
 				'sql',
 				'bash',
 				'diff',
-				'text',
 				'go',
 				'rust',
 				'haskell',
 				'php',
-				'kotlin',
 				'swift',
 				'ruby'
 			]
@@ -83,6 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function renderAll() {
 	try {
+		$('.ui.text.loader').text("渲染 LaTeX 中...");
 		renderMathInElement(document.body, {
 			delimiters: [
 				{left: '$$', right: '$$', display: true},
@@ -90,7 +89,7 @@ async function renderAll() {
 			],
 			throwOnError : false
 		});
-		$('.ui.text.loader').text("渲染 Shiki 中...");
+		$('.ui.text.loader').text("渲染代码块中...");
 		await renderShiki();
 		
 	} catch (err) {

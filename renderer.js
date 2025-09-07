@@ -83,10 +83,43 @@ export function createMarkdownRenderer() {
 			return s.split('<table>').join('<div class="table-container"><table class="ui structured celled table">')
 				.split('</table>').join('</table></div>');
 		}
-		const processed = src.split(/\r?\n/).map(preprocessLine).join("\n");
-		const result = replaceUI(md.render(processed));
+		const preprocessed = src.split(/\r?\n/).map(preprocessLine).join("\n");
+		let mathBlocks = [];
+		let codeBlocks = [];
+		let mathRegex = /\$\$([\s\S]*?)\$\$|\$([^\$]+?)\$/g;
+		var codeRegex = /((?:^|\n)(`{3,}|~{3,})[^\n]*\n[\s\S]*?\n\2(?=\n|$))|(`+)([\s\S]*?)\3/g;
+		
+		let processedMarkdown = preprocessed.replace(codeRegex, function(match) {
+			codeBlocks.push(match);
+			return 'CODE_BLOCK_' + (codeBlocks.length - 1) + '_';
+		});
+		
+		processedMarkdown = processedMarkdown.replace(mathRegex, function(match, block, inline) {
+			mathBlocks.push(match);
+			let index = mathBlocks.length - 1;
+			if (block !== undefined) {
+				return 'MATH_BLOCK_DISPLAY_' + index + '_';
+			} else {
+				return 'MATH_BLOCK_INLINE_' + index + '_';
+			}
+		});
+		
+		for (let i = 0; i < codeBlocks.length; i++) {
+			let placeholder = 'CODE_BLOCK_' + i + '_';
+			let regex = new RegExp(placeholder, 'g');
+			processedMarkdown = processedMarkdown.replace(regex, codeBlocks[i]);
+		}
+		
+		let result = replaceUI(md.render(processedMarkdown));
+		for (let i = 0; i < mathBlocks.length; i++) {
+			let displayPlaceholder = new RegExp('MATH_BLOCK_DISPLAY_' + i + '_', 'g');
+			let inlinePlaceholder  = new RegExp('MATH_BLOCK_INLINE_' + i + '_', 'g');
+			result = result.replace(displayPlaceholder, `$${mathBlocks[i]}$`);
+			result = result.replace(inlinePlaceholder, mathBlocks[i]);
+		}
 		const endTime = Date.now();
 		logger.debug(`Markdown rendered in ${endTime - startTime}ms. Size: ${size} bytes.`);
+		console.log(result);
 		return result;
 	}
 	

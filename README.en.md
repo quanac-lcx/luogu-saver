@@ -1,6 +1,6 @@
 <div align="center">
   <h1>Luogu Saver</h1>
-  <p>简体中文 | <a href="README.en.md">English</a></p>
+  <p><a href="README.md">简体中文</a> | English</p>
   <p>
     <img src="https://img.shields.io/badge/node-v22.18.0-brightgreen" />
     <img src="https://img.shields.io/github/last-commit/laikit-dev/luogu-saver" />
@@ -11,17 +11,17 @@
 
 ![](https://xland.eu.org/autoupload/f/go0xDZuFmGNrsTWJ7puX4UseuoJKLu4FmQh0o6csZq4/saver/homePage.png)
 
-## 简介
+## Introduction
 
-洛谷保存站开源代码。
+Open source code for Luogu Saver's frontend.
 
-## 特性
+## Features
 
-- 基于 Node.js 22 实现
-- 前端采用 Nunjucks + SemanticUI
-- 后端使用 Express + MySQL
+- Built with Node.js 22
+- Frontend: Nunjucks + SemanticUI
+- Backend: Express + MySQL
 
-## 开始
+## Getting Started
 
 ```bash
 git clone https://github.com/laikit-dev/luogu-saver.git
@@ -30,11 +30,11 @@ npm install
 node app.js
 ```
 
-## 许可协议
+## License
 
-本项目遵循 [GPL-3.0 许可协议](LICENSE)。
+This project licensed under [GPL-3.0 license](LICENSE).
 
-## Star 趋势
+## Star History
 
 <a href="https://www.star-history.com/#laikit-dev/luogu-saver&Date">
  <picture>

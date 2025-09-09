@@ -2,7 +2,7 @@ import express from 'express';
 import db from '../db.js';
 import {formatDate, makeStandardResponse} from "../utils.js";
 import logger from "../logger.js";
-import {getQueuePosition} from "../request.js";
+import {getQueuePosition} from "../worker.js";
 
 const router = express.Router();
 

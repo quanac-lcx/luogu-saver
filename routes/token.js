@@ -2,7 +2,7 @@ import express from 'express';
 import db from '../db.js';
 import logger from "../logger.js";
 import {makeStandardResponse} from "../utils.js";
-import {sendContentRequest} from "../request.js";
+import {sendContentRequest} from "../worker.js";
 
 const router = express.Router();
 

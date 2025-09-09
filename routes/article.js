@@ -2,7 +2,7 @@ import express from 'express';
 import db from '../db.js';
 import {formatDate, makeStandardResponse, sanitizeLatex} from '../utils.js';
 import { createMarkdownRenderer } from "../renderer.js";
-import {pushQueue} from "../request.js";
+import {pushQueue} from "../worker.js";
 import logger from "../logger.js";
 
 const router = express.Router();

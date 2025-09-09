@@ -11,7 +11,7 @@ import taskRouter from './routes/task.js';
 import tokenRouter from './routes/token.js';
 import userRouter from './routes/user.js';
 import apiRouter from './routes/api.js';
-import {processQueue, requestPointTick, restoreQueue} from "./request.js";
+import {processQueue, requestPointTick, restoreQueue} from "./worker.js";
 import db from "./db.js";
 import auth from "./middleware/auth.js";
 import {scheduleJob} from "node-schedule";

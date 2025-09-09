@@ -1,7 +1,6 @@
 import markdownit from "markdown-it";
 import markdownItAttrs from "markdown-it-attrs";
 import markdownItContainer from "markdown-it-container";
-import logger from "./logger.js";
 
 export function createMarkdownRenderer() {
 	const md = markdownit({
@@ -87,7 +86,7 @@ export function createMarkdownRenderer() {
 		let mathBlocks = [];
 		let codeBlocks = [];
 		let mathRegex = /\$\$([\s\S]*?)\$\$|\$([^\$]+?)\$/g;
-		var codeRegex = /((?:^|\n)(`{3,}|~{3,})[^\n]*\n[\s\S]*?\n\2(?=\n|$))|(`+)([\s\S]*?)\3/g;
+		let codeRegex = /((?:^|\n)(`{3,}|~{3,})[^\n]*\n[\s\S]*?\n\2(?=\n|$))|(`+)([\s\S]*?)\3/g;
 		
 		let processedMarkdown = preprocessed.replace(codeRegex, function(match) {
 			codeBlocks.push(match);

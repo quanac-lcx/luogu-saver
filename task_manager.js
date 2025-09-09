@@ -1,8 +1,5 @@
-import db from "./db.js";
-import {generateRandomString} from "./utils.js";
-
 export async function createTask(task) {
-	const id = generateRandomString();
+	const id = utils.generateRandomString();
 	await db.execute(`
 		INSERT INTO tasks (id, status, info, expire_time, oid, type)
 		VALUES (?, 0, 'Your task is in the queue.', DATE_ADD(NOW(), INTERVAL 7 DAY), ?, ?)

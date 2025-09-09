@@ -139,10 +139,10 @@
 					const res = await fetch(`/task/query?id={{ task.id }}`);
 					if (!res.ok) return;
 					const data = await res.json();
-					infoEl.textContent = data.data.tasks[0].info;
-					expireEl.textContent = data.data.tasks[0].expire_time;
-					setStatus(data.data.tasks[0].status, data.data.tasks[0].position);
-					if (data.data.tasks[0].status === "Completed") {
+					infoEl.textContent = data.tasks[0].info;
+					expireEl.textContent = data.tasks[0].expire_time;
+					setStatus(data.tasks[0].status, data.tasks[0].position);
+					if (data.tasks[0].status === "Completed") {
                         clearInterval(id);
                         document.getElementById("goto-btn").disabled = false;
                     }

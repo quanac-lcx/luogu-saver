@@ -1,6 +1,4 @@
-import logger from '../logger.js';
 import 'dotenv/config';
-import {formatDate, makeStandardResponse} from "../utils.js";
 
 let bannedIPs = {};
 let requestHistory = {};
@@ -18,10 +16,10 @@ const filterIPs = (req, res, next) => {
 		if (bannedIPs[req.realIP] || requestHistory[req.realIP].length >= process.env.RATE_LIMIT) {
 			if (!bannedIPs[req.realIP]) {
 				bannedIPs[req.realIP] = now + parseInt(process.env.BAN_DURATION);
-				logger.warn(`IP ${req.realIP} is banned until ${formatDate(new Date(bannedIPs[req.realIP]))}`);
+				logger.warn(`IP ${req.realIP} is banned until ${utils.formatDate(new Date(bannedIPs[req.realIP]))}`);
 			}
-			const pardonTime = formatDate(new Date(bannedIPs[req.realIP]));
-			res.json(makeStandardResponse(false, { message: "Your IP address is blocked until " + pardonTime + "." }));
+			const pardonTime = utils.formatDate(new Date(bannedIPs[req.realIP]));
+			res.json(utils.makeResponse(false, { message: "Your IP address is blocked until " + pardonTime + "." }));
 			return;
 		}
 		requestHistory[req.realIP].push(now);

@@ -105,7 +105,7 @@
 					showError("接口返回失败");
 					return;
 				}
-				const data = json.data;
+				const data = json;
 				updateCards(data);
 				const articlesSeries = data.time_series.articles;
 				const pastesSeries   = data.time_series.pastes;

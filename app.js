@@ -11,13 +11,16 @@ import taskRouter from './routes/task.js';
 import tokenRouter from './routes/token.js';
 import userRouter from './routes/user.js';
 import apiRouter from './routes/api.js';
-import {processQueue, requestPointTick, restoreQueue} from "./worker.js";
+import indexRouter from './routes/index.js';
+import * as worker from "./worker.js";
+import * as renderer from "./renderer.js";
 import db from "./db.js";
 import auth from "./middleware/auth.js";
 import {scheduleJob} from "node-schedule";
 import fs from "fs/promises";
 import path from "path";
 import axios from "axios";
+import * as utils from "./utils.js";
 
 const app = express();
 const port = process.env.PORT || 55086;
@@ -41,34 +44,7 @@ app.use((req, res, next) => {
 	next();
 });
 
-app.get('/', async (req, res) => {
-	const [articlesCountResult] = await db.query('SELECT COUNT(*) as count FROM articles');
-	const [pastesCountResult] = await db.query('SELECT COUNT(*) as count FROM pastes');
-	const articlesCount = articlesCountResult[0].count;
-	const pastesCount = pastesCountResult[0].count;
-	res.render('index.njk', { title: "首页", paste_count: pastesCount, article_count: articlesCount });
-});
-
-app.get('/search', (req, res) => {
-	res.render('search.njk', { title: "搜索" });
-});
-
-app.get('/privacy', (req, res) => {
-	res.render('privacy.njk', { title: "隐私协议" });
-});
-
-app.get('/disclaimer', (req, res) => {
-	res.render('disclaimer.njk', { title: "免责声明" });
-});
-
-app.get('/deletion', (req, res) => {
-	res.render('deletion.njk', { title: "数据移除政策" });
-});
-
-app.get('/statistic', (req, res) => {
-	res.render('statistic.njk', { title: "统计" });
-});
-
+app.use('/', indexRouter);
 app.use('/article', articleRouter);
 app.use('/paste', pasteRouter);
 app.use('/task', taskRouter);
@@ -81,8 +57,14 @@ app.use((err, req, res, next) => {
 	res.render('error.njk', { title: "错误", error_message: err.message });
 });
 
-requestPointTick();
-processQueue();
+global.utils = utils;
+global.logger = logger;
+global.db = db;
+global.worker = worker;
+global.renderer = renderer;
+
+worker.requestPointTick();
+worker.processQueue();
 
 async function updateBeacon() {
 	const url = "https://static.cloudflareinsights.com/beacon.min.js";
@@ -117,7 +99,7 @@ scheduleJob('0 * * * *', async () => {
 	}
 })
 
-restoreQueue().then(() => {
+worker.restoreQueue().then(() => {
 	app.listen(port, () => {
 		logger.info("Server is running on port " + port);
 	})

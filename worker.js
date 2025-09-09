@@ -1,9 +1,6 @@
-import db from './db.js';
-import {generateRandomString, makeStandardResponse} from './utils.js';
 import "dotenv/config";
 import axios from "axios";
 import * as cheerio from 'cheerio';
-import logger from "./logger.js";
 import {createTask, updateTask} from "./task_manager.js";
 import { createHash } from 'crypto';
 
@@ -22,17 +19,17 @@ export async function processTask() {
 	logger.debug(`Start to process task #${task.id}. Type: ${task.type}`);
 	await updateTask(task.id, 1, "We are processing your task.");
 	const url = task.url;
-	const headers = task.headers;
+	const headers = task.headers || defaultHeaders;
 	const aid = task.aid;
 	const response = await sendContentRequest(url, headers, task.type);
 	await updateTask(task.id, 1, "Content fetched. Updating database...");
 	if (!response.success) {
-		logger.warn(`An error occurred when processing task #${task.id}: ${response.data.message}`);
-		await updateTask(task.id, 3, response.data.message);
+		logger.warn(`An error occurred when processing task #${task.id}: ${response.message}`);
+		await updateTask(task.id, 3, response.message);
 		running--;
 		return;
 	}
-	const obj = response.data;
+	const obj = response;
 	try {
 		if (task.type === 0) {
 			const [originalData] = await db.query('SELECT * FROM articles WHERE id = ?', [aid]);
@@ -173,7 +170,7 @@ function getResponseUser(response) {
 	};
 }
 
-export async function sendContentRequest(url, headers, type = 0) {
+export async function sendContentRequest(url, headers = defaultHeaders, type = 0) {
 	try {
 		const startTime = Date.now();
 		let response = await axios.get(url + "?_contentOnly=1", headers);
@@ -197,11 +194,11 @@ export async function sendContentRequest(url, headers, type = 0) {
 		}
 		const endTime = Date.now();
 		logger.debug(`Content fetched from ${url.split('?')[0]} in ${endTime - startTime}ms`);
-		return makeStandardResponse(true, obj);
+		return utils.makeResponse(true, obj);
 	}
 	catch(error) {
 		logger.warn(`Error fetching content from ${url.split('?')[0]}: ${error.message}`);
-		return makeStandardResponse(false, { message: error.message });
+		return utils.makeResponse(false, { message: error.message });
 	}
 }
 
@@ -238,7 +235,7 @@ export async function restoreQueue() {
 			queue.push({
 				id: task.id,
 				url: `https://www.luogu.com/${task.type === 0 ? 'article' : 'paste'}/${task.oid}`,
-				headers: {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36'},
+				headers: defaultHeaders,
 				aid: task.oid,
 				type: task.type
 			});
@@ -258,3 +255,7 @@ export async function pushQueue(task) {
 	queue.push(task);
 	return task.id;
 }
+
+export const defaultHeaders = {
+	'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36'
+};

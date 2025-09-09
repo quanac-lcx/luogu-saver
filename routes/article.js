@@ -1,9 +1,4 @@
 import express from 'express';
-import db from '../db.js';
-import {formatDate, makeStandardResponse, sanitizeLatex} from '../utils.js';
-import { createMarkdownRenderer } from "../renderer.js";
-import {pushQueue} from "../worker.js";
-import logger from "../logger.js";
 
 const router = express.Router();
 
@@ -29,8 +24,8 @@ router.get('/recent', async (req, res, next) => {
 		);
 		let articles = rows;
 		articles.map((article) => {
-			article.updated_at = formatDate(article.updated_at);
-			article.created_at = formatDate(article.created_at);
+			article.updated_at = utils.formatDate(article.updated_at);
+			article.created_at = utils.formatDate(article.created_at);
 			article.summary = article.content.slice(0, 200);
 			article.tags = JSON.parse(article.tags);
 			return article;
@@ -62,8 +57,8 @@ router.get('/:id', async (req, res, next) => {
 		}
 		const article = await loadRelationships({
 			...rows[0],
-			updated_at: formatDate(rows[0].updated_at),
-			created_at: formatDate(rows[0].created_at),
+			updated_at: utils.formatDate(rows[0].updated_at),
+			created_at: utils.formatDate(rows[0].created_at),
 		});
 		if (article.deleted) {
 			throw new Error(article.deleted_reason);
@@ -71,8 +66,8 @@ router.get('/:id', async (req, res, next) => {
 		//const versions = await db.query('SELECT * FROM article_versions WHERE origin_id = ? ORDER BY version DESC', [article.id]);
 		const end_1 = Date.now();
 		logger.debug(`Article ${article.id} loaded from database in ${end_1 - start}ms.`);
-		const sanitized = sanitizeLatex(article.content);
-		const renderedContent = createMarkdownRenderer().renderMarkdown(sanitized);
+		const sanitized = utils.sanitizeLatex(article.content);
+		const renderedContent = renderer.createMarkdownRenderer().renderMarkdown(sanitized);
 		const end_2 = Date.now();
 		logger.debug(`Article ${article.id} loaded in ${end_2 - start}ms.`);
 		res.render('article.njk', { title: `${article.title}`, article, renderedContent, empty: false });
@@ -86,14 +81,11 @@ router.get('/save/:id', async (req, res) => {
 		const s = req.params.id;
 		if (s.length !== 8) throw new Error('Invalid article ID.');
 		const url = `https://www.luogu.com/article/${s}`;
-		const headers = {
-			'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36'
-		};
-		const id = await pushQueue({ url, headers, aid: s, type: 0 });
-		res.send(makeStandardResponse(true, { message: "Request queued.", result: id })).end();
+		const id = await worker.pushQueue({ url, aid: s, type: 0 });
+		res.send(utils.makeResponse(true, { message: "Request queued.", result: id }));
 	} catch (error) {
 		logger.warn('An error occurred when saving article: ' + error.message);
-		res.send(makeStandardResponse(false, { message: error.message })).end();
+		res.send(utils.makeResponse(false, { message: error.message }));
 	}
 });
 

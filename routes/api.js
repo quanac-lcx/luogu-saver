@@ -1,7 +1,4 @@
 import express from 'express';
-import db from "../db.js";
-import {formatDate, makeStandardResponse} from "../utils.js";
-import logger from "../logger.js";
 
 const router = express.Router();
 
@@ -19,7 +16,7 @@ router.get('/statistic', async (req, res) => {
 			);
 			const dailyMap = {};
 			dailyData.forEach(item => {
-				const dateStr = formatDate(item.date);
+				const dateStr = utils.formatDate(item.date);
 				dailyMap[dateStr] = item.count;
 			});
 			let cumulativeCount = 0;
@@ -29,7 +26,7 @@ router.get('/statistic', async (req, res) => {
 			const today = new Date();
 			today.setHours(0, 0, 0, 0);
 			while (currentDate <= today) {
-				const dateStr = formatDate(currentDate);
+				const dateStr = utils.formatDate(currentDate);
 				const dayCount = dailyMap[dateStr] || 0;
 				cumulativeCount += dayCount;
 				result.push({
@@ -61,7 +58,7 @@ router.get('/statistic', async (req, res) => {
 		const todayPastes = todayPastesResult[0].count;
 		const articlesData = await getTimeSeriesData('articles');
 		const pastesData = await getTimeSeriesData('pastes');
-		res.json(makeStandardResponse(
+		res.json(utils.makeResponse(
 			true,
 			{
 				articles_total: articlesCount,
@@ -76,7 +73,7 @@ router.get('/statistic', async (req, res) => {
 		));
 	} catch (error) {
 		logger.warn(`An error occurred while fetching statistics: ${error.message}`);
-		res.json(makeStandardResponse(false, {message: error.message}));
+		res.json(utils.makeResponse(false, { message: error.message }));
 	}
 });
 

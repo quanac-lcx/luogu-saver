@@ -13,8 +13,8 @@ export function formatDate(date, format = "YYYY-MM-DD HH:mm:ss") {
 	return format.replace(/YYYY|MM|DD|HH|mm|ss/g, (matched) => map[matched]);
 }
 
-export function makeStandardResponse(success, data) {
-	return { success, data };
+export function makeResponse(success, data) {
+	return { success, ...data };
 }
 
 export function generateRandomString(length = 8) {

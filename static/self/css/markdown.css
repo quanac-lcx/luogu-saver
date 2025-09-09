@@ -91,11 +91,15 @@ code {
 
 .md-block .md-block-title {
     font-weight: 700;
-    margin-bottom: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
+
+.md-block {
+    margin-bottom: 8px;
+}
+
 .md-block .md-block-body {
     margin-top: 4px;
 }

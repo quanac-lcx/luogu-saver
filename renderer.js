@@ -119,7 +119,6 @@ export function createMarkdownRenderer() {
 		}
 		const endTime = Date.now();
 		logger.debug(`Markdown rendered in ${endTime - startTime}ms. Size: ${size} bytes.`);
-		console.log(result);
 		return result;
 	}
 	

@@ -55,7 +55,7 @@
             </div>
             <div class="card shadow outline md-container" id="render-container" style="min-height: 200px; position: relative;">
                 <div class="ui active inverted dimmer" id="render-loader">
-                    <div class="ui text loader">
+                    <div class="ui text loader" id="render-loader">
                         等待网页内容加载完成...
                     </div>
                 </div>
@@ -74,4 +74,9 @@
             </div>
         </div>
     </div>
+    <script>
+		setTimeout(() => {
+			$('#loader-text').text('如果长时间未加载完成，请尝试 Ctrl+F5 刷新浏览器缓存。');
+		}, 10000);
+    </script>
 {% endblock %}

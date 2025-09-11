@@ -109,12 +109,19 @@ export function createMarkdownRenderer() {
 			processedMarkdown = processedMarkdown.replace(regex, codeBlocks[i]);
 		}
 		
+		function escapeHtmlInMath(str) {
+			return str
+				.replace(/&/g, "&amp;")
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;");
+		}
+		
 		let result = replaceUI(md.render(processedMarkdown));
 		for (let i = 0; i < mathBlocks.length; i++) {
 			let displayPlaceholder = new RegExp('MATH_BLOCK_DISPLAY_' + i + '_', 'g');
 			let inlinePlaceholder  = new RegExp('MATH_BLOCK_INLINE_' + i + '_', 'g');
-			result = result.replace(displayPlaceholder, `$${mathBlocks[i]}$`);
-			result = result.replace(inlinePlaceholder, mathBlocks[i]);
+			result = result.replace(displayPlaceholder, `$${escapeHtmlInMath(mathBlocks[i])}$`);
+			result = result.replace(inlinePlaceholder, escapeHtmlInMath(mathBlocks[i]));
 		}
 		const endTime = Date.now();
 		logger.debug(`Markdown rendered in ${endTime - startTime}ms. Size: ${size} bytes.`);

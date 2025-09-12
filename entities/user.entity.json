@@ -1,0 +1,9 @@
+{
+    "name": "User",
+    "tableName": "user",
+    "columns": {
+        "id": { "type": "int", "unsigned": true, "primary": true },
+        "name": { "type": "varchar", "length": 255, "nullable": true },
+        "color": { "type": "varchar", "length": 50, "nullable": true }
+    }
+}

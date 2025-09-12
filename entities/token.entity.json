@@ -1,0 +1,13 @@
+{
+    "name": "Token",
+    "tableName": "token",
+    "columns": {
+        "id": { "type": "varchar", "length": 32, "primary": true },
+        "uid": { "type": "int", "nullable": false },
+        "role": { "type": "int", "nullable": false },
+        "created_at": { "type": "timestamp", "default": "CURRENT_TIMESTAMP", "nullable": false }
+    },
+    "uniques": [
+        { "name": "uid", "columns": ["uid"] }
+    ]
+}

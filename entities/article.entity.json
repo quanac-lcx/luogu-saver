@@ -1,0 +1,28 @@
+{
+    "name": "Article",
+    "tableName": "article",
+    "columns": {
+        "id": { "type": "varchar", "length": 8, "primary": true },
+        "title": { "type": "varchar", "length": 255, "nullable": false },
+        "content": { "type": "mediumtext", "nullable": true },
+        "author_uid": { "type": "int", "unsigned":  true, "nullable": true },
+        "category": { "type": "int", "nullable": true },
+        "upvote": { "type": "int", "nullable": true },
+        "favorCount": { "type": "int", "nullable": true },
+        "solutionFor_pid": { "type": "varchar", "length": 50, "nullable": true },
+        "created_at": { "type": "timestamp", "default": "CURRENT_TIMESTAMP", "nullable": false },
+        "updated_at": { "type": "timestamp", "default": "CURRENT_TIMESTAMP", "onUpdate": "CURRENT_TIMESTAMP", "nullable": false },
+        "priority": { "type": "int", "default": 0, "nullable": false },
+        "tags": { "type": "longtext", "nullable": true },
+        "deleted": { "type": "tinyint", "default": 0, "nullable": false },
+        "deleted_reason": { "type": "varchar", "length": 255, "default": "作者要求删除", "nullable": false },
+        "content_hash": { "type": "text", "nullable": true }
+    },
+    "indices": [
+        { "name": "idx_articles_author", "columns": ["author_uid"] },
+        { "name": "idx_articles_deleted_priority_updated_at", "columns": ["deleted", "priority", "updated_at"] },
+        { "name": "idx_created_at", "columns": ["created_at"] },
+        { "name": "idx_priority", "columns": ["priority"] },
+        { "name": "idx_updated_at", "columns": ["updated_at"] }
+    ]
+}

@@ -1,4 +1,5 @@
 import express from 'express';
+import Paste from "../models/paste.js";
 
 const router = express.Router();
 
@@ -15,8 +16,8 @@ router.get('/:id', async (req, res, next) => {
 	try {
 		const { id } = req.params;
 		if (id.length !== 8) throw new Error('Invalid article ID.');
-		const [rows] = await db.query('SELECT * FROM pastes WHERE id = ?', [id]);
-		if (rows.length === 0) {
+		const paste = Paste.findById(id);
+		if (paste) {
 			res.render('paste.njk', {
 				title: "保存剪贴板",
 				paste: {
@@ -29,11 +30,8 @@ router.get('/:id', async (req, res, next) => {
 			});
 			return next();
 		}
-		const paste = await loadRelationships({
-			...rows[0],
-			updated_at: utils.formatDate(rows[0].updated_at),
-			created_at: utils.formatDate(rows[0].created_at),
-		});
+		await paste.loadRelationships();
+		paste.formatDate();
 		if (paste.deleted) {
 			throw new Error(paste.deleted_reason);
 		}

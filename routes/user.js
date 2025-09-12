@@ -1,4 +1,5 @@
 import express from 'express';
+import Token from '../models/token.js';
 
 const router = express.Router();
 
@@ -15,13 +16,13 @@ router.post('/login', async (req, res, next) => {
 	if (!req.body || !req.body.token) {
 		throw new Error('Token is required.');
 	}
-	const { token } = req.body;
+	const tokenText = req.body.token;
 	try {
-		const [rows] = await db.query('SELECT * FROM token WHERE id = ?', [token]);
-		if (rows.length === 0) {
+		const token = await Token.findById(tokenText);
+		if (!token) {
 			throw new Error('Invalid token.');
 		}
-		res.cookie('token', token, { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000 });
+		res.cookie('token', tokenText, { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000 });
 		res.json(utils.makeResponse(true));
 	} catch (error) {
 		res.json(utils.makeResponse(false, { message: error.message }));

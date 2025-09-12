@@ -1,17 +1,22 @@
+import Task from "./models/task.js";
+
 export async function createTask(task) {
 	const id = utils.generateRandomString();
-	await db.execute(`
-		INSERT INTO tasks (id, status, info, expire_time, oid, type)
-		VALUES (?, 0, 'Your task is in the queue.', DATE_ADD(NOW(), INTERVAL 7 DAY), ?, ?)
-		ON DUPLICATE KEY UPDATE status = 0
-	`, [id, task.aid, task.type]);
+	const newTask = Task.create({
+		id,
+		status: 0,
+		info: 'Your task is in the queue.',
+		expire_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+		oid: task.aid,
+		type: task.type
+	});
+	await newTask.save();
 	return id;
 }
 
 export async function updateTask(id, status, info = "") {
-	await db.execute(`
-		UPDATE tasks
-		SET status = ?, info = ?
-		WHERE id = ?
-	`, [status, info, id]);
+	const task = await Task.findById(id);
+	task.status = status;
+	task.info = info;
+	await task.save();
 }

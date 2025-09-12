@@ -1,0 +1,18 @@
+{
+    "name": "ArticleVersion",
+    "tableName": "article_version",
+    "columns": {
+        "id": { "type": "int", "primary": true, "generated": true },
+        "origin_id": { "type": "varchar", "length": 8, "nullable": false },
+        "version": { "type": "int", "nullable": false },
+        "content": { "type": "mediumtext", "nullable": true },
+        "created_at": { "type": "timestamp", "default": "CURRENT_TIMESTAMP", "nullable": false },
+        "title": { "type": "text", "nullable": false }
+    },
+    "uniques": [
+        { "name": "version", "columns": ["version", "origin_id"] }
+    ],
+    "indices": [
+        { "name": "idx_article_time", "columns": ["origin_id", "created_at"] }
+    ]
+}

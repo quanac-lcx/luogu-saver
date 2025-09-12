@@ -1,4 +1,5 @@
 import express from 'express';
+import Token from '../models/token.js';
 
 const router = express.Router();
 
@@ -28,12 +29,16 @@ router.post('/generate', async (req, res) => {
 		if (parseInt(uid) !== value.userData.uid) {
 			throw new Error("UID does not match.");
 		}
-		const token = [...Array(32)].map(() => Math.random().toString(36)[2]).join('');
-		await db.execute(`
-			INSERT INTO token (id, uid, role) VALUES (?, ?, 0)
-			ON DUPLICATE KEY UPDATE uid = VALUES(uid), id = VALUES(id), role = VALUES(role)
-		`, [token, uid]);
-		res.json(utils.makeResponse(true, { token }));
+		const tokenText = utils.generateRandomString(32);
+		let token = await Token.findOne({ where: { uid: parseInt(uid) } });
+		if (token) await token.remove();
+		token = Token.create({
+			id: tokenText,
+			uid: parseInt(uid),
+			role: 0
+		});
+		await token.save();
+		res.json(utils.makeResponse(true, { token: tokenText }));
 	} catch (error) {
 		logger.warn(`An error occurred while generating token: ${error.message}`);
 		res.json(utils.makeResponse(false, { message: error.message || "Failed to generate token." }));

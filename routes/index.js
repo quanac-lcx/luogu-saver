@@ -1,12 +1,12 @@
 import express from "express";
+import Article from "../models/article.js";
+import Paste from "../models/paste.js";
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-	const [articlesCountResult] = await db.query('SELECT COUNT(*) as count FROM articles');
-	const [pastesCountResult] = await db.query('SELECT COUNT(*) as count FROM pastes');
-	const articlesCount = articlesCountResult[0].count;
-	const pastesCount = pastesCountResult[0].count;
+	const articlesCount = await Article.count();
+	const pastesCount = await Paste.count();
 	res.render('index.njk', { title: "首页", paste_count: pastesCount, article_count: articlesCount });
 });
 

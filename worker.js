@@ -1,8 +1,13 @@
 import "dotenv/config";
 import axios from "axios";
 import * as cheerio from 'cheerio';
-import {createTask, updateTask} from "./task_manager.js";
+import { createTask, updateTask } from "./task_manager.js";
 import { createHash } from 'crypto';
+import Article from "./models/article.js";
+import ArticleVersion from "./models/article_version.js";
+import Paste from "./models/paste.js";
+import User from "./models/user.js";
+import Task from "./models/task.js";
 
 let queue = [];
 let requestPoint = process.env.INITIAL_REQ_POINT;
@@ -32,88 +37,59 @@ export async function processTask() {
 	const obj = response;
 	try {
 		if (task.type === 0) {
-			const [originalData] = await db.query('SELECT * FROM articles WHERE id = ?', [aid]);
+			const article = await Article.findById(aid);
 			const newHash = hashContent(obj.content);
-			if (!originalData.length) {
-				await db.execute(`
-                            INSERT INTO articles (id, title, content, author_uid,
-                                                  category, solutionFor_pid, content_hash)
-                            VALUES (?, ?, ?, ?, ?, ?, ?)
-                            ON DUPLICATE KEY UPDATE title           = VALUES(title),
-                                                    content         = VALUES(content),
-                                                    author_uid      = VALUES(author_uid),
-                                                    category        = VALUES(category),
-                                                    solutionFor_pid = VALUES(solutionFor_pid),
-                                                    content_hash    = VALUES(content_hash)`,
-					[
-						aid,
-						obj.title,
-						obj.content,
-						obj.userData.uid,
-						obj.category,
-						obj.category === 2 ? (obj.solutionFor?.pid || null) : null,
-						newHash
-					]
-				);
+			if (!article) {
+				const newArticle = Article.create({
+					id: aid,
+					title: obj.title,
+					content: obj.content,
+					author_uid: obj.userData.uid,
+					category: obj.category,
+					solutionFor_pid: obj.category === 2 ? (obj.solutionFor?.pid || null) : null,
+					content_hash: newHash
+				});
+				await newArticle.save();
 			} else {
-				let oldHash = originalData[0].content_hash;
+				let oldHash = article.content_hash;
 				if (!oldHash) {
-					oldHash = hashContent(originalData[0].content);
-					await db.execute(
-						'UPDATE articles SET content_hash = ? WHERE id = ?',
-						[oldHash, aid]
-					);
+					oldHash = hashContent(article.content);
+					article.content_hash = oldHash;
+					await article.save();
 				}
-				if (originalData[0].title === obj.title && oldHash === newHash) {
+				if (article.title === obj.title && oldHash === newHash) {
 					await updateTask(task.id, 2, "The article is already up-to-date.");
 					return;
 				}
-				await db.execute(`
-                            INSERT INTO articles (id, title, content, author_uid,
-                                                  category, solutionFor_pid, content_hash)
-                            VALUES (?, ?, ?, ?, ?, ?, ?)
-                            ON DUPLICATE KEY UPDATE title           = VALUES(title),
-                                                    content         = VALUES(content),
-                                                    author_uid      = VALUES(author_uid),
-                                                    category        = VALUES(category),
-                                                    solutionFor_pid = VALUES(solutionFor_pid),
-                                                    content_hash    = VALUES(content_hash)`,
-					[
-						aid,
-						obj.title,
-						obj.content,
-						obj.userData.uid,
-						obj.category,
-						obj.category === 2 ? (obj.solutionFor?.pid || null) : null,
-						newHash
-					]
-				);
+				const newArticle = Article.create({
+					id: aid,
+					title: obj.title,
+					content: obj.content,
+					author_uid: obj.userData.uid,
+					category: obj.category,
+					solutionFor_pid: obj.category === 2 ? (obj.solutionFor?.pid || null) : null,
+					content_hash: newHash
+				});
+				await newArticle.save();
 			}
 			await updateTask(task.id, 1, "Article data updated. Updating version history...");
-			const [latestVersion] = await db.query(
-				'SELECT * FROM article_versions WHERE origin_id = ? ORDER BY version DESC LIMIT 1',
-				[aid]
-			);
-			const nextVersion = latestVersion.length ? latestVersion[0].version + 1 : 1;
-			await db.execute(`
-                        INSERT INTO article_versions (origin_id, version, title, content)
-                        VALUES (?, ?, ?, ?)`,
-				[aid, nextVersion, obj.title, obj.content]
-			);
+			const latestVersion = await Article.getLatestVersion(aid);
+			const nextVersion = latestVersion ? latestVersion.version + 1 : 1;
+			const newVersion = ArticleVersion.create({
+				origin_id: aid,
+				version: nextVersion,
+				title: obj.title,
+				content: obj.content
+			});
+			await newVersion.save();
 		} else {
-			const [originalData] = await db.query('SELECT * FROM pastes WHERE id = ?', [aid]);
-			if (originalData.length && originalData[0].content === obj.content) {
-				await updateTask(task.id, 2, "The paste is already up-to-date.");
-				return;
-			}
-			await db.execute(
-				`INSERT INTO pastes (id, title, content, author_uid)
-                 VALUES (?, ?, ?, ?)
-                 ON DUPLICATE KEY UPDATE title      = VALUES(title),
-                                         content    = VALUES(content),
-                                         author_uid = VALUES(author_uid)`,
-				[aid, aid, obj.content, obj.userData.uid]
-			);
+			const newPaste = Paste.create({
+				id: aid,
+				title: aid,
+				content: obj.content,
+				author_uid: obj.userData.uid
+			});
+			await newPaste.save();
 		}
 		await updateTask(task.id, 2, "Your task has been completed successfully.");
 	} catch (error) {
@@ -152,13 +128,11 @@ function getResponseObject(response, type = 0) {
 export async function upsertUser(userData) {
 	if (!userData || !userData.uid) return;
 	const { uid, name, color } = userData;
-	db.execute(`
-		INSERT INTO users (id, name, color)
-		VALUES (?, ?, ?)
-		ON DUPLICATE KEY UPDATE
-			name = VALUES(name),
-		 	color = VALUES(color)`,
-		[uid, name, color]);
+	
+	const user = await User.findById(uid);
+	user.name = name;
+	user.color = color;
+	await user.save();
 }
 
 function getResponseUser(response) {
@@ -229,7 +203,7 @@ export function getQueuePosition(id) {
 }
 
 export async function restoreQueue() {
-	const [tasks] = await db.query('SELECT * FROM tasks WHERE status = 0 OR status = 1 ORDER BY id');
+	const tasks = await Task.createQueryBuilder("t").where("t.status = 0 OR t.status = 1").orderBy("t.id", "ASC").getMany();
 	for (const task of tasks) {
 		if (task.status === 0) {
 			queue.push({

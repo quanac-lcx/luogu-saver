@@ -1,0 +1,16 @@
+{
+    "name": "Task",
+    "tableName": "task",
+    "columns": {
+        "id": { "type": "varchar", "length": 8, "primary": true },
+        "info": { "type": "text", "nullable": false },
+        "status": { "type": "int", "default": 0, "nullable": false },
+        "created_at": { "type": "timestamp", "default": "CURRENT_TIMESTAMP", "nullable": false },
+        "expire_time": { "type": "datetime", "nullable": false },
+        "type": { "type": "int", "default": 0, "nullable": false },
+        "oid": { "type": "varchar", "length": 8, "nullable": false }
+    },
+    "indices": [
+        { "name": "idx_expire_time", "columns": ["expire_time"] }
+    ]
+}

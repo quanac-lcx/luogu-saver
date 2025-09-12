@@ -1,30 +1,44 @@
-import express from 'express';
+import express from "express";
+import Article from "../models/article.js";
+import Paste from "../models/paste.js";
 
 const router = express.Router();
 
-router.get('/statistic', async (req, res) => {
+router.get("/statistic", async (req, res) => {
 	try {
-		async function getTimeSeriesData(tableName) {
-			const [earliestRecord] = await db.query(
-				`SELECT created_at FROM ${tableName} ORDER BY created_at ASC LIMIT 1`
-			);
-			if (earliestRecord.length === 0) return [];
-			const startDate = new Date(earliestRecord[0].created_at);
+		async function getTimeSeriesData(entityClass) {
+			const earliest = await entityClass
+				.createQueryBuilder("t")
+				.select("t.created_at", "created_at")
+				.orderBy("t.created_at", "ASC")
+				.limit(1)
+				.getRawOne();
+			
+			if (!earliest) return [];
+			
+			const startDate = new Date(earliest.created_at);
 			startDate.setHours(0, 0, 0, 0);
-			const [dailyData] = await db.query(
-				`SELECT DATE(created_at) as date, COUNT(*) as count FROM ${tableName} GROUP BY DATE(created_at) ORDER BY DATE(created_at) ASC`
-			);
+			
+			const dailyData = await entityClass
+				.createQueryBuilder("t")
+				.select("DATE(t.created_at)", "date")
+				.addSelect("COUNT(*)", "count")
+				.groupBy("DATE(t.created_at)")
+				.orderBy("DATE(t.created_at)", "ASC")
+				.getRawMany();
+			
 			const dailyMap = {};
-			dailyData.forEach(item => {
-				const dateStr = utils.formatDate(item.date);
-				dailyMap[dateStr] = item.count;
+			dailyData.forEach((row) => {
+				const dateStr = utils.formatDate(row.date);
+				dailyMap[dateStr] = Number(row.count);
 			});
+			
 			let cumulativeCount = 0;
 			const result = [];
 			let currentDate = new Date(startDate);
-			currentDate.setHours(0, 0, 0, 0);
 			const today = new Date();
 			today.setHours(0, 0, 0, 0);
+			
 			while (currentDate <= today) {
 				const dateStr = utils.formatDate(currentDate);
 				const dayCount = dailyMap[dateStr] || 0;
@@ -32,47 +46,47 @@ router.get('/statistic', async (req, res) => {
 				result.push({
 					date: dateStr,
 					total: cumulativeCount,
-					delta: dayCount
+					delta: dayCount,
 				});
-				
 				currentDate.setDate(currentDate.getDate() + 1);
 			}
 			
 			return result;
 		}
-		const [articlesCountResult] = await db.query('SELECT COUNT(*) as count FROM articles');
-		const [pastesCountResult] = await db.query('SELECT COUNT(*) as count FROM pastes');
-		const articlesCount = articlesCountResult[0].count;
-		const pastesCount = pastesCountResult[0].count;
+		
+		const articlesCount = await Article.count();
+		const pastesCount = await Paste.count();
+		
 		const today = new Date();
 		today.setHours(0, 0, 0, 0);
-		const [todayArticlesResult] = await db.query(
-			'SELECT COUNT(*) as count FROM articles WHERE created_at >= ?',
-			[today]
-		);
-		const [todayPastesResult] = await db.query(
-			'SELECT COUNT(*) as count FROM pastes WHERE created_at >= ?',
-			[today]
-		);
-		const todayArticles = todayArticlesResult[0].count;
-		const todayPastes = todayPastesResult[0].count;
-		const articlesData = await getTimeSeriesData('articles');
-		const pastesData = await getTimeSeriesData('pastes');
-		res.json(utils.makeResponse(
-			true,
-			{
+		
+		const todayArticles = await Article.createQueryBuilder("a")
+			.where("a.created_at >= :today", { today })
+			.getCount();
+		
+		const todayPastes = await Paste.createQueryBuilder("p")
+			.where("p.created_at >= :today", { today })
+			.getCount();
+		
+		const articlesData = await getTimeSeriesData(Article);
+		const pastesData = await getTimeSeriesData(Paste);
+		
+		res.json(
+			utils.makeResponse(true, {
 				articles_total: articlesCount,
 				pastes_total: pastesCount,
 				today_articles: todayArticles,
 				today_pastes: todayPastes,
 				time_series: {
 					articles: articlesData,
-					pastes: pastesData
-				}
-			}
-		));
+					pastes: pastesData,
+				},
+			})
+		);
 	} catch (error) {
-		logger.warn(`An error occurred while fetching statistics: ${error.message}`);
+		logger.warn(
+			`An error occurred while fetching statistics: ${error.message}`
+		);
 		res.json(utils.makeResponse(false, { message: error.message }));
 	}
 });

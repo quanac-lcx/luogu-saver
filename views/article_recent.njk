@@ -43,15 +43,15 @@
                     <div style="display: flex; flex: 1;">
                         <div>
                             <div style="width: 70px;" class="meta user">
-                                <img class="ui circular image" src="https://cdn.luogu.com.cn/upload/usericon/{{ article.author_uid }}.png"
-                                     alt="{{ article.author_name }}"
+                                <img class="ui circular image" src="https://cdn.luogu.com.cn/upload/usericon/{{ article.author.id }}.png"
+                                     alt="{{ article.author.name }}"
                                 >
                             </div>
                         </div>
                         <div style="margin-left: 20px;">
                             <a class="article-title" href="/article/{{ article.id }}">{{ article.title }}</a>
                             <div class="article-author">
-                                @<a href="/user/{{ article.author_uid }}" class="user-{{ article.author_color }}">{{ article.author_name }}</a>
+                                @<a href="/user/{{ article.author.id }}" class="user-{{ article.author.color }}">{{ article.author.name }}</a>
                             </div>
                             <div class="article-meta meta gray">
                                 <i class="fas fa-calendar-alt"></i>

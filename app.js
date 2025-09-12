@@ -14,7 +14,6 @@ import apiRouter from './routes/api.js';
 import indexRouter from './routes/index.js';
 import * as worker from "./worker.js";
 import * as renderer from "./renderer.js";
-import db from "./db.js";
 import auth from "./middleware/auth.js";
 import {scheduleJob} from "node-schedule";
 import fs from "fs/promises";
@@ -25,6 +24,8 @@ import * as utils from "./utils.js";
 const app = express();
 const port = process.env.PORT || 55086;
 nunjucks.configure("views", { autoescape: true, express: app, watch: true });
+
+// initialize routes and middleware
 
 app.use(cookieParser());
 app.set('trust proxy', true);
@@ -57,11 +58,14 @@ app.use((err, req, res, next) => {
 	res.render('error.njk', { title: "错误", error_message: err.message });
 });
 
+// make some modules globally accessible
+
 global.utils = utils;
 global.logger = logger;
-global.db = db;
 global.worker = worker;
 global.renderer = renderer;
+
+// start worker
 
 worker.requestPointTick();
 worker.processQueue();
@@ -89,18 +93,39 @@ updateBeacon().then(() => {
 	logger.warn("Initial beacon.min.js update failed: " + err.message);
 });
 
+// initialize database
+
+import "reflect-metadata";
+import { DataSource } from "typeorm";
+import config from "./ormconfig.json" with { type: "json" };
+import { loadEntities } from "./entities/index.js";
+import Task from "./models/task.js";
+
+export const AppDataSource = new DataSource({
+	...config,
+	host: process.env.DB_HOST || config.host,
+	port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : config.port,
+	username: process.env.DB_USER || config.username,
+	password: process.env.DB_PASSWORD || config.password,
+	database: process.env.DB_NAME || config.database,
+	entities: loadEntities()
+});
+
 scheduleJob('0 * * * *', updateBeacon);
 
 scheduleJob('0 * * * *', async () => {
 	try {
-		await db.execute("DELETE FROM tasks WHERE expire_time <= NOW()");
+		await Task.deleteExpired();
 	} catch (error) {
 		logger.warn("An error occurred while cleaning up expired tasks: " + error.message);
 	}
 })
 
-worker.restoreQueue().then(() => {
+// start server after restoring queue from database
+AppDataSource.initialize()
+	.then(() => worker.restoreQueue())
+	.then(() => {
 	app.listen(port, () => {
-		logger.info("Server is running on port " + port);
-	})
-});
+			logger.info("Server is running on port " + port);
+		})
+	});

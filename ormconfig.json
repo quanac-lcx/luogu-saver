@@ -1,11 +1,11 @@
 {
-    "type": "mysql",
+    "type": "mariadb",
     "host": "localhost",
     "port": 3306,
     "username": "root",
     "password": "password",
     "database": "luogu-saver",
-    "synchronize": false,
+    "synchronize": true,
     "logging": true,
     "entities": []
 }

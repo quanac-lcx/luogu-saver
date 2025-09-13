@@ -9,7 +9,7 @@ export default class Article extends BaseModel {
 	content = null;
 	content_hash = null;
 	category = 0;
-	solutionFor_pid = null;
+	solution_for_pid = null;
 	author_uid = null;
 	author = null;
 	deleted = false;

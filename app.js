@@ -121,11 +121,14 @@ scheduleJob('0 * * * *', async () => {
 	}
 })
 
-// start server after restoring queue from database
-AppDataSource.initialize()
-	.then(() => worker.restoreQueue())
-	.then(() => {
-	app.listen(port, () => {
-			logger.info("Server is running on port " + port);
-		})
-	});
+// 仅在直接运行 node app.js 时执行初始化逻辑
+if (import.meta.url === `file://${process.argv[1]}`) {
+	// start server after restoring queue from database
+	AppDataSource.initialize()
+		.then(() => worker.restoreQueue())
+		.then(() => {
+			app.listen(port, () => {
+				logger.info("Server is running on port " + port);
+			})
+		});
+}

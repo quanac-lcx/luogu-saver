@@ -16,7 +16,7 @@ router.get('/:id', async (req, res, next) => {
 	try {
 		const { id } = req.params;
 		if (id.length !== 8) throw new Error('Invalid article ID.');
-		const paste = Paste.findById(id);
+		const paste = await Paste.findById(id);
 		if (paste) {
 			res.render('paste.njk', {
 				title: "保存剪贴板",

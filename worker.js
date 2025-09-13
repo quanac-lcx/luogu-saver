@@ -73,7 +73,7 @@ export async function processTask() {
 				await newArticle.save();
 			}
 			await updateTask(task.id, 1, "Article data updated. Updating version history...");
-			const latestVersion = await Article.getLatestVersion(aid);
+			const latestVersion = await ArticleVersion.getLatestVersion(aid);
 			const nextVersion = latestVersion ? latestVersion.version + 1 : 1;
 			const newVersion = ArticleVersion.create({
 				origin_id: aid,

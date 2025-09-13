@@ -129,7 +129,7 @@ export async function upsertUser(userData) {
 	if (!userData || !userData.uid) return;
 	const { uid, name, color } = userData;
 	
-	const user = await User.findById(uid);
+	const user = (await User.findById(uid)) || User.create({ id: uid });
 	user.name = name;
 	user.color = color;
 	await user.save();
@@ -163,8 +163,8 @@ export async function sendContentRequest(url, headers = defaultHeaders, type = 0
 		try {
 			obj.userData = getResponseUser(obj);
 			await upsertUser(obj.userData);
-		} catch (ignore) {
-			logger.warn(`Failed to upsert user when requesting ${url}`);
+		} catch (error) {
+			logger.warn('An error occurred when upserting user data: ' + error.message);
 		}
 		const endTime = Date.now();
 		logger.debug(`Content fetched from ${url.split('?')[0]} in ${endTime - startTime}ms`);

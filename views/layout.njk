@@ -133,7 +133,9 @@
 					$.post("/user/login", { token: result.value })
 						.done(res => {
 							if (!res.success) {
-								Swal.fire("登录失败", res.message || "Token 无效", "error");
+								if (!(!result.value || result.value === "")) {
+									Swal.fire("登录失败", res.message || "Token 无效", "error");
+								}
 							}
 							else {
 								location.reload();

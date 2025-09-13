@@ -114,8 +114,6 @@ export function createMarkdownRenderer() {
 			}
 		});
 		
-		console.log(processed);
-		
 		let resultHtml;
 		try {
 			resultHtml = md.render(processed);

@@ -122,7 +122,7 @@ scheduleJob('0 * * * *', async () => {
 })
 
 // 仅在直接运行 node app.js 时执行初始化逻辑
-if (import.meta.url === `file:///${process.argv[1].replaceAll('\\', '/')}`) {
+if (import.meta.url.endsWith('app.js')) {
 	// start server after restoring queue from database
 	AppDataSource.initialize()
 		.then(() => worker.restoreQueue())

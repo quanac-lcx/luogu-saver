@@ -63,7 +63,8 @@ export function createMarkdownRenderer() {
 	
 	function renderMarkdown(src) {
 		const startTime = Date.now();
-		const size = Buffer.byteLength(src, 'utf8');
+		const size = Buffer.byteLength(src || '', 'utf8');
+		
 		const pattern = /^(:{2,})([\w|-]+)(\s*\[.*?\])?(\s*\{.*?\})?$/;
 		function preprocessLine(line) {
 			const match = line.match(pattern);
@@ -78,54 +79,83 @@ export function createMarkdownRenderer() {
 			}
 			return line;
 		}
-		function replaceUI(s) {
-			return s.split('<table>').join('<div class="table-container"><table class="ui structured celled table">')
-				.split('</table>').join('</table></div>');
-		}
-		const preprocessed = src.split(/\r?\n/).map(preprocessLine).join("\n");
-		let mathBlocks = [];
-		let codeBlocks = [];
-		let mathRegex = /\$\$([\s\S]*?)\$\$|\$([^\$]+?)\$/g;
-		let codeRegex = /((?:^|\n)(`{3,}|~{3,})[^\n]*\n[\s\S]*?\n\2(?=\n|$))|(`+)([\s\S]*?)\3/g;
 		
-		let processedMarkdown = preprocessed.replace(codeRegex, function(match) {
-			codeBlocks.push(match);
-			return 'CODE_BLOCK_' + (codeBlocks.length - 1) + '_';
+		const preprocessed = src.split(/\r?\n/).map(preprocessLine).join("\n");
+		
+		const uid = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+		const codePlaceholder = (i) => `CODE?PLACEHOLDER${uid}?${i}?`;
+		const mathDisplayPlaceholder = (i) => `MATH?DISPLAY${uid}?${i}?`;
+		const mathInlinePlaceholder = (i) => `MATH?INLINE${uid}?${i}?`;
+		
+		const codeBlocks = [];
+		const codeHtmlBlocks = [];
+		const mathBlocks = [];
+		
+		const codeRegex = /((?:^|\n)(`{3,}|~{3,})[^\n]*\n[\s\S]*?\n\2(?=\n|$))|(`+)([\s\S]*?)\3/g;
+		const mathRegex = /\$\$([\s\S]*?)\$\$|\$([^\$]+?)\$/g;
+		
+		let processed = preprocessed.replace(codeRegex, function(match) {
+			const idx = codeBlocks.push(match) - 1;
+			try {
+				codeHtmlBlocks[idx] = md.render(match);
+			} catch (e) {
+				codeHtmlBlocks[idx] = '<pre><code>' + md.utils.escapeHtml(match) + '</code></pre>';
+			}
+			return codePlaceholder(idx);
 		});
 		
-		processedMarkdown = processedMarkdown.replace(mathRegex, function(match, block, inline) {
-			mathBlocks.push(match);
-			let index = mathBlocks.length - 1;
+		processed = processed.replace(mathRegex, function(match, block, inline) {
 			if (block !== undefined) {
-				return 'MATH_BLOCK_DISPLAY_' + index + '_';
+				const idx = mathBlocks.push(block) - 1;
+				return mathDisplayPlaceholder(idx);
 			} else {
-				return 'MATH_BLOCK_INLINE_' + index + '_';
+				const idx = mathBlocks.push(inline) - 1;
+				return mathInlinePlaceholder(idx);
 			}
 		});
 		
-		for (let i = 0; i < codeBlocks.length; i++) {
-			let placeholder = 'CODE_BLOCK_' + i + '_';
-			let regex = new RegExp(placeholder, 'g');
-			processedMarkdown = processedMarkdown.replace(regex, codeBlocks[i]);
+		console.log(processed);
+		
+		let resultHtml;
+		try {
+			resultHtml = md.render(processed);
+		} catch (err) {
+			logger.warn('md.render failed' + err);
+			return `<p>渲染失败：${md.utils ? md.utils.escapeHtml(err.message) : 'render error'}</p>`;
 		}
 		
 		function escapeHtmlInMath(str) {
-			return str
+			if (!str) return "";
+			return String(str)
 				.replace(/&/g, "&amp;")
 				.replace(/</g, "&lt;")
 				.replace(/>/g, "&gt;");
 		}
 		
-		let result = replaceUI(md.render(processedMarkdown));
 		for (let i = 0; i < mathBlocks.length; i++) {
-			let displayPlaceholder = new RegExp('MATH_BLOCK_DISPLAY_' + i + '_', 'g');
-			let inlinePlaceholder  = new RegExp('MATH_BLOCK_INLINE_' + i + '_', 'g');
-			result = result.replace(displayPlaceholder, `$${escapeHtmlInMath(mathBlocks[i])}$`);
-			result = result.replace(inlinePlaceholder, escapeHtmlInMath(mathBlocks[i]));
+			const display = mathDisplayPlaceholder(i);
+			const inline = mathInlinePlaceholder(i);
+			resultHtml = resultHtml.split(display).join(`$$${escapeHtmlInMath(mathBlocks[i])}$$`);
+			resultHtml = resultHtml.split(inline).join(`$${escapeHtmlInMath(mathBlocks[i])}$`);
 		}
+		
+		for (let i = 0; i < codeHtmlBlocks.length; i++) {
+			const ph = codePlaceholder(i);
+			resultHtml = resultHtml.split(ph).join(codeHtmlBlocks[i] || '');
+		}
+		
+		function replaceUI(s) {
+			return s.split('<table>')
+					.join('<div class="table-container"><table class="ui structured celled table">')
+					.split('</table>')
+					.join('</table></div>');
+		}
+		
+		resultHtml = replaceUI(resultHtml);
+		
 		const endTime = Date.now();
-		logger.debug(`Markdown rendered in ${endTime - startTime}ms. Size: ${size} bytes.`);
-		return result;
+		logger.debug(`Markdown rendered in ${endTime - startTime}ms. Size: ${size} bytes. Output: ${resultHtml.length} chars.`);
+		return resultHtml;
 	}
 	
 	return { renderMarkdown };

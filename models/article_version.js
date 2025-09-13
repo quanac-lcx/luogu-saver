@@ -10,7 +10,7 @@ export default class ArticleVersion extends BaseModel {
 	}
 	
 	static async getLatestVersion(id) {
-		return await this.find({
+		return await this.findOne({
 			where: { origin_id: id },
 			order: { version: 'DESC' },
 			take: 1

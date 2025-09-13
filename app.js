@@ -122,7 +122,7 @@ scheduleJob('0 * * * *', async () => {
 })
 
 // 仅在直接运行 node app.js 时执行初始化逻辑
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === `file:///${process.argv[1].replaceAll('\\', '/')}`) {
 	// start server after restoring queue from database
 	AppDataSource.initialize()
 		.then(() => worker.restoreQueue())
@@ -131,4 +131,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 				logger.info("Server is running on port " + port);
 			})
 		});
+}
+else {
+	logger.info("app.js imported as a module, skipping initialization logic.");
 }

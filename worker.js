@@ -46,7 +46,7 @@ export async function processTask() {
 					content: obj.content,
 					author_uid: obj.userData.uid,
 					category: obj.category,
-					solutionFor_pid: obj.category === 2 ? (obj.solutionFor?.pid || null) : null,
+					solution_for_pid: obj.category === 2 ? (obj.solutionFor?.pid || null) : null,
 					content_hash: newHash
 				});
 				await newArticle.save();
@@ -67,7 +67,7 @@ export async function processTask() {
 					content: obj.content,
 					author_uid: obj.userData.uid,
 					category: obj.category,
-					solutionFor_pid: obj.category === 2 ? (obj.solutionFor?.pid || null) : null,
+					solution_for_pid: obj.category === 2 ? (obj.solutionFor?.pid || null) : null,
 					content_hash: newHash
 				});
 				await newArticle.save();

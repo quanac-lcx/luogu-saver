@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { AppDataSource } from "./app.js";
 
 export async function migrate() {
@@ -31,8 +32,8 @@ export async function migrate() {
          SELECT id, info, status, created_at, expire_time, type, oid FROM tasks;`,
 		
 		// articles → article
-		`INSERT INTO article (id, title, content, author_uid, category, upvote, favorCount,
-                              solutionFor_pid, created_at, updated_at, priority, tags,
+		`INSERT INTO article (id, title, content, author_uid, category, upvote, favor_count,
+                              solution_for_pid, created_at, updated_at, priority, tags,
                               deleted, deleted_reason, content_hash)
          SELECT id, title, content, author_uid, category, upvote, favorCount,
                 solutionFor_pid, created_at, updated_at, priority, tags,

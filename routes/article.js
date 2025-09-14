@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get('/recent', async (req, res, next) => {
 	try {
-		const count = parseInt(req.query.count) || 20;
+		const count = Math.min(parseInt(req.query.count) || 20, 2000);
 		let articles = await Article.find({
 			where: { deleted: false },
 			order: { priority: 'DESC', updated_at: 'DESC' },

@@ -33,20 +33,14 @@ export function createMarkdownRenderer() {
 			}
 		},
 	});
-	
 	["info", "warning", "success"].forEach((name) => {
 		md.use(markdownItContainer, name, {
 			render: (tokens, idx) => {
 				const info = tokens[idx].info || "";
 				if (tokens[idx].nesting === 1) {
 					const titleMatch = info.match(/\[(.*?)\]/);
-					const openMatch = info.match(/\{(.*?)\}/);
 					const title = titleMatch ? titleMatch[1] : name.toUpperCase();
 					const open = (tokens[idx].attrs ? (tokens[idx].attrs[0]?.length ? tokens[idx].attrs[0][0] : "") : "") === "open";
-					let icon = "fa fa-";
-					if (name === "success") icon = icon + "check-circle";
-					else if (name === "warning") icon = icon + "warning";
-					else icon = icon + "info-circle";
 					return `<div class="md-block ${name}"><div class="md-block-title"><span>${title}</span><i class="toggle-btn fa fa-caret-${open ? "down" : "right"}"></i></div><div class="md-block-body"${open ? "" : ' style="display:none"'}>`;
 				} else {
 					return `</div></div>`;
@@ -96,11 +90,7 @@ export function createMarkdownRenderer() {
 		
 		let processed = preprocessed.replace(codeRegex, function(match) {
 			const idx = codeBlocks.push(match) - 1;
-			try {
-				codeHtmlBlocks[idx] = md.render(match);
-			} catch (e) {
-				codeHtmlBlocks[idx] = '<pre><code>' + md.utils.escapeHtml(match) + '</code></pre>';
-			}
+			codeHtmlBlocks[idx] = match;
 			return codePlaceholder(idx);
 		});
 		
@@ -113,6 +103,11 @@ export function createMarkdownRenderer() {
 				return mathInlinePlaceholder(idx);
 			}
 		});
+		
+		for (let i = 0; i < codeHtmlBlocks.length; i++) {
+			const ph = codePlaceholder(i);
+			processed = processed.split(ph).join(codeHtmlBlocks[i] || '');
+		}
 		
 		let resultHtml;
 		try {
@@ -135,11 +130,6 @@ export function createMarkdownRenderer() {
 			const inline = mathInlinePlaceholder(i);
 			resultHtml = resultHtml.split(display).join(`$$${escapeHtmlInMath(mathBlocks[i])}$$`);
 			resultHtml = resultHtml.split(inline).join(`$${escapeHtmlInMath(mathBlocks[i])}$`);
-		}
-		
-		for (let i = 0; i < codeHtmlBlocks.length; i++) {
-			const ph = codePlaceholder(i);
-			resultHtml = resultHtml.split(ph).join(codeHtmlBlocks[i] || '');
 		}
 		
 		function replaceUI(s) {

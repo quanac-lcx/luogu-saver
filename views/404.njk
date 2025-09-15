@@ -1,0 +1,33 @@
+{% extends "layout.njk" %}
+
+{% block content %}
+    <div class="ui grid">
+        <div class="sixteen wide column">
+            <div class="card shadow">
+                <h1 class="ui center aligned header">
+                    <span><i class="ui icon question circle outline colored"></i> 杂鱼！！！404 喵~❤️</span>
+                    <div class="sub header" style="margin-top: 10px;">
+                        抱歉，您请求的页面 <code>{{ originalUrl }}</code> 不存在。
+                    </div>
+                </h1>
+                
+                <div class="ui container" style="margin-top: 30px;">
+                    <div class="ui info message">
+                        <div class="header">可能的原因</div>
+                        <ul class="list">
+                            <li>输入的地址有误喵~</li>
+                            <li>该页面已被移除或移动喵~</li>
+                            <li>如果主人认为这是我们的错，请<a href="https://github.com/laikit-dev/luogu-saver/issues">反馈</a>喵呜！</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="ui buttons" style="display: flex; justify-content: center; margin-top: 20px;">
+                        <a href="/" class="ui primary button">返回首页</a>
+                        <div class="or"></div>
+                        <a href="https://img.cbpan.org/secret/global/porn/" class="ui secondary button">爸❤️妈💕不❤️在💕家❤️</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

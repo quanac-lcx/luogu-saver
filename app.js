@@ -70,6 +70,13 @@ global.renderer = renderer;
 worker.requestPointTick();
 worker.processQueue();
 
+app.use((req, res, next) => {
+    res.status(404).render('404.njk', {
+        title: "404喵~",
+        originalUrl: req.originalUrl
+    });
+});
+
 async function updateBeacon() {
 	const url = "https://static.cloudflareinsights.com/beacon.min.js";
 	const dest = path.join(process.cwd(), "static", "cloudflare", "beacon.min.js");

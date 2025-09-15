@@ -59,6 +59,7 @@ export async function processTask() {
 				}
 				if (article.title === obj.title && oldHash === newHash) {
 					await updateTask(task.id, 2, "The article is already up-to-date.");
+					running--;
 					return;
 				}
 				const newArticle = Article.create({
@@ -147,7 +148,7 @@ function getResponseUser(response) {
 export async function sendContentRequest(url, headers = defaultHeaders, type = 0) {
 	try {
 		const startTime = Date.now();
-		let response = await axios.get(url + "?_contentOnly=1", headers);
+		let response = await axios.get(url + "?_contentOnly=1", { headers });
 		if (type) response = await c3vk(response, url, headers);
 		const obj = getResponseObject(response, type);
 		if (!obj) throw new Error("Invalid response structure.");
@@ -172,6 +173,13 @@ export async function sendContentRequest(url, headers = defaultHeaders, type = 0
 	}
 	catch(error) {
 		logger.warn(`Error fetching content from ${url.split('?')[0]}: ${error.message}`);
+		
+		// 特别处理451错误，提供更友好的错误信息
+		if (error.response && error.response.status === 451) {
+			const errorMsg = "由于法律原因，无法访问目标内容 (HTTP 451)。这通常表示源网站根据法律法规限制了内容访问。";
+			return utils.makeResponse(false, { message: errorMsg });
+		}
+		
 		return utils.makeResponse(false, { message: error.message });
 	}
 }

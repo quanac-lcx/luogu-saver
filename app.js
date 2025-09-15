@@ -33,7 +33,7 @@ app.use('/static', express.static('static'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
-	req.realIP = req.headers['ali-cdn-real-ip'] || req.ip;
+	req.realIP = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
 	next();
 });
 app.use(filterIPs);

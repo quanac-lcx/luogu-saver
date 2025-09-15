@@ -38,8 +38,8 @@ export function createMarkdownRenderer() {
 			render: (tokens, idx) => {
 				const info = tokens[idx].info || "";
 				if (tokens[idx].nesting === 1) {
-					const titleMatch = info.match(/\[(.*?)\]/);
-					const title = titleMatch ? titleMatch[1] : name.toUpperCase();
+					const titleMatch = info.match(/\[(.*)\]$/);
+					const title = titleMatch ? md.render(titleMatch[1]) : name.toUpperCase();
 					const open = (tokens[idx].attrs ? (tokens[idx].attrs[0]?.length ? tokens[idx].attrs[0][0] : "") : "") === "open";
 					return `<div class="md-block ${name}"><div class="md-block-title"><span>${title}</span><i class="toggle-btn fa fa-caret-${open ? "down" : "right"}"></i></div><div class="md-block-body"${open ? "" : ' style="display:none"'}>`;
 				} else {

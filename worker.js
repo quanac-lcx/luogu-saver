@@ -174,9 +174,8 @@ export async function sendContentRequest(url, headers = defaultHeaders, type = 0
 	catch(error) {
 		logger.warn(`Error fetching content from ${url.split('?')[0]}: ${error.message}`);
 		
-		// 特别处理451错误，提供更友好的错误信息
 		if (error.response && error.response.status === 451) {
-			const errorMsg = "由于法律原因，无法访问目标内容 (HTTP 451)。这通常表示源网站根据法律法规限制了内容访问。";
+			const errorMsg = "HTTP ERROR 451";
 			return utils.makeResponse(false, { message: errorMsg });
 		}
 		

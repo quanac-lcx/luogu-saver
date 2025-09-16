@@ -175,7 +175,7 @@ export async function sendContentRequest(url, headers = defaultHeaders, type = 0
 		logger.warn(`Error fetching content from ${url.split('?')[0]}: ${error.message}`);
 		
 		if (error.response && error.response.status === 451) {
-			const errorMsg = "HTTP ERROR 451";
+			const errorMsg = "HTTP ERROR 451: Unavailable For Legal Reasons - This content is not available in your region.";
 			return utils.makeResponse(false, { message: errorMsg });
 		}
 		

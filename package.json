@@ -4,8 +4,7 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "migrate": "node ./migrate.js",
-    "init-db": "node ./init_db.js"
+    "migrate": "node ./migrate.js"
   },
   "keywords": [],
   "author": "",

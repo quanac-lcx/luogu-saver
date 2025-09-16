@@ -8,6 +8,7 @@ import ArticleVersion from "./models/article_version.js";
 import Paste from "./models/paste.js";
 import User from "./models/user.js";
 import Task from "./models/task.js";
+import Problem from "./models/problem.js";
 
 let queue = [];
 let requestPoint = process.env.INITIAL_REQ_POINT;
@@ -235,6 +236,30 @@ export async function pushQueue(task) {
 	logger.debug(`Task #${task.id} queued.`);
 	queue.push(task);
 	return task.id;
+}
+
+async function saveProblems(problems) {
+	logger.debug("Start to save problem list to database.");
+	for (const problem of problems) {
+		const newProblem = Problem.create({
+			id: problem.id,
+			difficulty: problem.difficulty,
+			accept_solution: problem.accept_solution,
+			solution_count: problem.solution_count
+		});
+		try {
+			if (await Problem.findById(problem.id)) await (await Problem.findById(problem.id)).remove();
+			await newProblem.save();
+		} catch (error) {
+			logger.warn(`An error occurred when saving problem ${problem.id}: ${error.message}`);
+		}
+	}
+	logger.debug("Saved ${problems.length} problems to database.");
+}
+
+async function fetchProblems() {
+	logger.debug("Start to fetch problem list from Luogu.");
+	const problems = [];
 }
 
 export const defaultHeaders = {

@@ -1,0 +1,14 @@
+{
+	"name": "Problem",
+	"tableName": "problem",
+	"columns": {
+		"id": { "type": "varchar", "length": 50, "primary": true },
+		"difficult": { "type": "int", "unsigned": true, "nullable": false },
+		"updated_at": { "type": "timestamp", "nullable": false, "default": "CURRENT_TIMESTAMP", "onUpdate": "CURRENT_TIMESTAMP" },
+		"accept_solution": { "type": "int", "unsigned": true, "nullable": false, "default": 0 },
+		"solution_count": { "type": "int", "unsigned": true, "nullable": false, "default": 0 }
+	},
+	"indices": [
+		{ "name": "idx_solution_count", "columns": ["solution_count"] }
+	]
+}

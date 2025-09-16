@@ -7,9 +7,9 @@
     <img src="https://www.codefactor.io/repository/github/laikit-dev/luogu-saver/badge" />
     <img src="https://img.shields.io/github/license/laikit-dev/luogu-saver" />
   </p>
+  <img src="https://github.com/user-attachments/assets/93c999ff-f027-4586-b290-45eb292fac77#gh-light-mode-only" />
+  <img src="https://github.com/user-attachments/assets/647c8dfc-5eb9-48fe-841d-e0637b88582e#gh-dark-mode-only" />
 </div>
-
-<img width="3494" height="2460" alt="59da13e67b2387253e0e12213257e327" src="https://github.com/user-attachments/assets/6ca25926-07c3-4890-8fc8-1b2d38f011c1" />
 
 ## Introduction
 

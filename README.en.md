@@ -9,7 +9,7 @@
   </p>
 </div>
 
-![](https://xland.eu.org/autoupload/f/go0xDZuFmGNrsTWJ7puX4UseuoJKLu4FmQh0o6csZq4/default/image.png)
+<img width="3494" height="2460" alt="59da13e67b2387253e0e12213257e327" src="https://github.com/user-attachments/assets/6ca25926-07c3-4890-8fc8-1b2d38f011c1" />
 
 ## Introduction
 

@@ -424,7 +424,7 @@ async function fetchProblemSet(type) {
 				chunk.map(async (p) => {
 					const dbProblem = existingMap.get(p.id);
 					const now = Date.now();
-					if (dbProblem && now - new Date(dbProblem.updated_at).getTime() < 24 * 60 * 60 * 1000) {
+					if (dbProblem && now - new Date(dbProblem.updated_at).getTime() < 18 * 60 * 60 * 1000) {
 						return null;
 					}
 					try {

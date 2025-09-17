@@ -123,6 +123,7 @@ scheduleJob('0 * * * *', updateBeacon);
 
 if (import.meta.url.endsWith('app.js')) {
 	AppDataSource.initialize()
+		.then(() => runProblemUpdater())
 		.then(() => {
 			scheduleJob('0 * * * *', async () => {
 				try {

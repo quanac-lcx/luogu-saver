@@ -10,6 +10,7 @@ import User from "./models/user.js";
 import Task from "./models/task.js";
 import Problem from "./models/problem.js";
 import fs from "fs";
+import { In } from "typeorm";
 
 let queue = [];
 let requestPoint = process.env.INITIAL_REQ_POINT;
@@ -279,7 +280,8 @@ async function saveProblems(problems) {
 				difficulty: p.difficulty,
 				accept_solution: p.accept_solution,
 				solution_count: p.solution_count,
-				title: p.title
+				title: p.title,
+				updated_at: Date.now()
 			})), ["id"], { skipUpdateIfNoValuesChanged: true });
 		
 		logger.debug(`Bulk upsert completed: ${problems.length} problems processed.`);
@@ -320,8 +322,13 @@ async function debugRedirects(url, headers = {}) {
 	}
 }
 
-async function fetchProblemPage(page, type) {
+async function fetchProblemPage(page, type, retry = 0) {
 	logger.debug(`Fetching problem list, page ${page}, type ${type}`);
+	if (retry >= 3) {
+		logger.warn(`Max retries reached for fetching problem list page ${page}, type ${type}. Returning empty list.`);
+		return [];
+	}
+	if (retry > 0) await sleep(1000 * retry);
 	try {
 		// await sleep(2000);
 		const url = `https://www.luogu.com.cn/problem/list?type=${type}&page=${page}`;
@@ -335,13 +342,18 @@ async function fetchProblemPage(page, type) {
 			title: i.title
 		}));
 	} catch (e) {
-		logger.warn(`Error fetching problem list page ${page}, type ${type}: ${e}`);
-		return [];
+		logger.warn(`Error fetching problem list page ${page}, type ${type} (attempt ${retry + 1}): ${e}`);
+		return fetchProblemPage(page, type, retry + 1);
 	}
 }
 
-async function fetchProblemTotal(type) {
+async function fetchProblemTotal(type, retry = 0) {
 	logger.debug(`Fetching total pages for type ${type}`);
+	if (retry >= 3) {
+		logger.warn(`Max retries reached for fetching total pages of type ${type}. Returning 0.`);
+		return 0;
+	}
+	if (retry > 0) await sleep(1000 * retry);
 	try {
 		const url = `https://www.luogu.com.cn/problem/list?type=${type}&page=1`;
 		const html = (await c3vkNew(await axios.get(url, newFrontendConfig), url)).data;
@@ -351,8 +363,8 @@ async function fetchProblemTotal(type) {
 		const total = json.data.problems.count;
 		return Math.ceil(total / 50);
 	} catch (e) {
-		logger.warn(`Error fetching total for type ${type}: ${e}`);
-		return 0;
+		logger.warn(`Error fetching total pages for type ${type} (attempt ${retry + 1}): ${e}`);
+		return fetchProblemTotal(type, retry + 1);
 	}
 }
 
@@ -383,7 +395,7 @@ async function fetchProblemSolution(pid, retry = 0) {
 			solution_count: json.data.solutions ? parseInt(json.data.solutions.count) : 0
 		};
 	} catch (e) {
-		logger.debug(`Error fetching solution for problem ${pid} (attempt ${retry + 1}): ${e}`);
+		logger.warn(`Error fetching solution for problem ${pid} (attempt ${retry + 1}): ${e}`);
 		return fetchProblemSolution(pid, retry + 1);
 	}
 }
@@ -391,15 +403,30 @@ async function fetchProblemSolution(pid, retry = 0) {
 async function fetchProblemSet(type) {
 	logger.debug(`Start fetching problem set, type: ${type}`);
 	const total = await fetchProblemTotal(type);
+	
 	for (let page = 1; page <= total; page++) {
-		const allProblems = [];
 		const problems = await fetchProblemPage(page, type);
 		logger.debug(`Page ${page} fetched, ${problems.length} problems.`);
+		
+		const ids = problems.map(p => p.id);
+		const existing = await Problem.find({
+			where: { id: In(ids) },
+			select: ["id", "updated_at"],
+		});
+		
+		const existingMap = new Map(existing.map(e => [e.id, e]));
+		
+		const allProblems = [];
 		
 		for (let i = 0; i < problems.length; i += 1) {
 			const chunk = problems.slice(i, i + 1);
 			const results = await Promise.all(
 				chunk.map(async (p) => {
+					const dbProblem = existingMap.get(p.id);
+					const now = Date.now();
+					if (dbProblem && now - new Date(dbProblem.updated_at).getTime() < 24 * 60 * 60 * 1000) {
+						return null;
+					}
 					try {
 						const result = await fetchProblemSolution(p.id);
 						p.accept_solution = result.accept_solution;
@@ -411,15 +438,18 @@ async function fetchProblemSet(type) {
 					}
 				})
 			);
-			allProblems.push(...results);
+			allProblems.push(...results.filter(Boolean));
 		}
-		
-		logger.debug(`Page ${page} processed, ${allProblems.length} problems collected so far.`);
-		await saveProblems(allProblems);
-		
-		await sleep(500);
-		// QPS = 2 req/s
+		if (allProblems.length > 0) {
+			await saveProblems(allProblems);
+			logger.debug(`Page ${page} processed, ${allProblems.length} problems updated.`);
+		}
+		else {
+			logger.debug(`Page ${page} processed, no problems needed update.`);
+		}
+		await sleep(500); // QPS = 2 req/s
 	}
+	
 	logger.debug(`Finished fetching type ${type}`);
 }
 

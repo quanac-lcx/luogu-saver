@@ -15,6 +15,10 @@ export class BaseModel {
 		return Object.setPrototypeOf(entity, this.prototype);
 	}
 	
+	static async upsert(data, conflictPaths, options = {}) {
+		await this.repository.upsert(data, { conflictPaths, ...options });
+	}
+	
 	static async find(options = {}) {
 		const rows = await this.repository.find(options);
 		return rows.map(row => Object.setPrototypeOf(row, this.prototype));

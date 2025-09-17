@@ -3,5 +3,4 @@ node_modules/
 .env
 package-lock.json
 ormconfig.json
-init_db.js
-package.json
+accounts.json

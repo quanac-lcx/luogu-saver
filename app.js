@@ -107,6 +107,7 @@ import { DataSource } from "typeorm";
 import config from "./ormconfig.json" with { type: "json" };
 import { loadEntities } from "./entities/index.js";
 import Task from "./models/task.js";
+import {runProblemUpdater} from "./worker.js";
 
 export const AppDataSource = new DataSource({
 	...config,
@@ -120,18 +121,21 @@ export const AppDataSource = new DataSource({
 
 scheduleJob('0 * * * *', updateBeacon);
 
-scheduleJob('0 * * * *', async () => {
-	try {
-		await Task.deleteExpired();
-	} catch (error) {
-		logger.warn("An error occurred while cleaning up expired tasks: " + error.message);
-	}
-})
-
-// 仅在直接运行 node app.js 时执行初始化逻辑
 if (import.meta.url.endsWith('app.js')) {
-	// start server after restoring queue from database
 	AppDataSource.initialize()
+		.then(() => runProblemUpdater())
+		.then(() => {
+			scheduleJob('0 * * * *', async () => {
+				try {
+					await Task.deleteExpired();
+				} catch (error) {
+					logger.warn("An error occurred while cleaning up expired tasks: " + error.message);
+				}
+			})
+			scheduleJob('0 2 * * *', async () => {
+				await runProblemUpdater();
+			})
+		})
 		.then(() => worker.restoreQueue())
 		.then(() => {
 			app.listen(port, () => {

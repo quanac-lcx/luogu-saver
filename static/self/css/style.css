@@ -43,7 +43,7 @@
     top: -1px;
 }
 
-.item {
+.ui.left.hover.sidebar.labeled.icon.menu .item {
     margin-left: 10px;
     text-align: left !important;
     color: #555 !important;

@@ -1,0 +1,98 @@
+
+{% extends "layout.njk" %}
+
+{% block extra_header %}
+    <script src="/static/self/js/problem_list.js"></script>
+    <link rel="stylesheet" href="/static/self/css/probcolor.css">
+{% endblock %}
+
+{% block content %}
+    <div class="ui grid">
+        <div class="sixteen wide column">
+            <div class="card shadow">
+                <h1 class="ui center aligned header">
+                    <span><i class="ui list icon colored"></i>题目列表</span>
+                    <div class="sub header" style="margin-top: 10px;">
+                        支持按难度与解答情况筛选 · 每页 50 条
+                    </div>
+                </h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="ui grid">
+        <div class="sixteen wide column">
+            <div class="card shadow outline" style="padding: 10px 30px;">
+                <div class="ui form">
+                    <div class="inline fields" style="margin-bottom: 0;">
+                        <div class="field">
+                            <label>题号前缀</label>
+                            <input type="text" id="prefix-filter" placeholder="例如 AT, UVA, CF...">
+                        </div>
+                        <div class="field">
+                            <label>难度</label>
+                            <select id="difficulty-filter" class="ui dropdown">
+                                <option value="all">全部</option>
+                                <option value="0">暂无评定</option>
+                                <option value="1">入门</option>
+                                <option value="2">普及-</option>
+                                <option value="3">普及/提高-</option>
+                                <option value="4">普及+/提高</option>
+                                <option value="5">提高+/省选-</option>
+                                <option value="6">省选/NOI-</option>
+                                <option value="7">NOI/NOI+/CTSC</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>题解通道</label>
+                            <select id="solution-filter" class="ui dropdown">
+                                <option value="all">全部</option>
+                                <option value="true">开启</option>
+                                <option value="false">关闭</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <button class="ui button primary" onclick="applyFilters()">筛选</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="problem-results" class="card shadow outline">
+                <h3 class="ui dividing header">
+                    <i class="list icon"></i>
+                    搜索结果
+                </h3>
+                <div class="ui divided items">
+                    {% for p in problems %}
+                        <div class="item">
+                            <div class="content">
+                                <a class="header diff-{{ p.difficulty }}" href="https://www.luogu.com.cn/problem/{{ p.id }}">
+                                    {{ p.id }} {{ p.title }}
+                                </a>
+                                <div class="meta firacode">
+                                    <span><i class="fa fa-hashtag"></i> {{ p.id }}</span>
+                                    <span><i class="fa fa-pen-to-square"></i> {{ "题解通道：开启" if p.accept_solution else "题解通道：关闭" }}</span>
+                                    <span><i class="fa fa-file-lines"></i> 题解数目：{{ p.solution_count }}</span>
+                                    <span><i class="fa fa-clock"></i> 更新时间: {{ p.updated_at }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div id="pagination" class="card shadow padding-10" style="text-align: center;">
+                <div id="pagination-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+		window.problemPageData = {
+			currentPage: {{ page }},
+			totalPages: {{ pageCount }},
+			prefix: "{{ prefix | default('') }}"
+		};
+    </script>
+{% endblock %}

@@ -12,6 +12,7 @@ import tokenRouter from './routes/token.js';
 import userRouter from './routes/user.js';
 import apiRouter from './routes/api.js';
 import indexRouter from './routes/index.js';
+import problemRouter from './routes/problem.js';
 import * as worker from "./worker.js";
 import * as renderer from "./renderer.js";
 import auth from "./middleware/auth.js";
@@ -49,6 +50,7 @@ app.use('/task', taskRouter);
 app.use('/token', tokenRouter);
 app.use('/user', userRouter);
 app.use('/api', apiRouter);
+app.use('/problem', problemRouter);
 
 app.use((err, req, res, next) => {
 	logger.warn(`An error occurred while processing ${req.method} ${req.originalUrl}: ${err.message}`);

@@ -17,6 +17,7 @@ export class BaseModel {
 	
 	static async upsert(data, conflictPaths, options = {}) {
 		await this.repository.upsert(data, { conflictPaths, ...options });
+		return this;
 	}
 	
 	static async find(options = {}) {
@@ -65,5 +66,6 @@ export class BaseModel {
 		if (this.created_at) this.created_at = utils.formatDate(this.created_at);
 		if (this.updated_at) this.updated_at = utils.formatDate(this.updated_at);
 		if (this.expire_time) this.expire_time = utils.formatDate(this.expire_time);
+		return this;
 	}
 }

@@ -23,7 +23,6 @@ document.addEventListener("DOMContentLoaded", () => {
 			const response = await fetch(`/${type}/save/` + encodeURIComponent(id));
 			
 			if (response.status === 429) {
-				// 从 Retry-After 读取秒数
 				const retryAfter = response.headers.get("Retry-After");
 				const waitSec = retryAfter ? parseInt(retryAfter, 10) : null;
 				Swal.fire({

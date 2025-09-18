@@ -36,7 +36,7 @@ app.use((req, res, next) => {
 	req.realIP = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
 	next();
 });
-app.use(filterIPs);
+// app.use(filterIPs);
 app.use(auth);
 app.use((req, res, next) => { res.locals.user = req.user; next(); });
 

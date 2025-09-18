@@ -409,27 +409,27 @@ async function fetchProblemSet(type) {
 		logger.debug(`Page ${page} fetched, ${problems.length} problems.`);
 		
 		const ids = problems.map(p => p.id);
-		const existing = await Problem。find({
-			where: { id: In(ids) }，
-			select: ["id"， "updated_at"]，
+		const existing = await Problem.find({
+			where: { id: In(ids) },
+			select: ["id", "updated_at"],
 		});
 		
-		const existingMap = new Map(existing。map(e => [e.id， e]));
+		const existingMap = new Map(existing.map(e => [e.id, e]));
 		
 		const allProblems = [];
 		
 		for (let i = 0; i < problems.length; i += 1) {
-			const chunk = problems。slice(i， i + 1);
-			const results = await Promise。全部(
+			const chunk = problems.slice(i, i + 1);
+			const results = await Promise.all(
 				chunk.map(async (p) => {
-					const dbProblem = existingMap.get(p。id);
-					const 当前 = Date.当前();
-					if (dbProblem && 当前 - new Date(dbProblem.updated_at).getTime() < 18 * 60 * 60 * 1000) {
+					const dbProblem = existingMap.get(p.id);
+					const now = Date.now();
+					if (dbProblem && now - new Date(dbProblem.updated_at).getTime() < 18 * 60 * 60 * 1000) {
 						return null;
 					}
 					try {
 						const result = await fetchProblemSolution(p.id);
-						p。accept_solution = result。accept_solution;
+						p.accept_solution = result.accept_solution;
 						p.solution_count = result.solution_count;
 						return p;
 					} catch (err) {
@@ -440,9 +440,9 @@ async function fetchProblemSet(type) {
 			);
 			allProblems.push(...results.filter(Boolean));
 		}
-		if (allProblems。length > 0) {
+		if (allProblems.length > 0) {
 			await saveProblems(allProblems);
-			logger。debug(`Page ${page} processed, ${allProblems。length} problems updated.`);
+			logger.debug(`Page ${page} processed, ${allProblems.length} problems updated.`);
 		}
 		else {
 			logger.debug(`Page ${page} processed, no problems needed update.`);

@@ -28,7 +28,7 @@ router.get('/:id', async (req, res, next) => {
 				renderedContent: null,
 				empty: true
 			});
-			return next();
+			return;
 		}
 		await paste.loadRelationships();
 		paste.formatDate();

@@ -41,7 +41,7 @@ function executeSearch() {
 		})
 		.catch(error => {
 			console.error('Search error:', error);
-			showError('搜索请求失败，请检查网络连接');
+			showError('网络错误或请求过于频繁，请稍后再试。');
 		});
 }
 
@@ -129,10 +129,4 @@ function showError(message) {
         </div>
     `;
 	document.getElementById('pagination').style.display = 'none';
-	
-	Swal.fire({
-		icon: 'error',
-		title: '出错啦',
-		text: message
-	});
 }

@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
 				console.error(err);
 				Swal.fire({
 					title: "保存失败",
-					text: err.message || "无法保存内容，请稍后再试。",
+					text: "网络错误或请求过于频繁，请稍后再试。",
 					icon: "error",
 					confirmButtonText: "确定"
 				});

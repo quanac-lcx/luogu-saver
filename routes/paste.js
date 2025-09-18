@@ -3,15 +3,6 @@ import Paste from "../models/paste.js";
 
 const router = express.Router();
 
-async function loadRelationships(paste) {
-	const [rows] = await db.query('SELECT * FROM users WHERE id = ?', [paste.author_uid]);
-	if (rows.length === 0) {
-		throw new Error('Author not found');
-	}
-	paste.author = rows[0];
-	return paste;
-}
-
 router.get('/:id', async (req, res, next) => {
 	try {
 		const { id } = req.params;

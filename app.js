@@ -1,7 +1,7 @@
 import express from 'express';
 import nunjucks from 'nunjucks';
 import cookieParser from 'cookie-parser';
-import {filterIPs} from './middleware/rate_limit.js';
+// import {filterIPs} from './middleware/rate_limit.js';
 import 'dotenv/config';
 import logger from './logger.js';
 
@@ -16,9 +16,6 @@ import * as worker from "./worker.js";
 import * as renderer from "./renderer.js";
 import auth from "./middleware/auth.js";
 import {scheduleJob} from "node-schedule";
-import fs from "fs/promises";
-import path from "path";
-import axios from "axios";
 import * as utils from "./utils.js";
 
 const app = express();
@@ -76,30 +73,6 @@ app.use((req, res, next) => {
         originalUrl: req.originalUrl
     });
 });
-
-async function updateBeacon() {
-	const url = "https://static.cloudflareinsights.com/beacon.min.js";
-	const dest = path.join(process.cwd(), "static", "cloudflare", "beacon.min.js");
-	logger.debug("Updating beacon.min.js from " + url);
-	try {
-		const startTime = Date.now();
-		const response = await axios.get(url, { responseType: "text" });
-		await fs.mkdir(path.dirname(dest), { recursive: true });
-		await fs.writeFile(dest, response.data, "utf-8");
-		const endTime = Date.now();
-		logger.debug(`beacon.min.js updated in ${(endTime - startTime)} ms`);
-		logger.info("Updated beacon.min.js successfully");
-	} catch (err) {
-		logger.warn("Beacon update failed: " + err.message);
-	}
-}
-
-updateBeacon().then(() => {
-	logger.info("Initial beacon.min.js update completed");
-}).catch((err) => {
-	logger.warn("Initial beacon.min.js update failed: " + err.message);
-});
-
 // initialize database
 
 import "reflect-metadata";
@@ -118,8 +91,6 @@ export const AppDataSource = new DataSource({
 	database: process.env.DB_NAME || config.database,
 	entities: loadEntities()
 });
-
-scheduleJob('0 * * * *', updateBeacon);
 
 if (import.meta.url.endsWith('app.js')) {
 	AppDataSource.initialize()

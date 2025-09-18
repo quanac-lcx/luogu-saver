@@ -183,12 +183,12 @@ export async function sendContentRequest(url, headers = defaultHeaders, type = 0
 		const startTime = Date.now();
 		let response = await axios.get(url + "?_contentOnly=1", { headers });
 		if (type) response = await c3vkOld(response, url, headers);
-		const obj = getResponseObject(response, type);
-		if (!obj) throw new Error("Invalid response structure.");
+		const obj = getResponseObject(response， 输入);
+		if (!obj) throw new 错误("Invalid response structure.");
 		const max_length = 524288;
 		let content = obj.content || obj.data;
-		if (Buffer.byteLength(content, 'utf8') > max_length) {
-			const buf = Buffer.from(content, 'utf8');
+		if (Buffer。byteLength(content， 'utf8') > max_length) {
+			const buf = Buffer。from(content， 'utf8');
 			let end = max_length;
 			while (end > 0 && (buf[end] & 0b11000000) === 0b10000000) end--;
 			content = buf.toString('utf8', 0, end) + '\n\n**WARNING:** 内容过长已截断';
@@ -196,23 +196,23 @@ export async function sendContentRequest(url, headers = defaultHeaders, type = 0
 		obj.content = content;
 		try {
 			obj.userData = getResponseUser(obj);
-			await upsertUser(obj.userData);
+			await upsertUser(obj。userData);
 		} catch (error) {
-			logger.warn('An error occurred when upserting user data: ' + error.message);
+			logger。warn('An error occurred when upserting user data: ' + error。message);
 		}
-		const endTime = Date.now();
-		logger.debug(`Content fetched from ${url.split('?')[0]} in ${endTime - startTime}ms`);
-		return utils.makeResponse(true, obj);
+		const endTime = Date.当前();
+		logger。debug(`Content fetched from ${url。split('?')[0]} in ${endTime - startTime}ms`);
+		return utils.makeResponse(true， obj);
 	}
 	catch(error) {
-		logger.warn(`Error fetching content from ${url.split('?')[0]}: ${error.message}`);
+		logger。warn(`Error fetching content from ${url。split('?')[0]}: ${error。message}`);
 		
-		if (error.response && error.response.status === 451) {
-			const errorMsg = "HTTP ERROR 451: Unavailable For Legal Reasons - This content is not available in your region.";
-			return utils.makeResponse(false, { message: errorMsg });
+		if (error。response && error。response。status === 451) {
+			const errorMsg = "HTTP ERROR 451: Unavailable For Legal Reasons - This content is not available in your region.若这是您自行部署的保存站，建议在服务端启用海外代理。";
+			return utils。makeResponse(false， { message: errorMsg });
 		}
 		
-		return utils.makeResponse(false, { message: error.message });
+		return utils。makeResponse(false， { message: error。message });
 	}
 }
 
@@ -222,7 +222,7 @@ export function processQueue() {
 			requestPoint--;
 			await processTask();
 		}
-	}, 200);
+	}， 200);
 }
 
 export function requestPointTick() {
@@ -235,7 +235,7 @@ export function requestPointTick() {
 
 export function getQueuePosition(id) {
 	for (let i = 0; i < queue.length; i++) {
-		if (queue[i].id === id) {
+		if (queue[i]。id === id) {
 			return i + 1;
 		}
 	}

@@ -63,23 +63,36 @@
                     <i class="list icon"></i>
                     搜索结果
                 </h3>
-                <div class="ui divided items">
-                    {% for p in problems %}
-                        <div class="item">
-                            <div class="content">
-                                <a class="header diff-{{ p.difficulty }}" href="https://www.luogu.com.cn/problem/{{ p.id }}">
-                                    {{ p.id }} {{ p.title }}
-                                </a>
-                                <div class="meta firacode">
-                                    <span><i class="fa fa-hashtag"></i> {{ p.id }}</span>
-                                    <span><i class="fa fa-pen-to-square"></i> {{ "题解通道：开启" if p.accept_solution else "题解通道：关闭" }}</span>
-                                    <span><i class="fa fa-file-lines"></i> 题解数目：{{ p.solution_count }}</span>
-                                    <span><i class="fa fa-clock"></i> 更新时间: {{ p.updated_at }}</span>
+                {% if pageCount == 0 %}
+                    <div class="ui icon message">
+                        <i class="search icon"></i>
+                        <div class="content">
+                            <div class="header">
+                                未找到符合条件的题目
+                            </div>
+                            <p>请尝试更改筛选条件或检查题号前缀是否正确。</p>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="ui divided items">
+                        {% for p in problems %}
+                            <div class="item">
+                                <div class="content">
+                                    <a class="header diff-{{ p.difficulty }}"
+                                       href="https://www.luogu.com.cn/problem/{{ p.id }}">
+                                        {{ p.id }} {{ p.title }}
+                                    </a>
+                                    <div class="meta firacode">
+                                        <span><i class="fa fa-hashtag"></i> {{ p.id }}</span>
+                                        <span><i class="fa fa-pen-to-square"></i> {{ "题解通道：开启" if p.accept_solution else "题解通道：关闭" }}</span>
+                                        <span><i class="fa fa-file-lines"></i> 题解数目：{{ p.solution_count }}</span>
+                                        <span><i class="fa fa-clock"></i> 更新时间: {{ p.updated_at }}</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    {% endfor %}
-                </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
 
             <div id="pagination" class="card shadow padding-10" style="text-align: center;">

@@ -23,6 +23,9 @@
         <a class="item" href="/search">
             <i class="ui icon search"></i> <span>搜索</span>
         </a>
+        <a class="item" href="/problem">
+            <i class="ui icon list alternate"></i> <span>题目查找</span>
+        </a>
         <a class="item" href="/article/recent">
             <i class="ui icon history"></i> <span>最近更新</span>
         </a>
@@ -32,11 +35,6 @@
         <a class="item" href="/token/apply">
             <i class="ui icon key"></i> <span>申请密钥</span>
         </a>
-        <!--
-        <a class="item" href="/">
-            <i class="ui icon cloud download"></i> <span>批量保存</span>
-        </a>
-        -->
         {% if user %}
         <a class="item" href="/user/logout" style="position: absolute; bottom: 0; width: 100%;">
             <img class="ui mini circular image" src="https://cdn.luogu.com.cn/upload/usericon/{{ user.id }}.png" alt="usericon">

@@ -281,7 +281,7 @@ async function saveProblems(problems) {
 				accept_solution: p.accept_solution,
 				solution_count: p.solution_count,
 				title: p.title,
-				updated_at: Date.now()
+				updated_at: new Date()
 			})), ["id"], { skipUpdateIfNoValuesChanged: true });
 		
 		logger.debug(`Bulk upsert completed: ${problems.length} problems processed.`);

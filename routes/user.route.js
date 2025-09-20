@@ -1,5 +1,5 @@
 import express from 'express';
-import Token from '../models/token.js';
+import { validateToken } from "../services/token.service.js";
 
 const router = express.Router();
 
@@ -18,7 +18,7 @@ router.post('/login', async (req, res, next) => {
 	}
 	const tokenText = req.body.token;
 	try {
-		const token = await Token.findById(tokenText);
+		const token = await validateToken(tokenText);
 		if (!token) {
 			throw new Error('Invalid token.');
 		}

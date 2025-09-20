@@ -1,3 +1,5 @@
+import { createHash } from 'crypto';
+
 export function formatDate(date, format = "YYYY-MM-DD HH:mm:ss") {
 	const padZero = (num) => (num < 10 ? "0" + num : num);
 	
@@ -24,6 +26,23 @@ export function generateRandomString(length = 8) {
 		result += characters.charAt(Math.floor(Math.random() * characters.length));
 	}
 	return result;
+}
+
+export function truncateUtf8(content, maxBytes = 524288) {
+	if (!content) return '';
+	const buf = Buffer.from(String(content), 'utf8');
+	if (buf.length <= maxBytes) return String(content);
+	let end = maxBytes;
+	while (end > 0 && (buf[end] & 0b11000000) === 0b10000000) end--;
+	return buf.toString('utf8', 0, end) + '\n\n**WARNING:** 内容过长已截断';
+}
+
+export function hashContent(content) {
+	return createHash('sha256').update(content, 'utf8').digest('hex');
+}
+
+export function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export function sanitizeLatex(src) {

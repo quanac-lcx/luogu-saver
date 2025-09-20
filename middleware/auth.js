@@ -1,6 +1,6 @@
 import Token from "../models/token.js";
 
-const auth = async (req, res, next) => {
+export default async (req, res, next) => {
 	const tokenText = req.cookies.token;
 	if (!tokenText) {
 		req.user = null;
@@ -15,7 +15,6 @@ const auth = async (req, res, next) => {
 		id: token.uid,
 		role: token.role
 	};
+	res.locals.user = req.user;
 	next();
 };
-
-export default auth;

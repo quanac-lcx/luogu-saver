@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { AppDataSource } from "./app.js";
 
 export async function migrate() {

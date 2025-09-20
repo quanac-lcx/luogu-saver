@@ -142,7 +142,7 @@
 					infoEl.textContent = data.tasks[0].info;
 					expireEl.textContent = data.tasks[0].expire_time;
 					setStatus(data.tasks[0].status, data.tasks[0].position);
-					if (data.tasks[0].status === "Completed") {
+					if (data.tasks[0].status === "Completed" || data.tasks[0].status === "Failed") {
                         clearInterval(id);
                         document.getElementById("goto-btn").disabled = false;
                     }

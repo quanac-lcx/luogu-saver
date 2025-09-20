@@ -1,12 +1,10 @@
 import express from "express";
-import Article from "../models/article.js";
-import Paste from "../models/paste.js";
+import { getCounts } from "../services/statistic.service.js";
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-	const articlesCount = await Article.count();
-	const pastesCount = await Paste.count();
+	const { articlesCount, pastesCount } = await getCounts();
 	res.render('index.njk', { title: "首页", paste_count: pastesCount, article_count: articlesCount });
 });
 

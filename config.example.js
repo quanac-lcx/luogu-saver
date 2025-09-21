@@ -24,5 +24,11 @@ export default {
 	queue: {
 		processInterval: 200,
 		maxLength: 500
+	},
+	recent: {
+		article: {
+			default: 20,
+			max: 2000
+		}
 	}
 }

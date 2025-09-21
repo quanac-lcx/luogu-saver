@@ -6,7 +6,6 @@ export function getResponseObject(response, type = 0) {
 		const contextElement = $('#lentille-context');
 		if (!contextElement.length) throw new Error("Context not found.");
 		const dataObj = JSON.parse(contextElement.text().trim());
-		console.log(dataObj);
 		return dataObj.data?.article;
 	}
 	else return response.data?.currentData?.paste;

@@ -10,7 +10,6 @@ import { sleep } from "../core/utils.js";
 
 const accountPool = JSON.parse(fs.readFileSync("./accounts.json", "utf8"));
 
-// 添加执行状态标志
 let isUpdatingAllProblemSets = false;
 
 async function saveProblems(problems) {

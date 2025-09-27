@@ -24,7 +24,7 @@ export function mergeSetCookieToHeaders(response, headers) {
 export async function fetchContent(url, headers = {}, { c3vk = "new", timeout = 30000 } = {}) {
 	logger.debug(`Fetching URL: ${url} with c3vk mode: ${c3vk}`);
 	const h = { ...defaultHeaders, ...headers };
-	let resp = await axios.get(url + '?_contentOnly=1', {
+	let resp = await axios.get(url, {
 		...frontendFetchConfig,
 		headers: h,
 		timeout

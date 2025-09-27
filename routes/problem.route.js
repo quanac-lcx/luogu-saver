@@ -6,7 +6,7 @@ const router = express.Router();
 router.get('/', async (req, res, next) => {
 	try {
 		const { page, accept_solution, difficulty, prefix } = req.query;
-		const result = await getProblems({ page, accept_solution, difficulty, prefix });
+		const result = await getProblems({ page, accept_solution, difficulty, prefix, req });
 		
 		res.render('problem_list.njk', {
 			title: "题目列表",

@@ -1,5 +1,6 @@
 import Article from "../models/article.js";
 import ArticleVersion from "../models/article_version.js";
+import { withCache, invalidateCache, invalidateCacheByPattern } from "../core/cache.js";
 
 export async function saveArticle(task, obj, onProgress) {
 	const aid = task.aid;
@@ -52,73 +53,58 @@ export async function saveArticle(task, obj, onProgress) {
 	});
 	await newVersion.save();
 	
-	// Invalidate cache for this article and recent articles
-	await redis.del(`article:${aid}`);
-	// Clear all recent articles cache (wildcard pattern)
-	const keys = await redis.redis.keys('recent_articles:*');
-	if (keys.length > 0) {
-		await redis.redis.del(...keys);
-	}
-	// Invalidate statistics cache since article count may have changed
-	await redis.del('statistics:full');
-	await redis.del('statistics:counts');
+	// Invalidate caches
+	await Promise.all([
+		invalidateCache(`article:${aid}`),
+		invalidateCacheByPattern('recent_articles:*'),
+		invalidateCache(['statistics:full', 'statistics:counts'])
+	]);
 }
 
-export async function getRecentArticles(count) {
-	const cacheKey = `recent_articles:${count}`;
-	
-	// Try to get from cache first
-	const cachedResult = await redis.get(cacheKey);
-	if (cachedResult) {
-		return JSON.parse(cachedResult);
-	}
-	
-	let articles = await Article.find({
-		where: {deleted: false},
-		order: {priority: 'DESC', updated_at: 'DESC'},
-		take: count
+export async function getRecentArticles(count, req = null) {
+	return await withCache({
+		cacheKey: `recent_articles:${count}`,
+		ttl: 600, // 10 minutes
+		req,
+		fetchFn: async () => {
+			let articles = await Article.find({
+				where: {deleted: false},
+				order: {priority: 'DESC', updated_at: 'DESC'},
+				take: count
+			});
+			articles = await Promise.all(articles.map(async(article) => {
+				await article.loadRelationships();
+				article.formatDate();
+				article.summary = article.content.slice(0, 200);
+				article.tags = JSON.parse(article.tags);
+				return article;
+			}));
+			return articles;
+		}
 	});
-	articles = await Promise.all(articles.map(async(article) => {
-		await article.loadRelationships();
-		article.formatDate();
-		article.summary = article.content.slice(0, 200);
-		article.tags = JSON.parse(article.tags);
-		return article;
-	}));
-	
-	// Cache for 10 minutes (600 seconds)
-	await redis.set(cacheKey, JSON.stringify(articles), 600);
-	
-	return articles;
 }
 
 
-export async function getArticleById(id) {
+export async function getArticleById(id, req = null) {
 	if (id.length !== 8) throw new Error("Invalid article ID.");
 	
-	const cacheKey = `article:${id}`;
-	
-	// Try to get from cache first
-	const cachedResult = await redis.get(cacheKey);
-	if (cachedResult) {
-		return JSON.parse(cachedResult);
-	}
-	
-	const article = await Article.findById(id);
-	if (!article) return null;
-	
-	await article.loadRelationships();
-	article.formatDate();
-	
-	if (article.deleted) throw new Error(article.deleted_reason);
-	
-	const sanitizedContent = utils.sanitizeLatex(article.content);
-	const renderedContent = renderer.renderMarkdown(sanitizedContent);
-	
-	const result = { article, renderedContent };
-	
-	// Cache for 30 minutes (1800 seconds)
-	await redis.set(cacheKey, JSON.stringify(result), 1800);
-	
-	return result;
+	return await withCache({
+		cacheKey: `article:${id}`,
+		ttl: 1800, // 30 minutes
+		req,
+		fetchFn: async () => {
+			const article = await Article.findById(id);
+			if (!article) return null;
+			
+			await article.loadRelationships();
+			article.formatDate();
+			
+			if (article.deleted) throw new Error(article.deleted_reason);
+			
+			const sanitizedContent = utils.sanitizeLatex(article.content);
+			const renderedContent = renderer.renderMarkdown(sanitizedContent);
+			
+			return { article, renderedContent };
+		}
+	});
 }

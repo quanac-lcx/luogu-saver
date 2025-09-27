@@ -7,6 +7,7 @@ import Problem from "../models/problem.js";
 import { fetchContent, defaultHeaders } from "../core/request.js";
 import config from "../config.js";
 import { sleep } from "../core/utils.js";
+import { withCache, invalidateCacheByPattern } from "../core/cache.js";
 
 const accountPool = JSON.parse(fs.readFileSync("./accounts.json", "utf8"));
 
@@ -27,10 +28,7 @@ async function saveProblems(problems) {
 		logger.debug(`Bulk upsert completed: ${problems.length} problems processed.`);
 		
 		// Invalidate problems cache after updating
-		const keys = await redis.redis.keys('problems:*');
-		if (keys.length > 0) {
-			await redis.redis.del(...keys);
-		}
+		await invalidateCacheByPattern('problems:*');
 	} catch (error) {
 		logger.warn(`Error saving problems: ${error.message}`);
 	}
@@ -147,57 +145,53 @@ export async function updateAllProblemSets() {
 	}
 }
 
-export async function getProblems({ page, accept_solution, difficulty, prefix }) {
+export async function getProblems({ page, accept_solution, difficulty, prefix, req = null }) {
 	const perPage = config.pagination.problem;
 	const currentPage = Math.max(parseInt(page) || 1, 1);
 	
 	// Create cache key based on parameters
 	const cacheKey = `problems:${currentPage}:${accept_solution || 'any'}:${difficulty || 'any'}:${prefix || 'none'}`;
 	
-	// Try to get from cache first
-	const cachedResult = await redis.get(cacheKey);
-	if (cachedResult) {
-		return JSON.parse(cachedResult);
-	}
-	
-	const where = {};
-	
-	if (prefix) {
-		where.id = Like(`${prefix}%`);
-	}
-	
-	if (accept_solution === 'true') {
-		where.accept_solution = true;
-	} else if (accept_solution === 'false') {
-		where.accept_solution = false;
-	}
-	
-	if (difficulty !== undefined) {
-		const diff = parseInt(difficulty);
-		if (!isNaN(diff)) {
-			where.difficulty = diff;
+	return await withCache({
+		cacheKey,
+		ttl: 900, // 15 minutes
+		req,
+		fetchFn: async () => {
+			const where = {};
+			
+			if (prefix) {
+				where.id = Like(`${prefix}%`);
+			}
+			
+			if (accept_solution === 'true') {
+				where.accept_solution = true;
+			} else if (accept_solution === 'false') {
+				where.accept_solution = false;
+			}
+			
+			if (difficulty !== undefined) {
+				const diff = parseInt(difficulty);
+				if (!isNaN(diff)) {
+					where.difficulty = diff;
+				}
+			}
+			
+			const [problems, total] = await Promise.all([
+				Problem.createQueryBuilder('p')
+					.where(where)
+					.orderBy('p.id', 'ASC')
+					.skip((currentPage - 1) * perPage)
+					.take(perPage)
+					.getMany(),
+				Problem.count({ where })
+			]);
+			
+			problems.forEach(p => Object.setPrototypeOf(p, Problem.prototype));
+			problems.forEach(p => p.formatDate());
+			
+			const pageCount = Math.ceil(total / perPage);
+			
+			return { problems, currentPage, pageCount, prefix };
 		}
-	}
-	
-	const [problems, total] = await Promise.all([
-		Problem.createQueryBuilder('p')
-			.where(where)
-			.orderBy('p.id', 'ASC')
-			.skip((currentPage - 1) * perPage)
-			.take(perPage)
-			.getMany(),
-		Problem.count({ where })
-	]);
-	
-	problems.forEach(p => Object.setPrototypeOf(p, Problem.prototype));
-	problems.forEach(p => p.formatDate());
-	
-	const pageCount = Math.ceil(total / perPage);
-	
-	const result = { problems, currentPage, pageCount, prefix };
-	
-	// Cache for 15 minutes (900 seconds)
-	await redis.set(cacheKey, JSON.stringify(result), 900);
-	
-	return result;
+	});
 }

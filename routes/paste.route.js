@@ -19,7 +19,7 @@ router.get('/save/:id', async (req, res) => {
 router.get('/:id', async (req, res, next) => {
 	try {
 		const { id } = req.params;
-		const result = await getPasteById(id);
+		const result = await getPasteById(id, req);
 		
 		if (!result) {
 			res.render('paste.njk', {

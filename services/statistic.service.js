@@ -1,5 +1,6 @@
 import Article from "../models/article.js";
 import Paste from "../models/paste.js";
+import { withCache } from "../core/cache.js";
 
 async function getTimeSeriesData(entityClass) {
 	const earliest = await entityClass
@@ -49,65 +50,52 @@ async function getTimeSeriesData(entityClass) {
 	return result;
 }
 
-export async function getStatistics() {
-	const cacheKey = 'statistics:full';
-	
-	// Try to get from cache first
-	const cachedResult = await redis.get(cacheKey);
-	if (cachedResult) {
-		return JSON.parse(cachedResult);
-	}
-	
-	const articlesCount = await Article.count();
-	const pastesCount = await Paste.count();
-	
-	const today = new Date();
-	today.setHours(0, 0, 0, 0);
-	
-	const todayArticles = await Article.createQueryBuilder("a")
-		.where("a.created_at >= :today", { today })
-		.getCount();
-	
-	const todayPastes = await Paste.createQueryBuilder("p")
-		.where("p.created_at >= :today", { today })
-		.getCount();
-	
-	const articlesData = await getTimeSeriesData(Article);
-	const pastesData = await getTimeSeriesData(Paste);
-	
-	const result = {
-		articles_total: articlesCount,
-		pastes_total: pastesCount,
-		today_articles: todayArticles,
-		today_pastes: todayPastes,
-		time_series: {
-			articles: articlesData,
-			pastes: pastesData,
-		},
-	};
-	
-	// Cache for 5 minutes (300 seconds) since this is expensive to compute
-	await redis.set(cacheKey, JSON.stringify(result), 300);
-	
-	return result;
+export async function getStatistics(req = null) {
+	return await withCache({
+		cacheKey: 'statistics:full',
+		ttl: 300, // 5 minutes
+		req,
+		fetchFn: async () => {
+			const articlesCount = await Article.count();
+			const pastesCount = await Paste.count();
+			
+			const today = new Date();
+			today.setHours(0, 0, 0, 0);
+			
+			const todayArticles = await Article.createQueryBuilder("a")
+				.where("a.created_at >= :today", { today })
+				.getCount();
+			
+			const todayPastes = await Paste.createQueryBuilder("p")
+				.where("p.created_at >= :today", { today })
+				.getCount();
+			
+			const articlesData = await getTimeSeriesData(Article);
+			const pastesData = await getTimeSeriesData(Paste);
+			
+			return {
+				articles_total: articlesCount,
+				pastes_total: pastesCount,
+				today_articles: todayArticles,
+				today_pastes: todayPastes,
+				time_series: {
+					articles: articlesData,
+					pastes: pastesData,
+				},
+			};
+		}
+	});
 }
 
-export async function getCounts() {
-	const cacheKey = 'statistics:counts';
-	
-	// Try to get from cache first
-	const cachedResult = await redis.get(cacheKey);
-	if (cachedResult) {
-		return JSON.parse(cachedResult);
-	}
-	
-	const articlesCount = await Article.count();
-	const pastesCount = await Paste.count();
-	
-	const result = { articlesCount, pastesCount };
-	
-	// Cache for 2 minutes (120 seconds)
-	await redis.set(cacheKey, JSON.stringify(result), 120);
-	
-	return result;
+export async function getCounts(req = null) {
+	return await withCache({
+		cacheKey: 'statistics:counts',
+		ttl: 120, // 2 minutes
+		req,
+		fetchFn: async () => {
+			const articlesCount = await Article.count();
+			const pastesCount = await Paste.count();
+			return { articlesCount, pastesCount };
+		}
+	});
 }

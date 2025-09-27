@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get("/apply", async (req, res, next) => {
 	try {
-		res.render("token_apply.njk", { title: "申请 Token" });
+		res.render("user/token_apply.njk", { title: "申请 Token" });
 	} catch (error) {
 		next(error);
 	}

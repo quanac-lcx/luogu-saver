@@ -25,7 +25,7 @@ export default async (err, req, res, next) => {
 		logger.error(`Failed to log error to database: ${logError.message}`);
 	}
 	
-	res.render('error.njk', { title: "错误", error_message: err.message });
+	res.render('system/error.njk', { title: "错误", error_message: err.message });
 }
 
 // Helper function to identify common user errors

@@ -13,7 +13,7 @@
     </div>
 </div>
 
-<div class="ui segment">
+<div class="card shadow">
     <div class="ui form">
         <div class="inline fields">
             <label>内容类型：</label>
@@ -34,21 +34,19 @@
 </div>
 
 {% if items.length > 0 %}
-<div class="ui cards">
+<div class="ui three column stackable grid">
     {% for item in items %}
-    <div class="card">
-        <div class="content">
-            <div class="header">{{ item.title }}</div>
+    <div class="column">
+        <div class="card shadow outline">
+            <h4 class="ui header">{{ item.title }}</h4>
             {% if type == 'paste' and item.author %}
-            <div class="meta">作者: {{ item.author.name }}</div>
+            <div class="meta gray">作者: {{ item.author.name }}</div>
             {% endif %}
-            <div class="meta">删除时间: {{ item.updated_at }}</div>
+            <div class="meta gray">删除时间: {{ item.updated_at }}</div>
             {% if item.deleted_reason %}
-            <div class="description">删除原因: {{ item.deleted_reason }}</div>
+            <div style="margin-top: 10px;">删除原因: {{ item.deleted_reason }}</div>
             {% endif %}
-        </div>
-        <div class="extra content">
-            <div class="ui two buttons">
+            <div class="ui two buttons" style="margin-top: 15px;">
                 <a href="/{{ type }}/{{ item.id }}" target="_blank" class="ui basic button">
                     <i class="ui icon eye"></i>
                     查看
@@ -64,7 +62,7 @@
 </div>
 
 {% if totalPages > 1 %}
-<div class="ui center aligned segment">
+<div class="card shadow" style="text-align: center;">
     <div class="ui pagination menu">
         {% if currentPage > 1 %}
         <a class="item" href="?page={{ currentPage - 1 }}&type={{ type }}">
@@ -96,7 +94,7 @@
 {% endif %}
 
 {% else %}
-<div class="ui placeholder segment">
+<div class="card shadow" style="text-align: center; padding: 60px 30px;">
     <div class="ui icon header">
         <i class="search icon"></i>
         没有找到已删除的{{ type == 'article' and '专栏' or '剪贴板' }}

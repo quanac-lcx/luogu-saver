@@ -13,7 +13,7 @@
     </div>
 </div>
 
-<div class="ui segment">
+<div class="card shadow">
     <div class="ui form">
         <div class="inline fields">
             <label>筛选级别：</label>
@@ -40,72 +40,70 @@
 </div>
 
 {% if errors.length > 0 %}
-<div class="ui segments">
-    {% for error in errors %}
-    <div class="ui segment">
-        <div class="ui grid">
-            <div class="twelve wide column">
-                <h4 class="ui header">
-                    <i class="ui icon 
-                        {% if error.level == 'error' %}exclamation circle red
-                        {% elif error.level == 'warn' %}warning sign yellow
-                        {% else %}info circle blue{% endif %}">
-                    </i>
-                    {{ error.message }}
-                </h4>
-                {% if error.url %}
-                <div class="ui label">
-                    <i class="ui icon linkify"></i>
-                    {{ error.method }} {{ error.url }}
-                </div>
-                {% endif %}
-                {% if error.user %}
-                <div class="ui label">
-                    <i class="ui icon user"></i>
-                    {{ error.user.name }} (ID: {{ error.user.id }})
-                </div>
-                {% endif %}
-                {% if error.ip %}
-                <div class="ui label">
-                    <i class="ui icon globe"></i>
-                    {{ error.ip }}
-                </div>
-                {% endif %}
+{% for error in errors %}
+<div class="card shadow outline">
+    <div class="ui grid">
+        <div class="twelve wide column">
+            <h4 class="ui header">
+                <i class="ui icon 
+                    {% if error.level == 'error' %}exclamation circle red
+                    {% elif error.level == 'warn' %}warning sign yellow
+                    {% else %}info circle blue{% endif %}">
+                </i>
+                {{ error.message }}
+            </h4>
+            {% if error.url %}
+            <div class="ui label">
+                <i class="ui icon linkify"></i>
+                {{ error.method }} {{ error.url }}
             </div>
-            <div class="four wide column right aligned">
-                <div class="ui small header">
-                    {{ error.created_at }}
-                </div>
+            {% endif %}
+            {% if error.user %}
+            <div class="ui label">
+                <i class="ui icon user"></i>
+                {{ error.user.name }} (ID: {{ error.user.id }})
+            </div>
+            {% endif %}
+            {% if error.ip %}
+            <div class="ui label">
+                <i class="ui icon globe"></i>
+                {{ error.ip }}
+            </div>
+            {% endif %}
+        </div>
+        <div class="four wide column right aligned">
+            <div class="ui small header">
+                {{ error.created_at }}
             </div>
         </div>
-        {% if error.stack %}
-        <div class="ui accordion">
-            <div class="title">
-                <i class="dropdown icon"></i>
-                查看堆栈跟踪
-            </div>
-            <div class="content">
-                <pre style="white-space: pre-wrap; background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 12px;">{{ error.stack }}</pre>
-            </div>
-        </div>
-        {% endif %}
-        {% if error.user_agent %}
-        <div class="ui accordion">
-            <div class="title">
-                <i class="dropdown icon"></i>
-                用户代理
-            </div>
-            <div class="content">
-                <code>{{ error.user_agent }}</code>
-            </div>
-        </div>
-        {% endif %}
     </div>
-    {% endfor %}
+    {% if error.stack %}
+    <div class="ui accordion">
+        <div class="title">
+            <i class="dropdown icon"></i>
+            查看堆栈跟踪
+        </div>
+        <div class="content">
+            <pre style="white-space: pre-wrap; background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 12px;">{{ error.stack }}</pre>
+        </div>
+    </div>
+    {% endif %}
+    {% if error.user_agent %}
+    <div class="ui accordion">
+        <div class="title">
+            <i class="dropdown icon"></i>
+            用户代理
+        </div>
+        <div class="content">
+            <code>{{ error.user_agent }}</code>
+        </div>
+    </div>
+    {% endif %}
 </div>
+{% endfor %}
 
 {% if totalPages > 1 %}
-<div class="ui center aligned segment">
+<div class="card shadow" style="text-align: center;">
     <div class="ui pagination menu">
         {% if currentPage > 1 %}
         <a class="item" href="?page={{ currentPage - 1 }}{% if level %}&level={{ level }}{% endif %}">
@@ -137,7 +135,7 @@
 {% endif %}
 
 {% else %}
-<div class="ui placeholder segment">
+<div class="card shadow" style="text-align: center; padding: 60px 30px;">
     <div class="ui icon header">
         <i class="search icon"></i>
         没有找到错误日志

@@ -14,31 +14,31 @@
 </div>
 
 {% if tokens.length > 0 %}
-<div class="ui cards">
+<div class="ui three column stackable grid">
     {% for token in tokens %}
-    <div class="card">
-        <div class="content">
-            <div class="header">Token #{{ token.id }}</div>
-            <div class="meta">创建时间: {{ token.created_at }}</div>
+    <div class="column">
+        <div class="card shadow outline">
+            <h4 class="ui header">Token #{{ token.id }}</h4>
+            <div class="meta gray">创建时间: {{ token.created_at }}</div>
             {% if token.expire_time %}
-            <div class="meta">过期时间: {{ token.expire_time }}</div>
+            <div class="meta gray">过期时间: {{ token.expire_time }}</div>
             {% endif %}
             {% if token.description %}
-            <div class="description">{{ token.description }}</div>
+            <div style="margin-top: 10px;">{{ token.description }}</div>
             {% endif %}
-        </div>
-        <div class="extra content">
-            <button class="ui red button" onclick="deleteToken('{{ token.id }}')">
-                <i class="ui icon trash"></i>
-                删除
-            </button>
+            <div style="margin-top: 15px;">
+                <button class="ui red button" onclick="deleteToken('{{ token.id }}')">
+                    <i class="ui icon trash"></i>
+                    删除
+                </button>
+            </div>
         </div>
     </div>
     {% endfor %}
 </div>
 
 {% if totalPages > 1 %}
-<div class="ui center aligned segment">
+<div class="card shadow" style="text-align: center;">
     <div class="ui pagination menu">
         {% if currentPage > 1 %}
         <a class="item" href="?page={{ currentPage - 1 }}">
@@ -70,7 +70,7 @@
 {% endif %}
 
 {% else %}
-<div class="ui placeholder segment">
+<div class="card shadow" style="text-align: center; padding: 60px 30px;">
     <div class="ui icon header">
         <i class="search icon"></i>
         没有找到 Token

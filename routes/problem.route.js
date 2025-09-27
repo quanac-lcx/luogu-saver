@@ -8,7 +8,7 @@ router.get('/', async (req, res, next) => {
 		const { page, accept_solution, difficulty, prefix } = req.query;
 		const result = await getProblems({ page, accept_solution, difficulty, prefix });
 		
-		res.render('problem_list.njk', {
+		res.render('content/problem_list.njk', {
 			title: "题目列表",
 			problems: result.problems,
 			page: result.currentPage,

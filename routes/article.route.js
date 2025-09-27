@@ -8,7 +8,7 @@ router.get('/recent', async (req, res, next) => {
 	try {
 		const count = Math.min(parseInt(req.query.count) || config.recent.article.default, config.recent.article.max);
 		let articles = await getRecentArticles(count);
-		res.render('article_recent.njk', { title: "最近更新", articles });
+		res.render('content/article_recent.njk', { title: "最近更新", articles });
 	} catch (error) {
 		next(error);
 	}
@@ -33,7 +33,7 @@ router.get('/:id', async (req, res, next) => {
 		const result = await getArticleById(id);
 		
 		if (!result) {
-			res.render('article.njk', {
+			res.render('content/article.njk', {
 				title: `保存文章`,
 				article: { title: `文章 ${id}`, id, updated_at: "尚未保存" },
 				renderedContent: null,
@@ -43,7 +43,7 @@ router.get('/:id', async (req, res, next) => {
 		}
 		
 		const { article, renderedContent } = result;
-		res.render('article.njk', {
+		res.render('content/article.njk', {
 			title: article.title,
 			article,
 			renderedContent,

@@ -22,7 +22,7 @@ router.get('/:id', async (req, res, next) => {
 		const result = await getPasteById(id);
 		
 		if (!result) {
-			res.render('paste.njk', {
+			res.render('content/paste.njk', {
 				title: "保存剪贴板",
 				paste: { title: `剪贴板 ${id}`, id, updated_at: "尚未保存" },
 				renderedContent: null,
@@ -32,7 +32,7 @@ router.get('/:id', async (req, res, next) => {
 		}
 		
 		const { paste, renderedContent } = result;
-		res.render('paste.njk', {
+		res.render('content/paste.njk', {
 			title: `剪贴板 ${paste.id}`,
 			paste,
 			renderedContent,

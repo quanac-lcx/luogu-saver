@@ -15,19 +15,18 @@
 
 <div class="ui four column stackable grid">
     <div class="column">
-        <div class="ui card">
-            <div class="content">
-                <div class="header">错误日志</div>
-                <div class="meta">系统错误监控</div>
-                <div class="description">
-                    <div class="ui statistic">
-                        <div class="value">{{ stats.errors.total }}</div>
-                        <div class="label">总数</div>
-                    </div>
-                    <p>最近24小时: {{ stats.errors.recent }} 个</p>
-                </div>
+        <div class="card shadow">
+            <h3 class="ui header">
+                <i class="ui icon exclamation triangle colored"></i>
+                错误日志
+            </h3>
+            <div class="meta gray">系统错误监控</div>
+            <div class="ui statistic" style="margin-top: 15px;">
+                <div class="value">{{ stats.errors.total }}</div>
+                <div class="label">总数</div>
             </div>
-            <div class="extra content">
+            <p style="margin-top: 10px;">最近24小时: {{ stats.errors.recent }} 个</p>
+            <div style="margin-top: 20px;">
                 <a href="/admin/errors" class="ui primary button">
                     <i class="ui icon list"></i> 查看日志
                 </a>
@@ -36,24 +35,23 @@
     </div>
 
     <div class="column">
-        <div class="ui card">
-            <div class="content">
-                <div class="header">任务队列</div>
-                <div class="meta">后台任务状态</div>
-                <div class="description">
-                    <div class="ui mini statistics">
-                        <div class="statistic">
-                            <div class="value">{{ stats.queue.length }}</div>
-                            <div class="label">等待中</div>
-                        </div>
-                        <div class="statistic">
-                            <div class="value">{{ stats.queue.running }}</div>
-                            <div class="label">执行中</div>
-                        </div>
-                    </div>
+        <div class="card shadow">
+            <h3 class="ui header">
+                <i class="ui icon tasks colored"></i>
+                任务队列
+            </h3>
+            <div class="meta gray">后台任务状态</div>
+            <div class="ui mini statistics" style="margin-top: 15px;">
+                <div class="statistic">
+                    <div class="value">{{ stats.queue.length }}</div>
+                    <div class="label">等待中</div>
+                </div>
+                <div class="statistic">
+                    <div class="value">{{ stats.queue.running }}</div>
+                    <div class="label">执行中</div>
                 </div>
             </div>
-            <div class="extra content">
+            <div style="margin-top: 20px;">
                 <a href="/admin/queue" class="ui primary button">
                     <i class="ui icon tasks"></i> 查看队列
                 </a>
@@ -62,24 +60,23 @@
     </div>
 
     <div class="column">
-        <div class="ui card">
-            <div class="content">
-                <div class="header">内容管理</div>
-                <div class="meta">专栏与剪贴板</div>
-                <div class="description">
-                    <div class="ui mini statistics">
-                        <div class="statistic">
-                            <div class="value">{{ stats.articles.deleted }}</div>
-                            <div class="label">已删专栏</div>
-                        </div>
-                        <div class="statistic">
-                            <div class="value">{{ stats.pastes.deleted }}</div>
-                            <div class="label">已删剪贴板</div>
-                        </div>
-                    </div>
+        <div class="card shadow">
+            <h3 class="ui header">
+                <i class="ui icon trash alternate colored"></i>
+                内容管理
+            </h3>
+            <div class="meta gray">专栏与剪贴板</div>
+            <div class="ui mini statistics" style="margin-top: 15px;">
+                <div class="statistic">
+                    <div class="value">{{ stats.articles.deleted }}</div>
+                    <div class="label">已删专栏</div>
+                </div>
+                <div class="statistic">
+                    <div class="value">{{ stats.pastes.deleted }}</div>
+                    <div class="label">已删剪贴板</div>
                 </div>
             </div>
-            <div class="extra content">
+            <div style="margin-top: 20px;">
                 <a href="/admin/deletions" class="ui primary button">
                     <i class="ui icon trash alternate"></i> 删除管理
                 </a>
@@ -88,18 +85,17 @@
     </div>
 
     <div class="column">
-        <div class="ui card">
-            <div class="content">
-                <div class="header">Token 管理</div>
-                <div class="meta">访问凭据管理</div>
-                <div class="description">
-                    <div class="ui statistic">
-                        <div class="value">{{ stats.tokens }}</div>
-                        <div class="label">总数</div>
-                    </div>
-                </div>
+        <div class="card shadow">
+            <h3 class="ui header">
+                <i class="ui icon key colored"></i>
+                Token 管理
+            </h3>
+            <div class="meta gray">访问凭据管理</div>
+            <div class="ui statistic" style="margin-top: 15px;">
+                <div class="value">{{ stats.tokens }}</div>
+                <div class="label">总数</div>
             </div>
-            <div class="extra content">
+            <div style="margin-top: 20px;">
                 <a href="/admin/tokens" class="ui primary button">
                     <i class="ui icon key"></i> 管理 Token
                 </a>
@@ -112,9 +108,9 @@
 
 <div class="ui two column stackable grid">
     <div class="column">
-        <div class="ui segment">
+        <div class="card shadow">
             <h3 class="ui header">
-                <i class="ui icon play"></i>
+                <i class="ui icon play colored"></i>
                 系统任务
             </h3>
             <div class="ui buttons">
@@ -131,9 +127,9 @@
     </div>
 
     <div class="column">
-        <div class="ui segment">
+        <div class="card shadow">
             <h3 class="ui header">
-                <i class="ui icon server"></i>
+                <i class="ui icon server colored"></i>
                 系统控制
             </h3>
             <button class="ui red button" onclick="restartSystem()">

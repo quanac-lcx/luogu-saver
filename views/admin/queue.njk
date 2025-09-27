@@ -15,24 +15,28 @@
 
 <div class="ui two column stackable grid">
     <div class="column">
-        <div class="ui statistic">
-            <div class="value">{{ queueStatus.length }}</div>
-            <div class="label">等待中的任务</div>
+        <div class="card shadow" style="text-align: center;">
+            <div class="ui statistic">
+                <div class="value">{{ queueStatus.length }}</div>
+                <div class="label">等待中的任务</div>
+            </div>
         </div>
     </div>
     <div class="column">
-        <div class="ui statistic">
-            <div class="value">{{ queueStatus.running }}</div>
-            <div class="label">正在执行的任务</div>
+        <div class="card shadow" style="text-align: center;">
+            <div class="ui statistic">
+                <div class="value">{{ queueStatus.running }}</div>
+                <div class="label">正在执行的任务</div>
+            </div>
         </div>
     </div>
 </div>
 
 <div class="ui divider"></div>
 
-<div class="ui segment">
+<div class="card shadow">
     <h3 class="ui header">
-        <i class="ui icon info circle"></i>
+        <i class="ui icon info circle colored"></i>
         队列说明
     </h3>
     <div class="ui list">
@@ -60,7 +64,7 @@
     </div>
 </div>
 
-<div class="ui segment">
+<div class="card shadow">
     <div class="ui info message">
         <i class="info circle icon"></i>
         <div class="content">

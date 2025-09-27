@@ -43,8 +43,8 @@
     top: -1px;
 }
 
-.ui.left.hover.sidebar.labeled.icon.menu .item {
-    margin-left: 10px;
+.ui.left.hover.sidebar.labeled.icon.menu > .item {
+    padding-left: calc(0.8em + 10px) !important;
     text-align: left !important;
     color: #555 !important;
 }
@@ -59,22 +59,38 @@
     font-size: 1.5em !important;
 }
 
-.item > span {
-    color: #2c3e50 !important;
+
+.accordion-content .item {
+    font-size: 0.95em;
+    margin-left: 0 !important;
+    padding-left: calc(10px + 1em) !important;
+}
+.accordion-content .item:hover {
+    background-color: rgba(0, 0, 0, .05) !important;
+}
+.accordion-title {
+     display: flex;
+     align-items: center;
+     white-space: nowrap;
 }
 
-.item > img {
+
+.item > span {
+    color: #2c3e50 !important;
+    margin-left: 8px;
+}
+
+.ui.left.hover.sidebar.labeled.icon.menu > .item > img {
     margin-left: -5px;
     /* 不是，我服了爹，好吧，神秘修正。 */
 }
 
-.item > span {
+.ui.left.hover.sidebar.labeled.icon.menu > .item > span {
     opacity: 0;
-    margin-left: 8px;
     transition: all 0.3s ease;
 }
 
-.ui.left.hover.sidebar.labeled.icon.menu .item {
+.ui.left.hover.sidebar.labeled.icon.menu > .item {
     padding-left: 0.8em;
 }
 
@@ -82,7 +98,7 @@
     width: 170px;
 }
 
-.ui.left.hover.sidebar.labeled.icon.menu:hover .item > span {
+.ui.left.hover.sidebar.labeled.icon.menu:hover > .item > span {
     opacity: 1;
     margin-left: 12px;
     display: inline;

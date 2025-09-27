@@ -13,10 +13,12 @@ import userRouter from './routes/user.route.js';
 import apiRouter from './routes/api.route.js';
 import indexRouter from './routes/index.route.js';
 import problemRouter from './routes/problem.route.js';
+import benbenRouter from './routes/benben.route.js';
 
 import * as renderer from "./core/markdown.js";
 import * as utils from "./core/utils.js";
 import logger from './core/logger.js';
+import RedisManager from './core/redis.js';
 
 import ormConfig from "./ormconfig.json" with { type: "json" };
 import config from './config.js';
@@ -56,6 +58,7 @@ app.use('/token', tokenRouter);
 app.use('/user', userRouter);
 app.use('/api', apiRouter);
 app.use('/problem', problemRouter);
+app.use('/benben', benbenRouter);
 
 app.use(notFound);
 app.use(errorDisplay);
@@ -64,6 +67,12 @@ global.utils = utils;
 global.logger = logger;
 global.renderer = renderer.createMarkdownRenderer();
 global.worker = worker;
+global.redis = new RedisManager({
+	host: config.redis.host,
+	port: config.redis.port,
+	password: config.redis.password,
+	db: config.redis.db
+});
 
 worker.scheduleRequestTokens();
 worker.startQueueProcessor();

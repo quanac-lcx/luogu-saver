@@ -24,8 +24,27 @@
             <i class="ui icon search"></i> <span>搜索</span>
         </a>
         <a class="item" href="/problem">
-            <i class="ui icon list alternate"></i> <span>题目查找</span>
+            <i class="ui icon list alternate"></i> <span>题目</span>
         </a>
+
+        <a class="item accordion-title">
+            <i class="ui icon rss"></i>
+            <span>犇犇</span>
+        </a>
+        <div class="accordion-content menu" style="display:none;">
+            <a class="item" href="/benben/mentions">
+                <i class="ui icon at"></i> <span>被 at 查询</span>
+            </a>
+            <a class="item" href="/benben/history">
+                <i class="ui icon history"></i> <span>用户历史</span>
+            </a>
+            <a class="item" href="/benben/search">
+                <i class="ui icon search"></i> <span>高级检索</span>
+            </a>
+            <a class="item" href="/benben/crawl">
+                <i class="ui icon cloud download"></i> <span>犇犇抓取</span>
+            </a>
+        </div>
         <a class="item" href="/article/recent">
             <i class="ui icon history"></i> <span>最近更新</span>
         </a>
@@ -154,6 +173,41 @@
                     .fail(() => {
                         Swal.fire("错误", "网络或服务器异常", "error");
                     });
+			});
+		});
+
+		$(function() {
+			const $sidebar = $(".ui.left.hover.sidebar");
+			let lastActive = null;
+			$(".accordion-title").on("click", function(e) {
+				e.preventDefault();
+				const $title = $(this);
+				const $content = $title.next(".accordion-content");
+
+				$(".accordion-content").not($content).slideUp(200);
+				$(".accordion-title").not($title).removeClass("active");
+
+				if ($title.hasClass("active")) {
+					$title.removeClass("active");
+					$content.slideUp(200);
+					lastActive = null;
+				} else {
+					$title.addClass("active");
+					$content.slideDown(200);
+					lastActive = $title;
+				}
+			});
+
+			$sidebar.on("mouseleave", function() {
+				$(".accordion-content").slideUp(200);
+				$(".accordion-title").removeClass("active");
+			});
+
+			$sidebar.on("mouseenter", function() {
+				if (lastActive) {
+					lastActive.addClass("active");
+					lastActive.next(".accordion-content").slideDown(200);
+				}
 			});
 		});
     </script>

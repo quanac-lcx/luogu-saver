@@ -50,6 +50,14 @@ async function getTimeSeriesData(entityClass) {
 }
 
 export async function getStatistics() {
+	const cacheKey = 'statistics:full';
+	
+	// Try to get from cache first
+	const cachedResult = await global.redis.get(cacheKey);
+	if (cachedResult) {
+		return JSON.parse(cachedResult);
+	}
+	
 	const articlesCount = await Article.count();
 	const pastesCount = await Paste.count();
 	
@@ -66,7 +74,8 @@ export async function getStatistics() {
 	
 	const articlesData = await getTimeSeriesData(Article);
 	const pastesData = await getTimeSeriesData(Paste);
-	return {
+	
+	const result = {
 		articles_total: articlesCount,
 		pastes_total: pastesCount,
 		today_articles: todayArticles,
@@ -76,10 +85,29 @@ export async function getStatistics() {
 			pastes: pastesData,
 		},
 	};
+	
+	// Cache for 5 minutes (300 seconds) since this is expensive to compute
+	await global.redis.set(cacheKey, JSON.stringify(result), 300);
+	
+	return result;
 }
 
 export async function getCounts() {
+	const cacheKey = 'statistics:counts';
+	
+	// Try to get from cache first
+	const cachedResult = await global.redis.get(cacheKey);
+	if (cachedResult) {
+		return JSON.parse(cachedResult);
+	}
+	
 	const articlesCount = await Article.count();
 	const pastesCount = await Paste.count();
-	return { articlesCount, pastesCount };
+	
+	const result = { articlesCount, pastesCount };
+	
+	// Cache for 2 minutes (120 seconds)
+	await global.redis.set(cacheKey, JSON.stringify(result), 120);
+	
+	return result;
 }

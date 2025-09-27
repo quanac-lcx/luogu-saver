@@ -51,9 +51,28 @@ export async function saveArticle(task, obj, onProgress) {
 		content: obj.content
 	});
 	await newVersion.save();
+	
+	// Invalidate cache for this article and recent articles
+	await global.redis.del(`article:${aid}`);
+	// Clear all recent articles cache (wildcard pattern)
+	const keys = await global.redis.redis.keys('recent_articles:*');
+	if (keys.length > 0) {
+		await global.redis.redis.del(...keys);
+	}
+	// Invalidate statistics cache since article count may have changed
+	await global.redis.del('statistics:full');
+	await global.redis.del('statistics:counts');
 }
 
 export async function getRecentArticles(count) {
+	const cacheKey = `recent_articles:${count}`;
+	
+	// Try to get from cache first
+	const cachedResult = await global.redis.get(cacheKey);
+	if (cachedResult) {
+		return JSON.parse(cachedResult);
+	}
+	
 	let articles = await Article.find({
 		where: {deleted: false},
 		order: {priority: 'DESC', updated_at: 'DESC'},
@@ -66,12 +85,24 @@ export async function getRecentArticles(count) {
 		article.tags = JSON.parse(article.tags);
 		return article;
 	}));
+	
+	// Cache for 10 minutes (600 seconds)
+	await global.redis.set(cacheKey, JSON.stringify(articles), 600);
+	
 	return articles;
 }
 
 
 export async function getArticleById(id) {
 	if (id.length !== 8) throw new Error("Invalid article ID.");
+	
+	const cacheKey = `article:${id}`;
+	
+	// Try to get from cache first
+	const cachedResult = await global.redis.get(cacheKey);
+	if (cachedResult) {
+		return JSON.parse(cachedResult);
+	}
 	
 	const article = await Article.findById(id);
 	if (!article) return null;
@@ -84,5 +115,10 @@ export async function getArticleById(id) {
 	const sanitizedContent = utils.sanitizeLatex(article.content);
 	const renderedContent = renderer.renderMarkdown(sanitizedContent);
 	
-	return { article, renderedContent };
+	const result = { article, renderedContent };
+	
+	// Cache for 30 minutes (1800 seconds)
+	await global.redis.set(cacheKey, JSON.stringify(result), 1800);
+	
+	return result;
 }

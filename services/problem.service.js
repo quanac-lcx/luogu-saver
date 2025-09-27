@@ -25,6 +25,12 @@ async function saveProblems(problems) {
 			updated_at: new Date()
 		})), ["id"], { skipUpdateIfNoValuesChanged: true });
 		logger.debug(`Bulk upsert completed: ${problems.length} problems processed.`);
+		
+		// Invalidate problems cache after updating
+		const keys = await global.redis.redis.keys('problems:*');
+		if (keys.length > 0) {
+			await global.redis.redis.del(...keys);
+		}
 	} catch (error) {
 		logger.warn(`Error saving problems: ${error.message}`);
 	}
@@ -144,6 +150,16 @@ export async function updateAllProblemSets() {
 export async function getProblems({ page, accept_solution, difficulty, prefix }) {
 	const perPage = config.pagination.problem;
 	const currentPage = Math.max(parseInt(page) || 1, 1);
+	
+	// Create cache key based on parameters
+	const cacheKey = `problems:${currentPage}:${accept_solution || 'any'}:${difficulty || 'any'}:${prefix || 'none'}`;
+	
+	// Try to get from cache first
+	const cachedResult = await global.redis.get(cacheKey);
+	if (cachedResult) {
+		return JSON.parse(cachedResult);
+	}
+	
 	const where = {};
 	
 	if (prefix) {
@@ -178,5 +194,10 @@ export async function getProblems({ page, accept_solution, difficulty, prefix })
 	
 	const pageCount = Math.ceil(total / perPage);
 	
-	return { problems, currentPage, pageCount, prefix };
+	const result = { problems, currentPage, pageCount, prefix };
+	
+	// Cache for 15 minutes (900 seconds)
+	await global.redis.set(cacheKey, JSON.stringify(result), 900);
+	
+	return result;
 }

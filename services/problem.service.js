@@ -10,6 +10,9 @@ import { sleep } from "../core/utils.js";
 
 const accountPool = JSON.parse(fs.readFileSync("./accounts.json", "utf8"));
 
+// 添加执行状态标志
+let isUpdatingAllProblemSets = false;
+
 async function saveProblems(problems) {
 	if (!problems.length) return;
 	
@@ -125,9 +128,16 @@ export async function updateProblemSet(type) {
 }
 
 export async function updateAllProblemSets() {
-	const types = ["luogu", "CF", "SP", "UVA", "AT"];
-	for (const type of types) {
-		await updateProblemSet(type);
+	if (isUpdatingAllProblemSets) {
+		return;
+	}
+	try {
+		const types = ["luogu", "CF", "SP", "UVA", "AT"];
+		for (const type of types) {
+			await updateProblemSet(type);
+		}
+	} finally {
+		isUpdatingAllProblemSets = false;
 	}
 }
 

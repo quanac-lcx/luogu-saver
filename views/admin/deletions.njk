@@ -1,0 +1,140 @@
+{% extends "../layout.njk" %}
+
+{% block content %}
+<div class="ui grid">
+    <div class="sixteen wide column">
+        <h1 class="ui header">
+            <i class="ui icon trash alternate"></i>
+            <div class="content">
+                删除管理
+                <div class="sub header">软删除内容的恢复与管理</div>
+            </div>
+        </h1>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="ui form">
+        <div class="inline fields">
+            <label>内容类型：</label>
+            <div class="field">
+                <div class="ui radio checkbox">
+                    <input type="radio" name="type" value="article" {% if type == 'article' %}checked{% endif %} onchange="filterType('article')">
+                    <label>专栏</label>
+                </div>
+            </div>
+            <div class="field">
+                <div class="ui radio checkbox">
+                    <input type="radio" name="type" value="paste" {% if type == 'paste' %}checked{% endif %} onchange="filterType('paste')">
+                    <label>剪贴板</label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if items.length > 0 %}
+<div class="ui three column stackable grid">
+    {% for item in items %}
+    <div class="column">
+        <div class="card shadow outline">
+            <h4 class="ui header">{{ item.title }}</h4>
+            {% if type == 'paste' and item.author %}
+            <div class="meta gray">作者: {{ item.author.name }}</div>
+            {% endif %}
+            <div class="meta gray">删除时间: {{ item.updated_at }}</div>
+            {% if item.deleted_reason %}
+            <div style="margin-top: 10px;">删除原因: {{ item.deleted_reason }}</div>
+            {% endif %}
+            <div class="ui two buttons" style="margin-top: 15px;">
+                <a href="/{{ type }}/{{ item.id }}" target="_blank" class="ui basic button">
+                    <i class="ui icon eye"></i>
+                    查看
+                </a>
+                <button class="ui green button" onclick="restoreItem('{{ type }}', '{{ item.id }}')">
+                    <i class="ui icon undo"></i>
+                    恢复
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if totalPages > 1 %}
+<div class="card shadow" style="text-align: center;">
+    <div class="ui pagination menu">
+        {% if currentPage > 1 %}
+        <a class="item" href="?page={{ currentPage - 1 }}&type={{ type }}">
+            <i class="left chevron icon"></i>
+        </a>
+        {% endif %}
+        
+        {% set startPage = currentPage - 2 %}
+        {% set endPage = currentPage + 2 %}
+        {% if startPage < 1 %}
+            {% set startPage = 1 %}
+        {% endif %}
+        {% if endPage > totalPages %}
+            {% set endPage = totalPages %}
+        {% endif %}
+        
+        {% for i in range(startPage, endPage + 1) %}
+        <a class="item {% if i == currentPage %}active{% endif %}" 
+           href="?page={{ i }}&type={{ type }}">{{ i }}</a>
+        {% endfor %}
+        
+        {% if currentPage < totalPages %}
+        <a class="item" href="?page={{ currentPage + 1 }}&type={{ type }}">
+            <i class="right chevron icon"></i>
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="card shadow" style="text-align: center; padding: 60px 30px;">
+    <div class="ui icon header">
+        <i class="search icon"></i>
+        没有找到已删除的{{ type == 'article' and '专栏' or '剪贴板' }}
+    </div>
+</div>
+{% endif %}
+
+<script>
+function filterType(type) {
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.set('type', type);
+    currentUrl.searchParams.delete('page'); // Reset to first page
+    window.location.href = currentUrl.toString();
+}
+
+function restoreItem(type, id) {
+    Swal.fire({
+        title: '确认恢复',
+        text: `确定要恢复这个${type == 'article' ? '专栏' : '剪贴板'}吗？`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: '确认恢复',
+        cancelButtonText: '取消'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.post(`/admin/api/restore/${type}/${id}`)
+                .done(function(res) {
+                    if (res.success) {
+                        Swal.fire('成功', res.message, 'success').then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire('失败', res.message, 'error');
+                    }
+                })
+                .fail(function() {
+                    Swal.fire('错误', '网络或服务器异常', 'error');
+                });
+        }
+    });
+}
+</script>
+{% endblock %}

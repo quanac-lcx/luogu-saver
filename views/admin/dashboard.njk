@@ -1,0 +1,192 @@
+{% extends "../layout.njk" %}
+
+{% block content %}
+<div class="ui grid">
+    <div class="sixteen wide column">
+        <h1 class="ui header">
+            <i class="ui icon cog"></i>
+            <div class="content">
+                管理后台
+                <div class="sub header">系统管理控制面板</div>
+            </div>
+        </h1>
+    </div>
+</div>
+
+<div class="ui four column stackable grid">
+    <div class="column">
+        <div class="card shadow">
+            <h3 class="ui header">
+                <i class="ui icon exclamation triangle colored"></i>
+                错误日志
+            </h3>
+            <div class="meta gray">系统错误监控</div>
+            <div class="ui statistic" style="margin-top: 15px;">
+                <div class="value">{{ stats.errors.total }}</div>
+                <div class="label">总数</div>
+            </div>
+            <p style="margin-top: 10px;">最近24小时: {{ stats.errors.recent }} 个</p>
+            <div style="margin-top: 20px;">
+                <a href="/admin/errors" class="ui primary button">
+                    <i class="ui icon list"></i> 查看日志
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="column">
+        <div class="card shadow">
+            <h3 class="ui header">
+                <i class="ui icon tasks colored"></i>
+                任务队列
+            </h3>
+            <div class="meta gray">后台任务状态</div>
+            <div class="ui mini statistics" style="margin-top: 15px;">
+                <div class="statistic">
+                    <div class="value">{{ stats.queue.length }}</div>
+                    <div class="label">等待中</div>
+                </div>
+                <div class="statistic">
+                    <div class="value">{{ stats.queue.running }}</div>
+                    <div class="label">执行中</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px;">
+                <a href="/admin/queue" class="ui primary button">
+                    <i class="ui icon tasks"></i> 查看队列
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="column">
+        <div class="card shadow">
+            <h3 class="ui header">
+                <i class="ui icon trash alternate colored"></i>
+                内容管理
+            </h3>
+            <div class="meta gray">专栏与剪贴板</div>
+            <div class="ui mini statistics" style="margin-top: 15px;">
+                <div class="statistic">
+                    <div class="value">{{ stats.articles.deleted }}</div>
+                    <div class="label">已删专栏</div>
+                </div>
+                <div class="statistic">
+                    <div class="value">{{ stats.pastes.deleted }}</div>
+                    <div class="label">已删剪贴板</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px;">
+                <a href="/admin/deletions" class="ui primary button">
+                    <i class="ui icon trash alternate"></i> 删除管理
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="column">
+        <div class="card shadow">
+            <h3 class="ui header">
+                <i class="ui icon key colored"></i>
+                Token 管理
+            </h3>
+            <div class="meta gray">访问凭据管理</div>
+            <div class="ui statistic" style="margin-top: 15px;">
+                <div class="value">{{ stats.tokens }}</div>
+                <div class="label">总数</div>
+            </div>
+            <div style="margin-top: 20px;">
+                <a href="/admin/tokens" class="ui primary button">
+                    <i class="ui icon key"></i> 管理 Token
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="ui divider"></div>
+
+<div class="ui two column stackable grid">
+    <div class="column">
+        <div class="card shadow">
+            <h3 class="ui header">
+                <i class="ui icon play colored"></i>
+                系统任务
+            </h3>
+            <div class="ui buttons">
+                <button class="ui button" onclick="triggerJob('cleanup')">
+                    <i class="ui icon broom"></i>
+                    启动清理任务
+                </button>
+                <button class="ui button" onclick="triggerJob('update-problems')">
+                    <i class="ui icon refresh"></i>
+                    更新题目数据
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="column">
+        <div class="card shadow">
+            <h3 class="ui header">
+                <i class="ui icon server colored"></i>
+                系统控制
+            </h3>
+            <button class="ui red button" onclick="restartSystem()">
+                <i class="ui icon redo"></i>
+                重启服务
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function triggerJob(jobType) {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="ui icon spinner loading"></i> 执行中...';
+    button.disabled = true;
+
+    $.post(`/admin/api/jobs/${jobType}`)
+        .done(function(res) {
+            if (res.success) {
+                Swal.fire('成功', res.message || '任务已启动', 'success');
+            } else {
+                Swal.fire('失败', res.message || '操作失败', 'error');
+            }
+        })
+        .fail(function() {
+            Swal.fire('错误', '网络或服务器异常', 'error');
+        })
+        .always(function() {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
+}
+
+function restartSystem() {
+    Swal.fire({
+        title: '确认重启',
+        text: '确定要重启系统服务吗？这将会中断所有连接。',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '确认重启',
+        cancelButtonText: '取消'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.post('/admin/api/restart')
+                .done(function(res) {
+                    if (res.success) {
+                        Swal.fire('重启中', res.message, 'info');
+                    } else {
+                        Swal.fire('失败', res.message, 'error');
+                    }
+                })
+                .fail(function() {
+                    Swal.fire('错误', '网络或服务器异常', 'error');
+                });
+        }
+    });
+}
+</script>
+{% endblock %}

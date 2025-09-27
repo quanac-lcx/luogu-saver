@@ -22,7 +22,7 @@ router.get('/:id', async (req, res, next) => {
 		const task = await getTaskById(taskId);
 		if (!task) throw new Error('Task not found.');
 		task.position = worker.getQueuePosition(task.id);
-		res.render('task.njk', { title: "任务详情", task });
+		res.render('system/task.njk', { title: "任务详情", task });
 	} catch (error) {
 		logger.warn(`An error occurred while fetching task details: ${error.message}`);
 		next(error);

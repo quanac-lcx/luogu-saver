@@ -1,0 +1,162 @@
+{% extends "../layout.njk" %}
+
+{% block content %}
+<div class="ui grid">
+    <div class="sixteen wide column">
+        <h1 class="ui header">
+            <i class="ui icon exclamation triangle"></i>
+            <div class="content">
+                错误日志
+                <div class="sub header">系统错误监控与管理</div>
+            </div>
+        </h1>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="ui form">
+        <div class="inline fields">
+            <label>筛选级别：</label>
+            <div class="field">
+                <div class="ui radio checkbox">
+                    <input type="radio" name="level" value="" {% if not level %}checked{% endif %} onchange="filterLevel('')">
+                    <label>全部</label>
+                </div>
+            </div>
+            <div class="field">
+                <div class="ui radio checkbox">
+                    <input type="radio" name="level" value="error" {% if level == 'error' %}checked{% endif %} onchange="filterLevel('error')">
+                    <label>错误</label>
+                </div>
+            </div>
+            <div class="field">
+                <div class="ui radio checkbox">
+                    <input type="radio" name="level" value="warn" {% if level == 'warn' %}checked{% endif %} onchange="filterLevel('warn')">
+                    <label>警告</label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if errors.length > 0 %}
+{% for error in errors %}
+<div class="card shadow outline">
+    <div class="ui grid">
+        <div class="twelve wide column">
+            <h4 class="ui header">
+                <i class="ui icon 
+                    {% if error.level == 'error' %}exclamation circle red
+                    {% elif error.level == 'warn' %}warning sign yellow
+                    {% else %}info circle blue{% endif %}">
+                </i>
+                {{ error.message }}
+            </h4>
+            {% if error.url %}
+            <div class="ui label">
+                <i class="ui icon linkify"></i>
+                {{ error.method }} {{ error.url }}
+            </div>
+            {% endif %}
+            {% if error.user %}
+            <div class="ui label">
+                <i class="ui icon user"></i>
+                {{ error.user.name }} (ID: {{ error.user.id }})
+            </div>
+            {% endif %}
+            {% if error.ip %}
+            <div class="ui label">
+                <i class="ui icon globe"></i>
+                {{ error.ip }}
+            </div>
+            {% endif %}
+        </div>
+        <div class="four wide column right aligned">
+            <div class="ui small header">
+                {{ error.created_at }}
+            </div>
+        </div>
+    </div>
+    {% if error.stack %}
+    <div class="ui accordion">
+        <div class="title">
+            <i class="dropdown icon"></i>
+            查看堆栈跟踪
+        </div>
+        <div class="content">
+            <pre style="white-space: pre-wrap; background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 12px;">{{ error.stack }}</pre>
+        </div>
+    </div>
+    {% endif %}
+    {% if error.user_agent %}
+    <div class="ui accordion">
+        <div class="title">
+            <i class="dropdown icon"></i>
+            用户代理
+        </div>
+        <div class="content">
+            <code>{{ error.user_agent }}</code>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endfor %}
+
+{% if totalPages > 1 %}
+<div class="card shadow" style="text-align: center;">
+    <div class="ui pagination menu">
+        {% if currentPage > 1 %}
+        <a class="item" href="?page={{ currentPage - 1 }}{% if level %}&level={{ level }}{% endif %}">
+            <i class="left chevron icon"></i>
+        </a>
+        {% endif %}
+        
+        {% set startPage = currentPage - 2 %}
+        {% set endPage = currentPage + 2 %}
+        {% if startPage < 1 %}
+            {% set startPage = 1 %}
+        {% endif %}
+        {% if endPage > totalPages %}
+            {% set endPage = totalPages %}
+        {% endif %}
+        
+        {% for i in range(startPage, endPage + 1) %}
+        <a class="item {% if i == currentPage %}active{% endif %}" 
+           href="?page={{ i }}{% if level %}&level={{ level }}{% endif %}">{{ i }}</a>
+        {% endfor %}
+        
+        {% if currentPage < totalPages %}
+        <a class="item" href="?page={{ currentPage + 1 }}{% if level %}&level={{ level }}{% endif %}">
+            <i class="right chevron icon"></i>
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="card shadow" style="text-align: center; padding: 60px 30px;">
+    <div class="ui icon header">
+        <i class="search icon"></i>
+        没有找到错误日志
+    </div>
+</div>
+{% endif %}
+
+<script>
+function filterLevel(level) {
+    const currentUrl = new URL(window.location);
+    if (level) {
+        currentUrl.searchParams.set('level', level);
+    } else {
+        currentUrl.searchParams.delete('level');
+    }
+    currentUrl.searchParams.delete('page'); // Reset to first page
+    window.location.href = currentUrl.toString();
+}
+
+$(document).ready(function() {
+    $('.ui.accordion').accordion();
+});
+</script>
+{% endblock %}

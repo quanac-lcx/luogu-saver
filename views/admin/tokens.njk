@@ -1,0 +1,113 @@
+{% extends "../layout.njk" %}
+
+{% block content %}
+<div class="ui grid">
+    <div class="sixteen wide column">
+        <h1 class="ui header">
+            <i class="ui icon key"></i>
+            <div class="content">
+                Token 管理
+                <div class="sub header">访问凭据管理与监控</div>
+            </div>
+        </h1>
+    </div>
+</div>
+
+{% if tokens.length > 0 %}
+<div class="ui three column stackable grid">
+    {% for token in tokens %}
+    <div class="column">
+        <div class="card shadow outline">
+            <h4 class="ui header">Token #{{ token.id }}</h4>
+            <div class="meta gray">创建时间: {{ token.created_at }}</div>
+            {% if token.expire_time %}
+            <div class="meta gray">过期时间: {{ token.expire_time }}</div>
+            {% endif %}
+            {% if token.description %}
+            <div style="margin-top: 10px;">{{ token.description }}</div>
+            {% endif %}
+            <div style="margin-top: 15px;">
+                <button class="ui red button" onclick="deleteToken('{{ token.id }}')">
+                    <i class="ui icon trash"></i>
+                    删除
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if totalPages > 1 %}
+<div class="card shadow" style="text-align: center;">
+    <div class="ui pagination menu">
+        {% if currentPage > 1 %}
+        <a class="item" href="?page={{ currentPage - 1 }}">
+            <i class="left chevron icon"></i>
+        </a>
+        {% endif %}
+        
+        {% set startPage = currentPage - 2 %}
+        {% set endPage = currentPage + 2 %}
+        {% if startPage < 1 %}
+            {% set startPage = 1 %}
+        {% endif %}
+        {% if endPage > totalPages %}
+            {% set endPage = totalPages %}
+        {% endif %}
+        
+        {% for i in range(startPage, endPage + 1) %}
+        <a class="item {% if i == currentPage %}active{% endif %}" 
+           href="?page={{ i }}">{{ i }}</a>
+        {% endfor %}
+        
+        {% if currentPage < totalPages %}
+        <a class="item" href="?page={{ currentPage + 1 }}">
+            <i class="right chevron icon"></i>
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="card shadow" style="text-align: center; padding: 60px 30px;">
+    <div class="ui icon header">
+        <i class="search icon"></i>
+        没有找到 Token
+    </div>
+</div>
+{% endif %}
+
+<script>
+function deleteToken(id) {
+    Swal.fire({
+        title: '确认删除',
+        text: '确定要删除这个 Token 吗？此操作不可恢复。',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '确认删除',
+        cancelButtonText: '取消',
+        confirmButtonColor: '#d33'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: `/admin/api/tokens/${id}`,
+                method: 'DELETE'
+            })
+                .done(function(res) {
+                    if (res.success) {
+                        Swal.fire('删除成功', res.message, 'success').then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire('删除失败', res.message, 'error');
+                    }
+                })
+                .fail(function() {
+                    Swal.fire('错误', '网络或服务器异常', 'error');
+                });
+        }
+    });
+}
+</script>
+{% endblock %}

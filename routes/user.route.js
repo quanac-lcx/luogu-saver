@@ -18,7 +18,7 @@ router.post('/login', async (req, res, next) => {
 	}
 	const tokenText = req.body.token;
 	try {
-		const token = await validateToken(tokenText, req);
+		const token = await validateToken(tokenText);
 		if (!token) {
 			throw new Error('Invalid token.');
 		}

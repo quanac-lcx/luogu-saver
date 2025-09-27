@@ -1,3 +1,15 @@
+/**
+ * Problem Service Module
+ * 
+ * This module provides services for managing programming contest problems, including:
+ * - Problem data synchronization from external sources
+ * - Cached problem listing with filtering and pagination
+ * - Bulk problem updates with cache invalidation
+ * - Problem metadata management
+ * 
+ * @author Copilot
+ */
+
 import * as cheerio from 'cheerio';
 import fs from "fs";
 import { In } from "typeorm";
@@ -13,10 +25,20 @@ const accountPool = JSON.parse(fs.readFileSync("./accounts.json", "utf8"));
 
 let isUpdatingAllProblemSets = false;
 
+/**
+ * Save multiple problems to database with cache invalidation
+ * 
+ * Performs bulk upsert operation for problem data and invalidates
+ * all related cache entries to ensure data consistency.
+ * 
+ * @param {Array<Object>} problems - Array of problem objects to save
+ * @private
+ */
 async function saveProblems(problems) {
 	if (!problems.length) return;
 	
 	try {
+		// Perform bulk upsert operation
 		await Problem.upsert(problems.map(p => ({
 			id: p.id,
 			difficulty: p.difficulty,
@@ -25,9 +47,10 @@ async function saveProblems(problems) {
 			title: p.title,
 			updated_at: new Date()
 		})), ["id"], { skipUpdateIfNoValuesChanged: true });
+		
 		logger.debug(`Bulk upsert completed: ${problems.length} problems processed.`);
 		
-		// Invalidate problems cache after updating
+		// Invalidate all problem-related cache entries
 		await invalidateCacheByPattern('problems:*');
 	} catch (error) {
 		logger.warn(`Error saving problems: ${error.message}`);
@@ -145,18 +168,31 @@ export async function updateAllProblemSets() {
 	}
 }
 
-export async function getProblems({ page, accept_solution, difficulty, prefix, req = null }) {
+/**
+ * Get problems with filtering, pagination and caching support
+ * 
+ * Retrieves problems based on various filter criteria with pagination support.
+ * Results are cached for 15 minutes with cache keys based on all parameters.
+ * 
+ * @param {Object} params - Filter and pagination parameters
+ * @param {number|string} [params.page=1] - Page number for pagination
+ * @param {string} [params.accept_solution] - Filter by solution acceptance ('true'/'false')
+ * @param {number|string} [params.difficulty] - Filter by difficulty level
+ * @param {string} [params.prefix] - Filter by problem ID prefix
+ * @returns {Promise<Object>} Object with problems array, pagination info, and filters
+ */
+export async function getProblems({ page, accept_solution, difficulty, prefix }) {
 	const perPage = config.pagination.problem;
 	const currentPage = Math.max(parseInt(page) || 1, 1);
 	
-	// Create cache key based on parameters
+	// Create cache key based on all parameters
 	const cacheKey = `problems:${currentPage}:${accept_solution || 'any'}:${difficulty || 'any'}:${prefix || 'none'}`;
 	
 	return await withCache({
 		cacheKey,
 		ttl: 900, // 15 minutes
-		req,
 		fetchFn: async () => {
+			// Build where clause based on filters
 			const where = {};
 			
 			if (prefix) {
@@ -176,6 +212,7 @@ export async function getProblems({ page, accept_solution, difficulty, prefix, r
 				}
 			}
 			
+			// Execute parallel queries for problems and total count
 			const [problems, total] = await Promise.all([
 				Problem.createQueryBuilder('p')
 					.where(where)
@@ -186,6 +223,7 @@ export async function getProblems({ page, accept_solution, difficulty, prefix, r
 				Problem.count({ where })
 			]);
 			
+			// Format problem data
 			problems.forEach(p => Object.setPrototypeOf(p, Problem.prototype));
 			problems.forEach(p => p.formatDate());
 			

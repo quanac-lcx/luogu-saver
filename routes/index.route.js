@@ -4,7 +4,7 @@ import { getCounts } from "../services/statistic.service.js";
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-	const { articlesCount, pastesCount } = await getCounts(req);
+	const { articlesCount, pastesCount } = await getCounts();
 	res.render('index.njk', { title: "首页", paste_count: pastesCount, article_count: articlesCount });
 });
 

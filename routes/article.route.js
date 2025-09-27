@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/recent', async (req, res, next) => {
 	try {
 		const count = Math.min(parseInt(req.query.count) || config.recent.article.default, config.recent.article.max);
-		let articles = await getRecentArticles(count, req);
+		let articles = await getRecentArticles(count);
 		res.render('article_recent.njk', { title: "最近更新", articles });
 	} catch (error) {
 		next(error);
@@ -30,7 +30,7 @@ router.get('/save/:id', async (req, res) => {
 router.get('/:id', async (req, res, next) => {
 	try {
 		const { id } = req.params;
-		const result = await getArticleById(id, req);
+		const result = await getArticleById(id);
 		
 		if (!result) {
 			res.render('article.njk', {

@@ -6,6 +6,7 @@ import { Like } from "typeorm";
 import Problem from "../models/problem.js";
 import { fetchContent, defaultHeaders } from "../core/request.js";
 import config from "../config.js";
+import { sleep } from "../core/utils.js";
 
 const accountPool = JSON.parse(fs.readFileSync("./accounts.json", "utf8"));
 

@@ -9,8 +9,6 @@ export const frontendFetchConfig = {
 	timeout: 30000
 };
 
-
-
 export function mergeSetCookieToHeaders(response, headers) {
 	const setCookie = response.headers && response.headers['set-cookie'];
 	if (!setCookie) return;
@@ -42,6 +40,10 @@ export async function fetchContent(url, headers = {}, { c3vk = "new", timeout = 
 		});
 	}
 	logger.debug(`Fetched URL: ${url} with status: ${resp.status}`);
+	if (resp.status === 401) {
+		logger.debug(`It seems that your cookies have expired.`);
+		logger.debug(`Your cookies: ${headers.Cookie}`);
+	}
 	return { resp, headers: h };
 }
 

@@ -14,6 +14,7 @@ import apiRouter from './routes/api.route.js';
 import indexRouter from './routes/index.route.js';
 import problemRouter from './routes/problem.route.js';
 import benbenRouter from './routes/benben.route.js';
+import adminRouter from './routes/admin.route.js';
 
 import * as renderer from "./core/markdown.js";
 import * as utils from "./core/utils.js";
@@ -59,6 +60,7 @@ app.use('/user', userRouter);
 app.use('/api', apiRouter);
 app.use('/problem', problemRouter);
 app.use('/benben', benbenRouter);
+app.use('/admin', adminRouter);
 
 app.use(notFound);
 app.use(errorDisplay);
@@ -93,7 +95,7 @@ if (!import.meta.url.endsWith('app.js')) {
 else {
 	AppDataSource.initialize()
 		.then(() => {
-			scheduleJob('* * * * *', cleanup)
+			scheduleJob('0/10 * * * *', cleanup)
 			scheduleJob('0 0 * * *', updateProblems)
 		})
 		.then(() => worker.restoreQueue())

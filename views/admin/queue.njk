@@ -1,0 +1,79 @@
+{% extends "../layout.njk" %}
+
+{% block content %}
+<div class="ui grid">
+    <div class="sixteen wide column">
+        <h1 class="ui header">
+            <i class="ui icon tasks"></i>
+            <div class="content">
+                队列管理
+                <div class="sub header">任务队列状态监控</div>
+            </div>
+        </h1>
+    </div>
+</div>
+
+<div class="ui two column stackable grid">
+    <div class="column">
+        <div class="ui statistic">
+            <div class="value">{{ queueStatus.length }}</div>
+            <div class="label">等待中的任务</div>
+        </div>
+    </div>
+    <div class="column">
+        <div class="ui statistic">
+            <div class="value">{{ queueStatus.running }}</div>
+            <div class="label">正在执行的任务</div>
+        </div>
+    </div>
+</div>
+
+<div class="ui divider"></div>
+
+<div class="ui segment">
+    <h3 class="ui header">
+        <i class="ui icon info circle"></i>
+        队列说明
+    </h3>
+    <div class="ui list">
+        <div class="item">
+            <i class="ui icon circle"></i>
+            <div class="content">
+                <div class="header">等待中的任务</div>
+                <div class="description">排队等待处理的任务数量</div>
+            </div>
+        </div>
+        <div class="item">
+            <i class="ui icon circle"></i>
+            <div class="content">
+                <div class="header">正在执行的任务</div>
+                <div class="description">当前并发执行的任务数量</div>
+            </div>
+        </div>
+        <div class="item">
+            <i class="ui icon circle"></i>
+            <div class="content">
+                <div class="header">自动刷新</div>
+                <div class="description">页面每5秒自动刷新队列状态</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="ui segment">
+    <div class="ui info message">
+        <i class="info circle icon"></i>
+        <div class="content">
+            <div class="header">队列状态健康</div>
+            <p>系统运行正常。如果等待队列过长或执行任务长时间卡住，可以考虑重启服务。</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto refresh every 5 seconds
+setInterval(function() {
+    window.location.reload();
+}, 5000);
+</script>
+{% endblock %}

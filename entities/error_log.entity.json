@@ -1,0 +1,64 @@
+{
+  "name": "ErrorLog",
+  "tableName": "error_logs",
+  "columns": {
+    "id": {
+      "type": "int",
+      "primary": true,
+      "generated": true
+    },
+    "message": {
+      "type": "text",
+      "nullable": false
+    },
+    "stack": {
+      "type": "text",
+      "nullable": true
+    },
+    "method": {
+      "type": "varchar",
+      "length": 10,
+      "nullable": true
+    },
+    "url": {
+      "type": "text",
+      "nullable": true
+    },
+    "user_id": {
+      "type": "int",
+      "nullable": true
+    },
+    "ip": {
+      "type": "varchar",
+      "length": 45,
+      "nullable": true
+    },
+    "user_agent": {
+      "type": "text",
+      "nullable": true
+    },
+    "level": {
+      "type": "enum",
+      "enum": ["error", "warn", "info"],
+      "default": "error"
+    },
+    "created_at": {
+      "type": "timestamp",
+      "default": "CURRENT_TIMESTAMP"
+    }
+  },
+  "indices": [
+    {
+      "name": "IDX_ERROR_LOG_CREATED_AT",
+      "columns": ["created_at"]
+    },
+    {
+      "name": "IDX_ERROR_LOG_LEVEL",
+      "columns": ["level"]
+    },
+    {
+      "name": "IDX_ERROR_LOG_USER_ID",
+      "columns": ["user_id"]
+    }
+  ]
+}

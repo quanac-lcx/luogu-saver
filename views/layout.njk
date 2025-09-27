@@ -54,6 +54,11 @@
         <a class="item" href="/token/apply">
             <i class="ui icon key"></i> <span>申请密钥</span>
         </a>
+        {% if user and user.role === 1 %}
+        <a class="item" href="/admin">
+            <i class="ui icon cog"></i> <span>管理后台</span>
+        </a>
+        {% endif %}
         {% if user %}
         <a class="item" href="/user/logout" style="position: absolute; bottom: 0; width: 100%;">
             <img class="ui mini circular image" src="https://cdn.luogu.com.cn/upload/usericon/{{ user.id }}.png" alt="usericon">

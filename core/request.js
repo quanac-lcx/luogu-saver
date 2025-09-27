@@ -9,6 +9,20 @@ export const frontendFetchConfig = {
 	timeout: 30000
 };
 
+
+
+export function mergeSetCookieToHeaders(response, headers) {
+	const setCookie = response.headers && response.headers['set-cookie'];
+	if (!setCookie) return;
+	const existingCookies = headers.Cookie ? headers.Cookie.split('; ').reduce((acc, cur) => { const [k,v] = cur.split('='); acc[k]=v; return acc; }, {}) : {};
+	setCookie.forEach(cookieStr => {
+		const [cookiePair] = cookieStr.split(';');
+		const [k,v] = cookiePair.split('=');
+		existingCookies[k] = v;
+	});
+	headers.Cookie = Object.entries(existingCookies).map(([k,v]) => `${k}=${v}`).join('; ');
+}
+
 export async function fetchContent(url, headers = {}, { c3vk = "new", timeout = 30000 } = {}) {
 	logger.debug(`Fetching URL: ${url} with c3vk mode: ${c3vk}`);
 	const h = { ...defaultHeaders, ...headers };

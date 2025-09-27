@@ -131,6 +131,7 @@ export async function updateAllProblemSets() {
 		return;
 	}
 	try {
+		isUpdatingAllProblemSets = true;
 		const types = ["luogu", "CF", "SP", "UVA", "AT"];
 		for (const type of types) {
 			await updateProblemSet(type);

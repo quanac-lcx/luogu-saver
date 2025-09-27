@@ -36,10 +36,10 @@ document.addEventListener("DOMContentLoaded", () => {
 				return;
 			}
 			
-			if (!response.ok) throw new Error(`HTTP ${response.status}`);
-			
 			const data = await response.json();
-			if (!data.success) throw new Error(data.message || "保存请求失败");
+			if (!response.ok || !data.success) {
+				throw new Error(data.message || `HTTP ${response.status}`);
+			}
 			
 			const tid = data.result;
 			Swal.fire({
@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			console.error(err);
 			Swal.fire({
 				title: "保存失败",
-				text: "网络错误或请求过于频繁，请稍后再试",
+				text: err.message || "网络错误或请求过于频繁，请稍后再试",
 				icon: "error",
 				confirmButtonText: "确定"
 			});

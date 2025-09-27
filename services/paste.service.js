@@ -10,10 +10,10 @@ export async function savePaste(task, obj) {
 	await newPaste.save();
 	
 	// Invalidate cache for this paste
-	await global.redis.del(`paste:${task.aid}`);
+	await redis.del(`paste:${task.aid}`);
 	// Invalidate statistics cache since paste count may have changed
-	await global.redis.del('statistics:full');
-	await global.redis.del('statistics:counts');
+	await redis.del('statistics:full');
+	await redis.del('statistics:counts');
 }
 
 export async function getPasteById(id) {
@@ -22,7 +22,7 @@ export async function getPasteById(id) {
 	const cacheKey = `paste:${id}`;
 	
 	// Try to get from cache first
-	const cachedResult = await global.redis.get(cacheKey);
+	const cachedResult = await redis.get(cacheKey);
 	if (cachedResult) {
 		return JSON.parse(cachedResult);
 	}
@@ -41,7 +41,7 @@ export async function getPasteById(id) {
 	const result = { paste, renderedContent };
 	
 	// Cache for 30 minutes (1800 seconds)
-	await global.redis.set(cacheKey, JSON.stringify(result), 1800);
+	await redis.set(cacheKey, JSON.stringify(result), 1800);
 	
 	return result;
 }

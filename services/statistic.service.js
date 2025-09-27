@@ -53,7 +53,7 @@ export async function getStatistics() {
 	const cacheKey = 'statistics:full';
 	
 	// Try to get from cache first
-	const cachedResult = await global.redis.get(cacheKey);
+	const cachedResult = await redis.get(cacheKey);
 	if (cachedResult) {
 		return JSON.parse(cachedResult);
 	}
@@ -87,7 +87,7 @@ export async function getStatistics() {
 	};
 	
 	// Cache for 5 minutes (300 seconds) since this is expensive to compute
-	await global.redis.set(cacheKey, JSON.stringify(result), 300);
+	await redis.set(cacheKey, JSON.stringify(result), 300);
 	
 	return result;
 }
@@ -96,7 +96,7 @@ export async function getCounts() {
 	const cacheKey = 'statistics:counts';
 	
 	// Try to get from cache first
-	const cachedResult = await global.redis.get(cacheKey);
+	const cachedResult = await redis.get(cacheKey);
 	if (cachedResult) {
 		return JSON.parse(cachedResult);
 	}
@@ -107,7 +107,7 @@ export async function getCounts() {
 	const result = { articlesCount, pastesCount };
 	
 	// Cache for 2 minutes (120 seconds)
-	await global.redis.set(cacheKey, JSON.stringify(result), 120);
+	await redis.set(cacheKey, JSON.stringify(result), 120);
 	
 	return result;
 }

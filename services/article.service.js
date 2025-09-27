@@ -53,22 +53,22 @@ export async function saveArticle(task, obj, onProgress) {
 	await newVersion.save();
 	
 	// Invalidate cache for this article and recent articles
-	await global.redis.del(`article:${aid}`);
+	await redis.del(`article:${aid}`);
 	// Clear all recent articles cache (wildcard pattern)
-	const keys = await global.redis.redis.keys('recent_articles:*');
+	const keys = await redis.redis.keys('recent_articles:*');
 	if (keys.length > 0) {
-		await global.redis.redis.del(...keys);
+		await redis.redis.del(...keys);
 	}
 	// Invalidate statistics cache since article count may have changed
-	await global.redis.del('statistics:full');
-	await global.redis.del('statistics:counts');
+	await redis.del('statistics:full');
+	await redis.del('statistics:counts');
 }
 
 export async function getRecentArticles(count) {
 	const cacheKey = `recent_articles:${count}`;
 	
 	// Try to get from cache first
-	const cachedResult = await global.redis.get(cacheKey);
+	const cachedResult = await redis.get(cacheKey);
 	if (cachedResult) {
 		return JSON.parse(cachedResult);
 	}
@@ -87,7 +87,7 @@ export async function getRecentArticles(count) {
 	}));
 	
 	// Cache for 10 minutes (600 seconds)
-	await global.redis.set(cacheKey, JSON.stringify(articles), 600);
+	await redis.set(cacheKey, JSON.stringify(articles), 600);
 	
 	return articles;
 }
@@ -99,7 +99,7 @@ export async function getArticleById(id) {
 	const cacheKey = `article:${id}`;
 	
 	// Try to get from cache first
-	const cachedResult = await global.redis.get(cacheKey);
+	const cachedResult = await redis.get(cacheKey);
 	if (cachedResult) {
 		return JSON.parse(cachedResult);
 	}
@@ -118,7 +118,7 @@ export async function getArticleById(id) {
 	const result = { article, renderedContent };
 	
 	// Cache for 30 minutes (1800 seconds)
-	await global.redis.set(cacheKey, JSON.stringify(result), 1800);
+	await redis.set(cacheKey, JSON.stringify(result), 1800);
 	
 	return result;
 }

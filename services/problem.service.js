@@ -27,9 +27,9 @@ async function saveProblems(problems) {
 		logger.debug(`Bulk upsert completed: ${problems.length} problems processed.`);
 		
 		// Invalidate problems cache after updating
-		const keys = await global.redis.redis.keys('problems:*');
+		const keys = await redis.redis.keys('problems:*');
 		if (keys.length > 0) {
-			await global.redis.redis.del(...keys);
+			await redis.redis.del(...keys);
 		}
 	} catch (error) {
 		logger.warn(`Error saving problems: ${error.message}`);
@@ -155,7 +155,7 @@ export async function getProblems({ page, accept_solution, difficulty, prefix })
 	const cacheKey = `problems:${currentPage}:${accept_solution || 'any'}:${difficulty || 'any'}:${prefix || 'none'}`;
 	
 	// Try to get from cache first
-	const cachedResult = await global.redis.get(cacheKey);
+	const cachedResult = await redis.get(cacheKey);
 	if (cachedResult) {
 		return JSON.parse(cachedResult);
 	}
@@ -197,7 +197,7 @@ export async function getProblems({ page, accept_solution, difficulty, prefix })
 	const result = { problems, currentPage, pageCount, prefix };
 	
 	// Cache for 15 minutes (900 seconds)
-	await global.redis.set(cacheKey, JSON.stringify(result), 900);
+	await redis.set(cacheKey, JSON.stringify(result), 900);
 	
 	return result;
 }

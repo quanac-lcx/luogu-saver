@@ -24,7 +24,7 @@ export async function generateToken(pasteId, uid) {
 	let token = await Token.findOne({ where: { uid: parseInt(uid) } });
 	if (token) {
 		// Invalidate old token from cache
-		await global.redis.del(`token:${token.id}`);
+		await redis.del(`token:${token.id}`);
 		await token.remove();
 	}
 	
@@ -37,7 +37,7 @@ export async function generateToken(pasteId, uid) {
 	await token.save();
 	
 	// Cache the new token
-	await global.redis.set(`token:${tokenText}`, JSON.stringify(token), 600);
+	await redis.set(`token:${tokenText}`, JSON.stringify(token), 600);
 	
 	return tokenText;
 }
@@ -46,7 +46,7 @@ export async function validateToken(tokenText) {
 	const cacheKey = `token:${tokenText}`;
 	
 	// Try to get from cache first
-	const cachedResult = await global.redis.get(cacheKey);
+	const cachedResult = await redis.get(cacheKey);
 	if (cachedResult) {
 		return JSON.parse(cachedResult);
 	}
@@ -55,7 +55,7 @@ export async function validateToken(tokenText) {
 	const result = token || null;
 	
 	// Cache for 10 minutes (600 seconds) since tokens don't change frequently
-	await global.redis.set(cacheKey, JSON.stringify(result), 600);
+	await redis.set(cacheKey, JSON.stringify(result), 600);
 	
 	return result;
 }

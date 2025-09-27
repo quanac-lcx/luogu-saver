@@ -21,7 +21,7 @@ export async function updateTask(id, status, info = "") {
 	await task.save();
 	
 	// Invalidate cache when task is updated
-	await global.redis.del(`task:${id}`);
+	await redis.del(`task:${id}`);
 }
 
 export async function getWaitingTasks() {
@@ -39,7 +39,7 @@ export async function getTaskById(id) {
 	const cacheKey = `task:${id}`;
 	
 	// Try to get from cache first
-	const cachedResult = await global.redis.get(cacheKey);
+	const cachedResult = await redis.get(cacheKey);
 	if (cachedResult) {
 		return JSON.parse(cachedResult);
 	}
@@ -51,7 +51,7 @@ export async function getTaskById(id) {
 	task.status = statusMap[task.status] || 'Unknown';
 	
 	// Cache for 5 minutes (300 seconds) since task status can change
-	await global.redis.set(cacheKey, JSON.stringify(task), 300);
+	await redis.set(cacheKey, JSON.stringify(task), 300);
 	
 	return task;
 }

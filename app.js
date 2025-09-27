@@ -93,7 +93,7 @@ if (!import.meta.url.endsWith('app.js')) {
 else {
 	AppDataSource.initialize()
 		.then(() => {
-			scheduleJob('0 * * * *', cleanup)
+			scheduleJob('* * * * *', cleanup)
 			scheduleJob('0 0 * * *', updateProblems)
 		})
 		.then(() => worker.restoreQueue())

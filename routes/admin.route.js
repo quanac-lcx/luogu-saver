@@ -190,9 +190,9 @@ router.post('/api/jobs/cleanup', requireAdmin, async (req, res, next) => {
 	try {
 		logger.debug("Admin triggered cleanup job.");
 		cleanup();
-		res.json(makeResponse(true, "清理任务已启动"));
+		res.json(makeResponse(true, { message: "清理任务已启动" }));
 	} catch (error) {
-		res.json(makeResponse(false, error.message));
+		res.json(makeResponse(false, { message: error.message }));
 	}
 });
 
@@ -200,9 +200,9 @@ router.post('/api/jobs/update-problems', requireAdmin, async (req, res, next) =>
 	try {
 		logger.debug("Admin triggered update problems job.");
 		updateAllProblemSets();
-		res.json(makeResponse(true, "题目更新任务已启动"));
+		res.json(makeResponse(true, { message: "题目更新任务已启动" }));
 	} catch (error) {
-		res.json(makeResponse(false, error.message));
+		res.json(makeResponse(false, { message: error.message }));
 	}
 });
 
@@ -213,7 +213,7 @@ router.post('/api/restore/:type/:id', requireAdmin, async (req, res, next) => {
 		if (type === 'article') {
 			const article = await Article.findById(id);
 			if (!article) {
-				return res.json(makeResponse(false, "专栏不存在"));
+				return res.json(makeResponse(false, { message: "专栏不存在" }));
 			}
 			article.deleted = false;
 			article.deleted_reason = null;
@@ -221,18 +221,18 @@ router.post('/api/restore/:type/:id', requireAdmin, async (req, res, next) => {
 		} else if (type === 'paste') {
 			const paste = await Paste.findById(id);
 			if (!paste) {
-				return res.json(makeResponse(false, "剪贴板不存在"));
+				return res.json(makeResponse(false, { message: "剪贴板不存在" }));
 			}
 			paste.deleted = false;
 			paste.deleted_reason = null;
 			await paste.save();
 		} else {
-			return res.json(makeResponse(false, "不支持的类型"));
+			return res.json(makeResponse(false, { message: "不支持的类型" }));
 		}
 
-		res.json(makeResponse(true, "恢复成功"));
+		res.json(makeResponse(true, { message: "恢复成功" }));
 	} catch (error) {
-		res.json(makeResponse(false, error.message));
+		res.json(makeResponse(false, { message: error.message }));
 	}
 });
 
@@ -240,13 +240,13 @@ router.delete('/api/tokens/:id', requireAdmin, async (req, res, next) => {
 	try {
 		const token = await Token.findById(req.params.id);
 		if (!token) {
-			return res.json(makeResponse(false, "Token 不存在"));
+			return res.json(makeResponse(false, { message: "Token 不存在" }));
 		}
 		
 		await token.remove();
-		res.json(makeResponse(true, "Token 删除成功"));
+		res.json(makeResponse(true, { message: "Token 删除成功" }));
 	} catch (error) {
-		res.json(makeResponse(false, error.message));
+		res.json(makeResponse(false, { message: error.message }));
 	}
 });
 
@@ -255,7 +255,7 @@ router.post('/api/restart', requireAdmin, async (req, res, next) => {
 		// Try PM2 first
 		try {
 			await execAsync('pm2 restart luogu-saver || pm2 restart all');
-			return res.json(makeResponse(true, "PM2 重启命令已执行"));
+			return res.json(makeResponse(true, { message: "PM2 重启命令已执行" }));
 		} catch (pm2Error) {
 			logger.debug("PM2 restart failed, trying systemctl");
 		}
@@ -263,15 +263,15 @@ router.post('/api/restart', requireAdmin, async (req, res, next) => {
 		// Fallback to systemctl
 		try {
 			await execAsync('systemctl restart luogu-saver');
-			return res.json(makeResponse(true, "systemctl 重启命令已执行"));
+			return res.json(makeResponse(true, { message: "systemctl 重启命令已执行" }));
 		} catch (systemctlError) {
 			logger.debug("systemctl restart failed");
 		}
 
 		// If both fail, suggest manual restart
-		res.json(makeResponse(false, "无法自动重启，请手动重启服务"));
+		res.json(makeResponse(false, { message: "无法自动重启，请手动重启服务" }));
 	} catch (error) {
-		res.json(makeResponse(false, error.message));
+		res.json(makeResponse(false, { message: error.message }));
 	}
 });
 

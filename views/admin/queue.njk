@@ -17,7 +17,7 @@
     <div class="column">
         <div class="card shadow" style="text-align: center;">
             <div class="ui statistic">
-                <div class="value">{{ queueStatus.length }}</div>
+                <div class="value" id="queue-length">{{ queueStatus.length }}</div>
                 <div class="label">等待中的任务</div>
             </div>
         </div>
@@ -25,17 +25,174 @@
     <div class="column">
         <div class="card shadow" style="text-align: center;">
             <div class="ui statistic">
-                <div class="value">{{ queueStatus.running }}</div>
+                <div class="value" id="running-tasks">{{ queueStatus.running }}</div>
                 <div class="label">正在执行的任务</div>
             </div>
         </div>
     </div>
 </div>
 
+<div class="card shadow">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 class="ui header" style="margin: 0;">队列详情</h3>
+        <div class="ui buttons">
+            <button class="ui icon button" onclick="refreshQueue()" id="refresh-btn">
+                <i class="refresh icon"></i>
+                刷新
+            </button>
+            <button class="ui toggle button" onclick="toggleAutoRefresh()" id="auto-refresh-btn">
+                <i class="play icon"></i>
+                自动刷新
+            </button>
+        </div>
+    </div>
+    
+    <div id="queue-tasks">
+        {% if queueStatus.tasks.length > 0 %}
+        <div class="ui divided items">
+            {% for task in queueStatus.tasks %}
+            <div class="item">
+                <div class="ui small image">
+                    <div style="display: flex; align-items: center; justify-content: center; width: 60px; height: 60px; background: #f8f9fa; border-radius: 4px;">
+                        <i class="{% if task.type == 0 %}file alternate{% else %}clipboard{% endif %} icon big"></i>
+                    </div>
+                </div>
+                <div class="content">
+                    <div class="header">
+                        <span class="ui small label">#{{ task.position }}</span>
+                        {% if task.type == 0 %}专栏{% else %}剪贴板{% endif %} {{ task.aid }}
+                    </div>
+                    <div class="meta">
+                        <span>任务ID: {{ task.id }}</span>
+                    </div>
+                    <div class="description">
+                        URL: <code>{{ task.url }}</code>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 40px; color: #999;">
+            <i class="huge inbox icon"></i>
+            <div style="margin-top: 10px;">队列为空</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
 <script>
-// Auto refresh every 5 seconds
-setInterval(function() {
-    window.location.reload();
-}, 5000);
+let autoRefreshInterval = null;
+let isAutoRefresh = false;
+
+function refreshQueue() {
+    const refreshBtn = document.getElementById('refresh-btn');
+    refreshBtn.classList.add('loading');
+    
+    $.ajax({
+        url: '/admin/api/queue/status',
+        method: 'GET'
+    })
+    .done(function(res) {
+        if (res.success) {
+            updateQueueDisplay(res.queueStatus);
+        } else {
+            console.error('Failed to refresh queue:', res.message);
+        }
+    })
+    .fail(function() {
+        console.error('Failed to refresh queue');
+    })
+    .always(function() {
+        refreshBtn.classList.remove('loading');
+    });
+}
+
+function updateQueueDisplay(queueStatus) {
+    // Update statistics
+    document.getElementById('queue-length').textContent = queueStatus.length;
+    document.getElementById('running-tasks').textContent = queueStatus.running;
+    
+    // Update task list
+    updateTaskList(queueStatus.tasks || []);
+}
+
+function updateTaskList(tasks) {
+    const container = document.getElementById('queue-tasks');
+    
+    if (tasks.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #999;">
+                <i class="huge inbox icon"></i>
+                <div style="margin-top: 10px;">队列为空</div>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<div class="ui divided items">';
+    
+    tasks.forEach(task => {
+        const taskType = task.type === 0 ? '专栏' : '剪贴板';
+        const taskIcon = task.type === 0 ? 'file alternate' : 'clipboard';
+        
+        html += `
+            <div class="item">
+                <div class="ui small image">
+                    <div style="display: flex; align-items: center; justify-content: center; width: 60px; height: 60px; background: #f8f9fa; border-radius: 4px;">
+                        <i class="${taskIcon} icon big"></i>
+                    </div>
+                </div>
+                <div class="content">
+                    <div class="header">
+                        <span class="ui small label">#${task.position}</span>
+                        ${taskType} ${task.aid}
+                    </div>
+                    <div class="meta">
+                        <span>任务ID: ${task.id}</span>
+                    </div>
+                    <div class="description">
+                        URL: <code>${task.url}</code>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function toggleAutoRefresh() {
+    const btn = document.getElementById('auto-refresh-btn');
+    
+    if (isAutoRefresh) {
+        // Stop auto refresh
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+        isAutoRefresh = false;
+        btn.innerHTML = '<i class="play icon"></i> 自动刷新';
+        btn.classList.remove('active');
+    } else {
+        // Start auto refresh
+        autoRefreshInterval = setInterval(refreshQueue, 3000); // Refresh every 3 seconds
+        isAutoRefresh = true;
+        btn.innerHTML = '<i class="pause icon"></i> 停止自动刷新';
+        btn.classList.add('active');
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-start refresh
+    toggleAutoRefresh();
+});
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', function() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+});
 </script>
 {% endblock %}

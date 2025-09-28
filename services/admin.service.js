@@ -16,7 +16,7 @@ import Article from "../models/article.js";
 import Paste from "../models/paste.js";
 import Token from "../models/token.js";
 import * as queue from "../workers/queue.worker.js";
-import { paginateQuery, createSearchCondition, createEnhancedSearchCondition } from "../core/pagination.js";
+import { paginateQuery, createSearchCondition } from "../core/pagination.js";
 import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 

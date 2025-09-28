@@ -1,0 +1,193 @@
+{% extends "../layout.njk" %}
+
+{% block content %}
+<div class="ui grid">
+    <div class="sixteen wide column">
+        <h1 class="ui header">
+            <i class="ui icon users"></i>
+            <div class="content">
+                账户管理
+                <div class="sub header">在线编辑 accounts.json 配置</div>
+            </div>
+        </h1>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="ui form">
+        <div class="field">
+            <label>账户配置 (JSON格式)</label>
+            <textarea id="accounts-config" rows="15" placeholder="请输入 JSON 格式的账户配置">{{ accounts | dump(2) }}</textarea>
+        </div>
+        <div class="actions" style="margin-top: 15px;">
+            <button class="ui primary button" onclick="saveAccounts()">
+                <i class="save icon"></i>
+                保存配置
+            </button>
+            <button class="ui button" onclick="resetAccounts()">
+                <i class="refresh icon"></i>
+                重置
+            </button>
+            <button class="ui button" onclick="validateJson()">
+                <i class="check icon"></i>
+                验证 JSON
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow">
+    <h4 class="ui header">配置说明</h4>
+    <div class="ui list">
+        <div class="item">
+            <i class="info circle icon"></i>
+            <div class="content">
+                <div class="header">格式要求</div>
+                <div class="description">配置文件应为 JSON 数组格式，每个账户包含 _uid 和 __client_id 字段</div>
+            </div>
+        </div>
+        <div class="item">
+            <i class="code icon"></i>
+            <div class="content">
+                <div class="header">示例格式</div>
+                <div class="description">
+                    <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-top: 5px;">[
+  { "_uid": "114514", "__client_id": "1145141919810" }
+]</pre>
+                </div>
+            </div>
+        </div>
+        <div class="item">
+            <i class="warning sign icon"></i>
+            <div class="content">
+                <div class="header">注意事项</div>
+                <div class="description">修改配置后可能需要重启服务以生效，请谨慎操作</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let originalConfig = {{ accounts | dump }};
+
+function validateJson() {
+    const textarea = document.getElementById('accounts-config');
+    const value = textarea.value.trim();
+    
+    if (!value) {
+        Swal.fire('提示', '配置内容为空', 'info');
+        return false;
+    }
+    
+    try {
+        const parsed = JSON.parse(value);
+        
+        if (!Array.isArray(parsed)) {
+            Swal.fire('验证失败', '配置必须是一个数组', 'error');
+            return false;
+        }
+        
+        for (let i = 0; i < parsed.length; i++) {
+            const account = parsed[i];
+            if (!account._uid || !account.__client_id) {
+                Swal.fire('验证失败', `第 ${i + 1} 个账户缺少必要字段 (_uid 或 __client_id)`, 'error');
+                return false;
+            }
+        }
+        
+        Swal.fire('验证成功', 'JSON 格式正确', 'success');
+        return true;
+    } catch (error) {
+        Swal.fire('验证失败', 'JSON 格式错误: ' + error.message, 'error');
+        return false;
+    }
+}
+
+function saveAccounts() {
+    if (!validateJson()) {
+        return;
+    }
+    
+    const textarea = document.getElementById('accounts-config');
+    const value = textarea.value.trim();
+    
+    let accounts;
+    try {
+        accounts = JSON.parse(value);
+    } catch (error) {
+        Swal.fire('错误', 'JSON 解析失败', 'error');
+        return;
+    }
+    
+    Swal.fire({
+        title: '确认保存',
+        text: '确定要保存账户配置吗？',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: '保存',
+        cancelButtonText: '取消'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '/admin/api/accounts',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ accounts })
+            })
+            .done(function(res) {
+                if (res.success) {
+                    originalConfig = accounts;
+                    Swal.fire('保存成功', res.message, 'success');
+                } else {
+                    Swal.fire('保存失败', res.message, 'error');
+                }
+            })
+            .fail(function() {
+                Swal.fire('错误', '网络或服务器异常', 'error');
+            });
+        }
+    });
+}
+
+function resetAccounts() {
+    Swal.fire({
+        title: '确认重置',
+        text: '确定要重置为原始配置吗？未保存的修改将丢失。',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '重置',
+        cancelButtonText: '取消',
+        confirmButtonColor: '#f39c12'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('accounts-config').value = JSON.stringify(originalConfig, null, 2);
+            Swal.fire('已重置', '配置已重置为原始状态', 'info');
+        }
+    });
+}
+
+// Add syntax highlighting and better formatting
+document.addEventListener('DOMContentLoaded', function() {
+    const textarea = document.getElementById('accounts-config');
+    
+    // Format initial JSON
+    try {
+        const parsed = JSON.parse(textarea.value);
+        textarea.value = JSON.stringify(parsed, null, 2);
+    } catch (error) {
+        // Keep original value if parse fails
+    }
+    
+    // Add tab support for better editing
+    textarea.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const start = this.selectionStart;
+            const end = this.selectionEnd;
+            this.value = this.value.substring(0, start) + '  ' + this.value.substring(end);
+            this.selectionStart = this.selectionEnd = start + 2;
+        }
+    });
+});
+</script>
+{% endblock %}

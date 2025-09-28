@@ -16,3 +16,15 @@ export function getQueuePosition(taskId) {
 	}
 	return 0;
 }
+
+/**
+ * Get all tasks in the queue for admin monitoring
+ * 
+ * @returns {Array} Array of queue tasks with position information
+ */
+export function getAllTasks() {
+	return queue.map((task, index) => ({
+		...task,
+		position: index + 1
+	}));
+}

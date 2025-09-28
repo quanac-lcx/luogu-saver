@@ -1,0 +1,30 @@
+{% if queueStatus.tasks.length > 0 %}
+<div class="ui divided items">
+    {% for task in queueStatus.tasks %}
+    <div class="item">
+        <div class="ui small image">
+            <div style="display: flex; align-items: center; justify-content: center; width: 60px; height: 60px; background: #f8f9fa; border-radius: 4px;">
+                <i class="{% if task.type == 0 %}file alternate{% else %}clipboard{% endif %} icon big"></i>
+            </div>
+        </div>
+        <div class="content">
+            <div class="header">
+                <span class="ui small label">#{{ task.position }}</span>
+                {% if task.type == 0 %}专栏{% else %}剪贴板{% endif %} {{ task.aid }}
+            </div>
+            <div class="meta">
+                <span>任务ID: {{ task.id }}</span>
+            </div>
+            <div class="description">
+                URL: <code>{{ task.url }}</code>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div style="text-align: center; padding: 40px; color: #999;">
+    <i class="huge inbox icon"></i>
+    <div style="margin-top: 10px;">队列为空</div>
+</div>
+{% endif %}

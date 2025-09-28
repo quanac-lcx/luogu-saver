@@ -55,7 +55,7 @@ export async function getDashboardStats() {
  * @param {string} search - Search query (optional)
  * @returns {Promise<Object>} Object containing errors, currentPage, totalPages
  */
-export async function getErrorLogs(page = 1, limit = 50, level = '', search = '') {
+export async function getErrorLogs(page = 1, limit = 50, level = '') {
     const whereCondition = {};
     
     if (level) {
@@ -70,7 +70,7 @@ export async function getErrorLogs(page = 1, limit = 50, level = '', search = ''
         order: { created_at: "DESC" },
         page,
         limit,
-        extra: { level, search },
+        extra: { level },
         processItems: async (error) => {
             await error.loadRelationships();
             error.formatDate();
@@ -151,9 +151,9 @@ export async function getUndeletedItems(type = 'article', page = 1, limit = 20, 
         page,
         limit,
         extra: { type, search },
-        processItems: type === 'paste' ? async (paste) => {
-            await paste.loadRelationships();
-        } : null
+        processItems: async (item) => {
+            await item.loadRelationships();
+        }
     });
 }
 

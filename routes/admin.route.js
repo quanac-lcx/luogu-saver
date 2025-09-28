@@ -12,8 +12,7 @@ router.get('/', requireAdmin, async (req, res, next) => {
 		const stats = await adminService.getDashboardStats();
 		res.render('admin/dashboard.njk', { 
 			title: "管理后台", 
-			stats,
-			user: req.user 
+			stats
 		});
 	} catch (error) {
 		next(error);
@@ -29,8 +28,7 @@ router.get('/errors', requireAdmin, async (req, res, next) => {
 		
 		res.render('admin/errors.njk', {
 			title: "错误日志",
-			...result,
-			user: req.user
+			...result
 		});
 	} catch (error) {
 		next(error);
@@ -43,8 +41,7 @@ router.get('/queue', requireAdmin, async (req, res, next) => {
 		const queueStatus = await adminService.getQueueStatus();
 		res.render('admin/queue.njk', {
 			title: "队列管理",
-			queueStatus,
-			user: req.user
+			queueStatus
 		});
 	} catch (error) {
 		next(error);
@@ -69,8 +66,7 @@ router.get('/deletions', requireAdmin, async (req, res, next) => {
 		res.render('admin/deletions.njk', {
 			title: "删除管理",
 			...result,
-			status,
-			user: req.user
+			status
 		});
 	} catch (error) {
 		next(error);
@@ -86,8 +82,7 @@ router.get('/tokens', requireAdmin, async (req, res, next) => {
 
 		res.render('admin/tokens.njk', {
 			title: "Token 管理",
-			...result,
-			user: req.user
+			...result
 		});
 	} catch (error) {
 		next(error);

@@ -39,7 +39,9 @@ function isKnownUserError(err) {
 		'Invalid token',
 		'has been deleted',
 		'Verification content does not match',
-		'UID does not match'
+		'UID does not match',
+		'Administrator access required',
+		'Login required'
 	];
 	
 	return userErrorMessages.some(msg => err.message.includes(msg));

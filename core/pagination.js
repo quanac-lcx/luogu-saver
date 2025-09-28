@@ -6,6 +6,8 @@
  * @author Copilot
  */
 
+import { Like } from "typeorm";
+
 /**
  * 计算分页偏移量
  * 
@@ -95,4 +97,17 @@ export async function paginateQuery(model, options) {
     const totalCount = await model.count({ where });
     
     return createPaginationResult(items, page, totalCount, limit, extra);
+}
+
+/**
+ * 创建搜索条件（用于 LIKE 查询）
+ * 
+ * @param {string} searchValue - 搜索值
+ * @returns {Object} TypeORM Like 查询对象
+ */
+export function createSearchCondition(searchValue) {
+    if (!searchValue || searchValue.trim() === '') {
+        return {};
+    }
+    return Like(`%${searchValue.trim()}%`);
 }

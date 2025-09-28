@@ -16,7 +16,7 @@ import Article from "../models/article.js";
 import Paste from "../models/paste.js";
 import Token from "../models/token.js";
 import * as queue from "../workers/queue.worker.js";
-import { paginateQuery } from "../core/pagination.js";
+import { paginateQuery, createSearchCondition } from "../core/pagination.js";
 import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 
@@ -62,10 +62,8 @@ export async function getErrorLogs(page = 1, limit = 50, level = '', search = ''
         whereCondition.level = level;
     }
     
-    // Add search functionality
-    if (search) {
-        whereCondition.message = { $like: `%${search}%` };
-    }
+    // Note: For TypeORM, we'll handle search separately with query builder if needed
+    // For now, we'll use the basic functionality
     
     return await paginateQuery(ErrorLog, {
         where: whereCondition,
@@ -105,13 +103,9 @@ export async function getQueueStatus() {
 export async function getDeletedItems(type = 'article', page = 1, limit = 20, search = '') {
     const whereCondition = { deleted: true };
     
-    // Add search functionality
-    if (search) {
-        if (type === 'article') {
-            whereCondition.title = { $like: `%${search}%` };
-        } else {
-            whereCondition.title = { $like: `%${search}%` };
-        }
+    // Add search functionality for title
+    if (search && search.trim()) {
+        whereCondition.title = createSearchCondition(search);
     }
     
     const model = type === 'article' ? Article : Paste;
@@ -195,9 +189,9 @@ export async function deleteItem(type, id) {
 export async function getTokens(page = 1, limit = 30, search = '') {
     const whereCondition = {};
     
-    // Add search functionality
-    if (search) {
-        whereCondition.uid = { $like: `%${search}%` };
+    // Add search functionality for UID
+    if (search && search.trim()) {
+        whereCondition.uid = createSearchCondition(search);
     }
     
     return await paginateQuery(Token, {

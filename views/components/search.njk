@@ -5,17 +5,18 @@
 - placeholder: 输入框占位符
 - onSubmit: 提交时的JS函数名（可选）
 - formId: 表单ID（可选）
+- extraParams: 额外的查询参数对象（可选）
 #}
-{% macro searchBox(searchValue = '', placeholder = '搜索...', onSubmit = '', formId = 'search-form') %}
+{% macro searchBox(searchValue = '', placeholder = '搜索...', onSubmit = '', formId = 'search-form', extraParams = {}) %}
 <div class="card shadow outline">
     <form id="{{ formId }}" method="GET" {% if onSubmit %}onsubmit="{{ onSubmit }}(event)"{% endif %}>
         <div class="ui icon fluid input">
             <input type="text" name="search" value="{{ searchValue }}" placeholder="{{ placeholder }}" />
             <i class="inverted circular search link icon" onclick="document.getElementById('{{ formId }}').submit()"></i>
         </div>
-        {# 保持其他查询参数 #}
-        {% for param, value in request.query %}
-            {% if param != 'search' and param != 'page' and value %}
+        {# 添加额外的查询参数 #}
+        {% for param, value in extraParams %}
+            {% if value %}
                 <input type="hidden" name="{{ param }}" value="{{ value }}" />
             {% endif %}
         {% endfor %}

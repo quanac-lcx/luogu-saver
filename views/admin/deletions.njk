@@ -42,7 +42,7 @@
 </div>
 
 {# 搜索框 #}
-{{ searchBox(search, '搜索标题...') }}
+{{ searchBox(search, '搜索标题...', '', 'search-form', {type: type}) }}
 
 {% if items.length > 0 %}
 <div class="card shadow">

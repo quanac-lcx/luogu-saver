@@ -96,9 +96,7 @@
                 {% endif %}
             </div>
 
-            <div id="pagination" class="card shadow padding-10" style="text-align: center;">
-                {{ pagination(currentPage, totalPages, '/problem', {accept_solution: accept_solution, difficulty: difficulty, prefix: prefix}) }}
-            </div>
+            {{ pagination(currentPage, totalPages, '/problem', {accept_solution: accept_solution, difficulty: difficulty, prefix: prefix}) }}
         </div>
     </div>
 {% endblock %}

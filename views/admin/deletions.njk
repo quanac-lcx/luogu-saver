@@ -44,12 +44,6 @@
                     <label>未删除</label>
                 </div>
             </div>
-            <div class="field" style="margin-left: 20px;">
-                <button class="ui red button" onclick="showMassDeleteModal()">
-                    <i class="trash alternate outline icon"></i>
-                    批量标记删除
-                </button>
-            </div>
         </div>
     </div>
 </div>
@@ -243,57 +237,6 @@ function deleteItem(type, id) {
                     });
                 } else {
                     Swal.fire('删除失败', res.message, 'error');
-                }
-            })
-            .fail(function() {
-                Swal.fire('错误', '网络或服务器异常', 'error');
-            });
-        }
-    });
-}
-
-function showMassDeleteModal() {
-    const type = '{{ type }}';
-    const typeName = type === 'article' ? '专栏' : '剪贴板';
-    
-    Swal.fire({
-        title: `批量标记删除 ${typeName}`,
-        html: `
-            <p style="margin-bottom: 15px;">此操作将把所有未删除的${typeName}标记为删除状态。</p>
-            <div style="text-align: left;">
-                <label for="delete-reason" style="font-weight: bold; margin-bottom: 5px; display: block;">删除原因：</label>
-                <input type="text" id="delete-reason" class="swal2-input" placeholder="请输入删除原因" value="批量删除" style="margin: 0;">
-            </div>
-        `,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: '确认标记删除',
-        cancelButtonText: '取消',
-        confirmButtonColor: '#dc3545',
-        preConfirm: () => {
-            const reason = document.getElementById('delete-reason').value;
-            if (!reason || reason.trim() === '') {
-                Swal.showValidationMessage('请输入删除原因');
-                return false;
-            }
-            return reason.trim();
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            const reason = result.value;
-            $.ajax({
-                url: `/admin/api/mass-delete/${type}s`,
-                method: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({ reason })
-            })
-            .done(function(res) {
-                if (res.success) {
-                    Swal.fire('操作成功', res.message, 'success').then(() => {
-                        window.location.reload();
-                    });
-                } else {
-                    Swal.fire('操作失败', res.message, 'error');
                 }
             })
             .fail(function() {

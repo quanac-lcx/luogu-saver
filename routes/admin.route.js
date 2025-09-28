@@ -84,20 +84,6 @@ router.get('/tokens', requireAdmin, async (req, res, next) => {
 	}
 });
 
-// Accounts management
-router.get('/accounts', requireAdmin, async (req, res, next) => {
-	try {
-		const accounts = await adminService.getAccountsConfig();
-		res.render('admin/accounts.njk', {
-			title: "账户管理",
-			accounts,
-			user: req.user
-		});
-	} catch (error) {
-		next(error);
-	}
-});
-
 // API Routes
 router.post('/api/jobs/cleanup', requireAdmin, async (req, res, next) => {
 	try {

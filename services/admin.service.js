@@ -25,25 +25,24 @@ import { join } from 'path';
  * @returns {Promise<Object>} Dashboard statistics object
  */
 export async function getDashboardStats() {
-    const stats = {
-        errors: {
-            total: await ErrorLog.count()
-        },
-        queue: {
-            length: queue.getQueueLength(),
-            running: queue.getRunning()
-        },
-        articles: {
-            total: await Article.count(),
-            deleted: await Article.count({ where: { deleted: true } })
-        },
-        pastes: {
-            total: await Paste.count(),
-            deleted: await Paste.count({ where: { deleted: true } })
-        },
-        tokens: await Token.count()
-    };
-    return stats;
+	return {
+		errors: {
+			total: await ErrorLog.count()
+		},
+		queue: {
+			length: queue.getQueueLength(),
+			running: queue.getRunning()
+		},
+		articles: {
+			total: await Article.count(),
+			deleted: await Article.count({ where: { deleted: true } })
+		},
+		pastes: {
+			total: await Paste.count(),
+			deleted: await Paste.count({ where: { deleted: true } })
+		},
+		tokens: await Token.count()
+	};
 }
 
 /**
@@ -68,6 +67,7 @@ export async function getErrorLogs(page = 1, limit = 50, level = '') {
     // Load user relationships
     for (const error of errors) {
         await error.loadRelationships();
+        error.formatDate();
     }
 
     const totalCount = await ErrorLog.count({ where: whereCondition });
@@ -144,7 +144,6 @@ export async function restoreItem(type, id) {
             throw new Error("专栏不存在");
         }
         article.deleted = false;
-        article.deleted_reason = null;
         await article.save();
     } else if (type === 'paste') {
         const paste = await Paste.findById(id);
@@ -152,7 +151,6 @@ export async function restoreItem(type, id) {
             throw new Error("剪贴板不存在");
         }
         paste.deleted = false;
-        paste.deleted_reason = null;
         await paste.save();
     } else {
         throw new Error("不支持的类型");
@@ -195,7 +193,7 @@ export async function deleteItem(type, id) {
  * @param {number} limit - Items per page
  * @returns {Promise<Object>} Object containing tokens, currentPage, totalPages
  */
-export async function getTokens(page = 1, limit = 20) {
+export async function getTokens(page = 1, limit = 30) {
     const offset = (page - 1) * limit;
 
     const tokens = await Token.find({
@@ -203,6 +201,10 @@ export async function getTokens(page = 1, limit = 20) {
         skip: offset,
         take: limit
     });
+    
+    for (const token of tokens) {
+		token.formatDate();
+	}
 
     const totalCount = await Token.count();
     const totalPages = Math.ceil(totalCount / limit);

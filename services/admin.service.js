@@ -16,6 +16,7 @@ import Article from "../models/article.js";
 import Paste from "../models/paste.js";
 import Token from "../models/token.js";
 import * as queue from "../workers/queue.worker.js";
+import { paginateQuery } from "../core/pagination.js";
 import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 
@@ -51,29 +52,32 @@ export async function getDashboardStats() {
  * @param {number} page - Page number
  * @param {number} limit - Items per page
  * @param {string} level - Log level filter
+ * @param {string} search - Search query (optional)
  * @returns {Promise<Object>} Object containing errors, currentPage, totalPages
  */
-export async function getErrorLogs(page = 1, limit = 50, level = '') {
-    const offset = (page - 1) * limit;
-    const whereCondition = level ? { level } : {};
+export async function getErrorLogs(page = 1, limit = 50, level = '', search = '') {
+    const whereCondition = {};
     
-    const errors = await ErrorLog.find({
+    if (level) {
+        whereCondition.level = level;
+    }
+    
+    // Add search functionality
+    if (search) {
+        whereCondition.message = { $like: `%${search}%` };
+    }
+    
+    return await paginateQuery(ErrorLog, {
         where: whereCondition,
         order: { created_at: "DESC" },
-        skip: offset,
-        take: limit
+        page,
+        limit,
+        extra: { level, search },
+        processItems: async (error) => {
+            await error.loadRelationships();
+            error.formatDate();
+        }
     });
-
-    // Load user relationships
-    for (const error of errors) {
-        await error.loadRelationships();
-        error.formatDate();
-    }
-
-    const totalCount = await ErrorLog.count({ where: whereCondition });
-    const totalPages = Math.ceil(totalCount / limit);
-
-    return { errors, currentPage: page, totalPages, level };
 }
 
 /**
@@ -95,39 +99,33 @@ export async function getQueueStatus() {
  * @param {string} type - Type of items ('article' or 'paste')
  * @param {number} page - Page number
  * @param {number} limit - Items per page
+ * @param {string} search - Search query (optional)
  * @returns {Promise<Object>} Object containing items, currentPage, totalPages, type
  */
-export async function getDeletedItems(type = 'article', page = 1, limit = 20) {
-    const offset = (page - 1) * limit;
-    let items = [];
-    let totalCount = 0;
-
-    if (type === 'article') {
-        items = await Article.find({
-            where: { deleted: true },
-            order: { updated_at: "DESC" },
-            skip: offset,
-            take: limit
-        });
-        totalCount = await Article.count({ where: { deleted: true } });
-    } else if (type === 'paste') {
-        items = await Paste.find({
-            where: { deleted: true },
-            order: { updated_at: "DESC" },
-            skip: offset,
-            take: limit
-        });
-        totalCount = await Paste.count({ where: { deleted: true } });
-
-        // Load relationships for pastes
-        for (const paste of items) {
-            await paste.loadRelationships();
+export async function getDeletedItems(type = 'article', page = 1, limit = 20, search = '') {
+    const whereCondition = { deleted: true };
+    
+    // Add search functionality
+    if (search) {
+        if (type === 'article') {
+            whereCondition.title = { $like: `%${search}%` };
+        } else {
+            whereCondition.title = { $like: `%${search}%` };
         }
     }
-
-    const totalPages = Math.ceil(totalCount / limit);
-
-    return { items, type, currentPage: page, totalPages };
+    
+    const model = type === 'article' ? Article : Paste;
+    
+    return await paginateQuery(model, {
+        where: whereCondition,
+        order: { updated_at: "DESC" },
+        page,
+        limit,
+        extra: { type, search },
+        processItems: type === 'paste' ? async (paste) => {
+            await paste.loadRelationships();
+        } : null
+    });
 }
 
 /**
@@ -191,25 +189,27 @@ export async function deleteItem(type, id) {
  * 
  * @param {number} page - Page number
  * @param {number} limit - Items per page
+ * @param {string} search - Search query (optional)
  * @returns {Promise<Object>} Object containing tokens, currentPage, totalPages
  */
-export async function getTokens(page = 1, limit = 30) {
-    const offset = (page - 1) * limit;
-
-    const tokens = await Token.find({
-        order: { created_at: "DESC" },
-        skip: offset,
-        take: limit
-    });
+export async function getTokens(page = 1, limit = 30, search = '') {
+    const whereCondition = {};
     
-    for (const token of tokens) {
-		token.formatDate();
-	}
-
-    const totalCount = await Token.count();
-    const totalPages = Math.ceil(totalCount / limit);
-
-    return { tokens, currentPage: page, totalPages };
+    // Add search functionality
+    if (search) {
+        whereCondition.uid = { $like: `%${search}%` };
+    }
+    
+    return await paginateQuery(Token, {
+        where: whereCondition,
+        order: { created_at: "DESC" },
+        page,
+        limit,
+        extra: { search },
+        processItems: async (token) => {
+            token.formatDate();
+        }
+    });
 }
 
 /**
@@ -242,6 +242,58 @@ export async function getAccountsConfig() {
         // If file doesn't exist, return empty array
         return [];
     }
+}
+
+/**
+ * Mark undeleted articles as deleted with specified reason
+ * 
+ * @param {string} reason - Deletion reason (cannot be null)
+ * @returns {Promise<Object>} Success result with count of affected articles
+ */
+export async function markAllArticlesDeleted(reason = "批量删除") {
+    if (!reason || reason.trim() === '') {
+        throw new Error("删除原因不能为空");
+    }
+    
+    const undeletedArticles = await Article.find({
+        where: { deleted: false }
+    });
+    
+    let count = 0;
+    for (const article of undeletedArticles) {
+        article.deleted = true;
+        article.deleted_reason = reason.trim();
+        await article.save();
+        count++;
+    }
+    
+    return { message: `已标记 ${count} 篇文章为删除状态`, count };
+}
+
+/**
+ * Mark undeleted pastes as deleted with specified reason
+ * 
+ * @param {string} reason - Deletion reason (cannot be null)
+ * @returns {Promise<Object>} Success result with count of affected pastes
+ */
+export async function markAllPastesDeleted(reason = "批量删除") {
+    if (!reason || reason.trim() === '') {
+        throw new Error("删除原因不能为空");
+    }
+    
+    const undeletedPastes = await Paste.find({
+        where: { deleted: false }
+    });
+    
+    let count = 0;
+    for (const paste of undeletedPastes) {
+        paste.deleted = true;
+        paste.deleted_reason = reason.trim();
+        await paste.save();
+        count++;
+    }
+    
+    return { message: `已标记 ${count} 个剪贴板为删除状态`, count };
 }
 
 /**

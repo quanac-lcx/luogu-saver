@@ -1,11 +1,11 @@
 /**
- * Admin Worker Module
+ * 管理员工作器模块
  * 
- * This module provides worker functions for admin operations, handling:
- * - Job execution (cleanup, problem updates, etc.)
- * - Queue management operations
- * - System restart operations
- * - Service and business logic coordination
+ * 该模块提供管理员操作相关的工作器功能，包括：
+ * - 作业执行（清理、题目更新等）
+ * - 队列管理操作
+ * - 系统重启操作
+ * - 服务和业务逻辑协调
  * 
  * @author Copilot
  */
@@ -20,9 +20,9 @@ import logger from "../core/logger.js";
 const execAsync = promisify(exec);
 
 /**
- * Execute cleanup job
+ * 执行清理作业
  * 
- * @returns {Promise<Object>} Success result with message
+ * @returns {Promise<Object>} 包含消息的成功结果
  */
 export async function executeCleanupJob() {
     logger.debug("Admin triggered cleanup job.");
@@ -31,9 +31,9 @@ export async function executeCleanupJob() {
 }
 
 /**
- * Execute problem update job
+ * 执行题目更新作业
  * 
- * @returns {Promise<Object>} Success result with message
+ * @returns {Promise<Object>} 包含消息的成功结果
  */
 export async function executeUpdateProblemsJob() {
     logger.debug("Admin triggered update problems job.");
@@ -42,12 +42,12 @@ export async function executeUpdateProblemsJob() {
 }
 
 /**
- * Restart the service using available methods
+ * 使用可用方法重启服务
  * 
- * @returns {Promise<Object>} Result with success status and message
+ * @returns {Promise<Object>} 包含成功状态和消息的结果
  */
 export async function restartService() {
-    // Try PM2 first
+    // 首先尝试 PM2
     try {
         await execAsync(`pm2 restart ${config.service.name} || pm2 restart all`);
         return { success: true, message: "PM2 重启命令已执行" };
@@ -55,7 +55,7 @@ export async function restartService() {
         logger.debug("PM2 restart failed, trying systemctl");
     }
 
-    // Fallback to systemctl
+    // 备用方案：使用 systemctl
     try {
         await execAsync(`systemctl restart ${config.service.name}`);
         return { success: true, message: "systemctl 重启命令已执行" };
@@ -63,6 +63,6 @@ export async function restartService() {
         logger.debug("systemctl restart failed");
     }
 
-    // If both fail, suggest manual restart
+    // 如果两种方法都失败，建议手动重启
     return { success: false, message: "无法自动重启，请手动重启服务" };
 }

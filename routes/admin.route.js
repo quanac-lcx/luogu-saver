@@ -56,7 +56,8 @@ router.get('/deletions', requireAdmin, async (req, res, next) => {
 	try {
 		const type = req.query.type || 'article';
 		const page = parseInt(req.query.page) || 1;
-		const result = await adminService.getDeletedItems(type, page);
+		const search = req.query.search || '';
+		const result = await adminService.getDeletedItems(type, page, 20, search);
 
 		res.render('admin/deletions.njk', {
 			title: "删除管理",
@@ -72,7 +73,8 @@ router.get('/deletions', requireAdmin, async (req, res, next) => {
 router.get('/tokens', requireAdmin, async (req, res, next) => {
 	try {
 		const page = parseInt(req.query.page) || 1;
-		const result = await adminService.getTokens(page);
+		const search = req.query.search || '';
+		const result = await adminService.getTokens(page, 30, search);
 
 		res.render('admin/tokens.njk', {
 			title: "Token 管理",
@@ -164,6 +166,27 @@ router.post('/api/restart', requireAdmin, async (req, res, next) => {
 	try {
 		const result = await adminWorker.restartService();
 		res.json(makeResponse(result.success, { message: result.message }));
+	} catch (error) {
+		res.json(makeResponse(false, { message: error.message }));
+	}
+});
+
+// Mass deletion endpoints
+router.post('/api/mass-delete/articles', requireAdmin, async (req, res, next) => {
+	try {
+		const { reason } = req.body;
+		const result = await adminService.markAllArticlesDeleted(reason);
+		res.json(makeResponse(true, result));
+	} catch (error) {
+		res.json(makeResponse(false, { message: error.message }));
+	}
+});
+
+router.post('/api/mass-delete/pastes', requireAdmin, async (req, res, next) => {
+	try {
+		const { reason } = req.body;
+		const result = await adminService.markAllPastesDeleted(reason);
+		res.json(makeResponse(true, result));
 	} catch (error) {
 		res.json(makeResponse(false, { message: error.message }));
 	}

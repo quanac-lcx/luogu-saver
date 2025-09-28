@@ -10,6 +10,7 @@ import Token from "../models/token.js";
 import * as queue from "../workers/queue.worker.js";
 import { exec } from "child_process";
 import { promisify } from "util";
+import config from "../config.js";
 
 const router = express.Router();
 const execAsync = promisify(exec);
@@ -20,12 +21,7 @@ router.get('/', requireAdmin, async (req, res, next) => {
 		// Get summary statistics
 		const stats = {
 			errors: {
-				total: await ErrorLog.count(),
-				recent: await ErrorLog.count({
-					where: {
-						created_at: new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
-					}
-				})
+				total: await ErrorLog.count()
 			},
 			queue: {
 				length: queue.getQueueLength(),
@@ -254,7 +250,7 @@ router.post('/api/restart', requireAdmin, async (req, res, next) => {
 	try {
 		// Try PM2 first
 		try {
-			await execAsync('pm2 restart luogu-saver || pm2 restart all');
+			await execAsync(`pm2 restart ${config.service.name} || pm2 restart all`);
 			return res.json(makeResponse(true, { message: "PM2 重启命令已执行" }));
 		} catch (pm2Error) {
 			logger.debug("PM2 restart failed, trying systemctl");
@@ -262,7 +258,7 @@ router.post('/api/restart', requireAdmin, async (req, res, next) => {
 
 		// Fallback to systemctl
 		try {
-			await execAsync('systemctl restart luogu-saver');
+			await execAsync(`systemctl restart ${config.service.name}`);
 			return res.json(makeResponse(true, { message: "systemctl 重启命令已执行" }));
 		} catch (systemctlError) {
 			logger.debug("systemctl restart failed");

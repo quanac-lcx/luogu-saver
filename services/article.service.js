@@ -161,7 +161,7 @@ export async function getArticleById(id) {
 			article.formatDate();
 			
 			// Check if article is deleted
-			if (article.deleted) throw new Error(article.deleted_reason);
+			if (article.deleted) throw new Error(`The article (ID: ${id}) has been deleted: ${article.deleted_reason}`);
 			
 			// Process and render content
 			const sanitizedContent = utils.sanitizeLatex(article.content);

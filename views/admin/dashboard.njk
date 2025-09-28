@@ -1,5 +1,16 @@
 {% extends "../layout.njk" %}
 
+{% block extra_header %}
+    <style>
+        .ui.stackable.grid .card.shadow {
+            text-align: center;
+        }
+        .ui.stackable.grid .ui.mini.statistics {
+            justify-content: center;
+        }
+    </style>
+{% endblock %}
+
 {% block content %}
 <div class="ui grid">
     <div class="sixteen wide column">
@@ -21,11 +32,12 @@
                 错误日志
             </h3>
             <div class="meta gray">系统错误监控</div>
-            <div class="ui statistic" style="margin-top: 15px;">
-                <div class="value">{{ stats.errors.total }}</div>
-                <div class="label">总数</div>
+            <div class="ui mini statistics" style="margin-top: 15px;">
+                <div class="statistic">
+                    <div class="value">{{ stats.errors.total }}</div>
+                    <div class="label">总数</div>
+                </div>
             </div>
-            <p style="margin-top: 10px;">最近24小时: {{ stats.errors.recent }} 个</p>
             <div style="margin-top: 20px;">
                 <a href="/admin/errors" class="ui primary button">
                     <i class="ui icon list"></i> 查看日志
@@ -91,9 +103,11 @@
                 Token 管理
             </h3>
             <div class="meta gray">访问凭据管理</div>
-            <div class="ui statistic" style="margin-top: 15px;">
-                <div class="value">{{ stats.tokens }}</div>
-                <div class="label">总数</div>
+            <div class="ui mini statistics" style="margin-top: 15px;">
+                <div class="statistic">
+                    <div class="value">{{ stats.tokens }}</div>
+                    <div class="label">总数</div>
+                </div>
             </div>
             <div style="margin-top: 20px;">
                 <a href="/admin/tokens" class="ui primary button">
@@ -115,7 +129,7 @@
             </h3>
             <div class="ui buttons">
                 <button class="ui button" onclick="triggerJob('cleanup')">
-                    <i class="ui icon broom"></i>
+                    <i class="ui icon bolt"></i>
                     启动清理任务
                 </button>
                 <button class="ui button" onclick="triggerJob('update-problems')">

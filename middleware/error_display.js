@@ -5,11 +5,10 @@ export default async (err, req, res, next) => {
 	const isUserError = isKnownUserError(err);
 	
 	if (isUserError) {
-		// For user errors, only log at debug level to reduce console noise
-		logger.debug(`User error while processing ${req.method} ${req.originalUrl}: ${err.message}`);
+		logger.debug(`User error: ${err.message}`);
 	} else {
 		// For system errors, log at warn level
-		logger.warn(`System error while processing ${req.method} ${req.originalUrl}: ${err.message}`);
+		logger.warn(err.message);
 	}
 	
 	// Always log to database for admin review
@@ -31,16 +30,16 @@ export default async (err, req, res, next) => {
 // Helper function to identify common user errors
 function isKnownUserError(err) {
 	const userErrorMessages = [
-		'需要登录',
-		'需要管理员权限',
-		'没有找到',
-		'不存在',
-		'已删除',
-		'权限不足',
-		'参数错误',
-		'格式错误',
-		'Token 无效',
-		'验证失败'
+		'Missing required parameters',
+		'Invalid input',
+		'Invalid article ID',
+		'Invalid paste Id',
+		'not found',
+		'is required',
+		'Invalid token',
+		'has been deleted',
+		'Verification content does not match',
+		'UID does not match'
 	];
 	
 	return userErrorMessages.some(msg => err.message.includes(msg));

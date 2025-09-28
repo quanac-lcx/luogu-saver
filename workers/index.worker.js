@@ -17,12 +17,12 @@ export function scheduleRequestTokens() {
 }
 
 export function startQueueProcessor() {
-	setInterval(async () => {
+	setInterval(() => {
 		if (queue.hasTask() && requestToken > 0 && queue.getRunning() < CONCURRENCY_LIMIT) {
 			requestToken--;
-			const task = queue.nextTask();
+			const task = queue.popTask();
 			queue.incRunning();
-			executeTask(task).finally(() => { queue.decRunning(); queue.popTask(); });
+			executeTask(task).finally(() => { queue.decRunning(); });
 		}
 	}, config.queue.processInterval);
 }

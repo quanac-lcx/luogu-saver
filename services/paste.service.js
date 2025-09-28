@@ -66,7 +66,7 @@ export async function getPasteById(id) {
 			paste.formatDate();
 			
 			// Check if paste is deleted
-			if (paste.deleted) throw new Error(paste.deleted_reason);
+			if (paste.deleted) throw new Error(`The paste (ID: ${id}) has been deleted: ${paste.deleted_reason}`);
 			
 			// Process and render content
 			const sanitizedContent = utils.sanitizeLatex(paste.content);

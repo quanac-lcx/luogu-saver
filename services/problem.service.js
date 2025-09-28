@@ -20,6 +20,7 @@ import { fetchContent, defaultHeaders } from "../core/request.js";
 import config from "../config.js";
 import { sleep } from "../core/utils.js";
 import { withCache, invalidateCacheByPattern } from "../core/cache.js";
+import { paginateQuery } from "../core/pagination.js";
 
 const accountPool = JSON.parse(fs.readFileSync("./accounts.json", "utf8"));
 
@@ -212,24 +213,24 @@ export async function getProblems({ page, accept_solution, difficulty, prefix })
 				}
 			}
 			
-			// Execute parallel queries for problems and total count
-			const [problems, total] = await Promise.all([
-				Problem.createQueryBuilder('p')
-					.where(where)
-					.orderBy('p.id', 'ASC')
-					.skip((currentPage - 1) * perPage)
-					.take(perPage)
-					.getMany(),
-				Problem.count({ where })
-			]);
+			// Use pagination utility
+			const result = await paginateQuery(Problem, {
+				where,
+				order: { id: 'ASC' },
+				page: currentPage,
+				limit: perPage,
+				extra: { prefix, accept_solution, difficulty },
+				processItems: async (problem) => {
+					problem.formatDate();
+				}
+			});
 			
-			// Format problem data
-			problems.forEach(p => Object.setPrototypeOf(p, Problem.prototype));
-			problems.forEach(p => p.formatDate());
+			// Rename for compatibility
+			result.problems = result.items;
+			result.pageCount = result.totalPages;
+			delete result.items;
 			
-			const pageCount = Math.ceil(total / perPage);
-			
-			return { problems, currentPage, pageCount, prefix };
+			return result;
 		}
 	});
 }

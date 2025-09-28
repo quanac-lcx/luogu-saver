@@ -1,4 +1,5 @@
 {% extends "layout.njk" %}
+{% from "components/pagination.njk" import pagination %}
 
 {% block extra_header %}
     <style>
@@ -38,7 +39,7 @@
     </div>
     <div class="ui grid">
         <div class="sixteen wide column">
-            {% for article in articles %}
+            {% for article in items %}
                 <div class="card shadow outline">
                     <div style="display: flex; flex: 1;">
                         <div>
@@ -115,4 +116,7 @@
             {% endfor %}
         </div>
     </div>
+
+    {# 使用可重用的分页组件 #}
+    {{ pagination(currentPage, totalPages, '/article/recent') }}
 {% endblock %}

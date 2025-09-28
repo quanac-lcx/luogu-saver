@@ -6,9 +6,14 @@ const router = express.Router();
 
 router.get('/recent', async (req, res, next) => {
 	try {
-		const count = Math.min(parseInt(req.query.count) || config.recent.article.default, config.recent.article.max);
-		let articles = await getRecentArticles(count);
-		res.render('content/article_recent.njk', { title: "最近更新", articles });
+		const page = parseInt(req.query.page) || 1;
+		const limit = Math.min(parseInt(req.query.limit) || config.recent.article.default, config.recent.article.max);
+		const result = await getRecentArticles(page, limit);
+		
+		res.render('content/article_recent.njk', { 
+			title: "最近更新", 
+			...result
+		});
 	} catch (error) {
 		next(error);
 	}

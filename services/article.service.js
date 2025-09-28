@@ -16,6 +16,7 @@
 import Article from "../models/article.js";
 import ArticleVersion from "../models/article_version.js";
 import { withCache, invalidateCache, invalidateCacheByPattern } from "../core/cache.js";
+import { paginateQuery } from "../core/pagination.js";
 
 /**
  * Save or update an article with version history
@@ -109,28 +110,28 @@ export async function saveArticle(task, obj, onProgress) {
  * @param {number} count - Maximum number of articles to retrieve
  * @returns {Promise<Array>} Array of article objects with formatted dates and summaries
  */
-export async function getRecentArticles(count) {
-	return await withCache({
-		cacheKey: `recent_articles:${count}`,
-		ttl: 600, // 10 minutes
-		fetchFn: async () => {
-			// Fetch articles from database
-			let articles = await Article.find({
-				where: {deleted: false},
-				order: {priority: 'DESC', updated_at: 'DESC'},
-				take: count
-			});
-			
-			// Process each article with relationships and formatting
-			articles = await Promise.all(articles.map(async(article) => {
-				await article.loadRelationships();
-				article.formatDate();
-				article.summary = article.content.slice(0, 200); // Create summary
-				article.tags = JSON.parse(article.tags);
-				return article;
-			}));
-			
-			return articles;
+/**
+ * Get recent articles with pagination
+ * 
+ * @param {number} page - Page number (default: 1)
+ * @param {number} limit - Items per page (default: 20)
+ * @returns {Promise<Object>} Object containing articles, pagination info
+ */
+export async function getRecentArticles(page = 1, limit = 20) {
+	return await paginateQuery(Article, {
+		where: { deleted: false },
+		order: { priority: 'DESC', updated_at: 'DESC' },
+		page: parseInt(page),
+		limit: parseInt(limit),
+		processItems: async (article) => {
+			await article.loadRelationships();
+			article.formatDate();
+			article.summary = article.content.slice(0, 200);
+			try {
+				article.tags = JSON.parse(article.tags || '[]');
+			} catch (e) {
+				article.tags = [];
+			}
 		}
 	});
 }

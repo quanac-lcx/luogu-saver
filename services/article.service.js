@@ -1,14 +1,14 @@
 /**
- * Article Service Module
+ * 文章服务模块
  * 
- * This module provides services for managing articles, including:
- * - Article creation and updates with version history
- * - Cached retrieval of articles with automatic cache bypass support
- * - Recent articles listing with configurable counts
- * - Cache invalidation on data changes
+ * 该模块提供文章管理服务，包括：
+ * - 带版本历史的文章创建和更新
+ * - 支持自动缓存绕过的文章缓存检索
+ * - 可配置计数的最新文章列表
+ * - 数据变更时的缓存失效
  * 
- * All cached methods automatically respect the _bypassRedis=1 parameter
- * when present in the request URL.
+ * 所有缓存方法在请求URL中包含_bypassRedis=1参数时
+ * 会自动绕过缓存。
  * 
  * @author Copilot
  */
@@ -18,20 +18,20 @@ import ArticleVersion from "../models/article_version.js";
 import { withCache, invalidateCache, invalidateCacheByPattern } from "../core/cache.js";
 
 /**
- * Save or update an article with version history
+ * 保存或更新带版本历史的文章
  * 
- * This function handles both creating new articles and updating existing ones.
- * It maintains version history and automatically invalidates related cache entries.
+ * 此函数处理创建新文章和更新现有文章两种情况。
+ * 它维护版本历史并自动使相关缓存条目失效。
  * 
- * @param {Object} task - Task object containing article metadata
- * @param {string} task.aid - Article ID
- * @param {Object} obj - Article data object
- * @param {string} obj.title - Article title
- * @param {string} obj.content - Article content
- * @param {Object} obj.userData - User data with uid
- * @param {number} obj.category - Article category
- * @param {Object} obj.solutionFor - Solution metadata (for category 2)
- * @param {Function} [onProgress] - Optional progress callback function
+ * @param {Object} task - 包含文章元数据的任务对象
+ * @param {string} task.aid - 文章ID
+ * @param {Object} obj - 文章数据对象
+ * @param {string} obj.title - 文章标题
+ * @param {string} obj.content - 文章内容
+ * @param {Object} obj.userData - 包含uid的用户数据
+ * @param {number} obj.category - 文章分类
+ * @param {Object} obj.solutionFor - 题解元数据（用于分类2）
+ * @param {Function} [onProgress] - 可选的进度回调函数
  */
 
 export async function saveArticle(task, obj, onProgress) {
@@ -100,14 +100,14 @@ export async function saveArticle(task, obj, onProgress) {
 }
 
 /**
- * Get recent articles with caching support
+ * 获取支持缓存的最新文章
  * 
- * Retrieves the most recently updated articles, ordered by priority and update time.
- * Results are cached for 10 minutes to improve performance. The cache automatically
- * respects bypass requests via the _bypassRedis=1 parameter.
+ * 检索最近更新的文章，按优先级和更新时间排序。
+ * 结果缓存10分钟以提高性能。缓存会自动识别
+ * 通过_bypassRedis=1参数的绕过请求。
  * 
- * @param {number} count - Maximum number of articles to retrieve
- * @returns {Promise<Array>} Array of article objects with formatted dates and summaries
+ * @param {number} count - 要检索的最大文章数量
+ * @returns {Promise<Array>} 包含格式化日期和摘要的文章对象数组
  */
 export async function getRecentArticles(count) {
 	return await withCache({
@@ -136,15 +136,15 @@ export async function getRecentArticles(count) {
 }
 
 /**
- * Get article by ID with caching support
+ * 通过ID获取支持缓存的文章
  * 
- * Retrieves a specific article by its ID, including rendered content.
- * Results are cached for 30 minutes. Throws error for deleted articles.
- * The cache automatically respects bypass requests.
+ * 通过ID检索特定文章，包括渲染的内容。
+ * 结果缓存30分钟。对已删除的文章会抛出错误。
+ * 缓存会自动识别绕过请求。
  * 
- * @param {string} id - Article ID (must be 8 characters)
- * @returns {Promise<Object|null>} Object with article and renderedContent, or null if not found
- * @throws {Error} If ID is invalid or article is deleted
+ * @param {string} id - 文章ID（必须是8个字符）
+ * @returns {Promise<Object|null>} 包含article和renderedContent的对象，如果未找到则返回null
+ * @throws {Error} 如果ID无效或文章已被删除
  */
 export async function getArticleById(id) {
 	if (id.length !== 8) throw new Error("Invalid article ID.");

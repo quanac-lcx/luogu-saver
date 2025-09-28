@@ -1,11 +1,11 @@
 /**
- * Problem Service Module
+ * 题目服务模块
  * 
- * This module provides services for managing programming contest problems, including:
- * - Problem data synchronization from external sources
- * - Cached problem listing with filtering and pagination
- * - Bulk problem updates with cache invalidation
- * - Problem metadata management
+ * 该模块提供编程竞赛题目管理服务，包括：
+ * - 从外部源同步题目数据
+ * - 带筛选和分页的缓存题目列表
+ * - 批量题目更新并使缓存失效
+ * - 题目元数据管理
  * 
  * @author Copilot
  */
@@ -20,18 +20,19 @@ import { fetchContent, defaultHeaders } from "../core/request.js";
 import config from "../config.js";
 import { sleep } from "../core/utils.js";
 import { withCache, invalidateCacheByPattern } from "../core/cache.js";
+import { paginateQuery } from "../core/pagination.js";
 
 const accountPool = JSON.parse(fs.readFileSync("./accounts.json", "utf8"));
 
 let isUpdatingAllProblemSets = false;
 
 /**
- * Save multiple problems to database with cache invalidation
+ * 将多个题目保存到数据库并使缓存失效
  * 
- * Performs bulk upsert operation for problem data and invalidates
- * all related cache entries to ensure data consistency.
+ * 对题目数据执行批量upsert操作并使所有相关缓存条目失效，
+ * 以确保数据一致性。
  * 
- * @param {Array<Object>} problems - Array of problem objects to save
+ * @param {Array<Object>} problems - 要保存的题目对象数组
  * @private
  */
 async function saveProblems(problems) {
@@ -169,17 +170,17 @@ export async function updateAllProblemSets() {
 }
 
 /**
- * Get problems with filtering, pagination and caching support
+ * 获取支持筛选、分页和缓存的题目
  * 
- * Retrieves problems based on various filter criteria with pagination support.
- * Results are cached for 15 minutes with cache keys based on all parameters.
+ * 根据各种筛选条件检索支持分页的题目。
+ * 结果基于所有参数的缓存键缓存15分钟。
  * 
- * @param {Object} params - Filter and pagination parameters
- * @param {number|string} [params.page=1] - Page number for pagination
- * @param {string} [params.accept_solution] - Filter by solution acceptance ('true'/'false')
- * @param {number|string} [params.difficulty] - Filter by difficulty level
- * @param {string} [params.prefix] - Filter by problem ID prefix
- * @returns {Promise<Object>} Object with problems array, pagination info, and filters
+ * @param {Object} params - 筛选和分页参数
+ * @param {number|string} [params.page=1] - 分页页码
+ * @param {string} [params.accept_solution] - 按题解接受状态筛选（'true'/'false'）
+ * @param {number|string} [params.difficulty] - 按难度级别筛选
+ * @param {string} [params.prefix] - 按题目ID前缀筛选
+ * @returns {Promise<Object>} 包含题目数组、分页信息和筛选条件的对象
  */
 export async function getProblems({ page, accept_solution, difficulty, prefix }) {
 	const perPage = config.pagination.problem;
@@ -212,24 +213,24 @@ export async function getProblems({ page, accept_solution, difficulty, prefix })
 				}
 			}
 			
-			// Execute parallel queries for problems and total count
-			const [problems, total] = await Promise.all([
-				Problem.createQueryBuilder('p')
-					.where(where)
-					.orderBy('p.id', 'ASC')
-					.skip((currentPage - 1) * perPage)
-					.take(perPage)
-					.getMany(),
-				Problem.count({ where })
-			]);
+			// Use pagination utility
+			const result = await paginateQuery(Problem, {
+				where,
+				order: { id: 'ASC' },
+				page: currentPage,
+				limit: perPage,
+				extra: { prefix, accept_solution, difficulty },
+				processItems: async (problem) => {
+					problem.formatDate();
+				}
+			});
 			
-			// Format problem data
-			problems.forEach(p => Object.setPrototypeOf(p, Problem.prototype));
-			problems.forEach(p => p.formatDate());
+			// Rename for compatibility
+			result.problems = result.items;
+			result.pageCount = result.totalPages;
+			delete result.items;
 			
-			const pageCount = Math.ceil(total / perPage);
-			
-			return { problems, currentPage, pageCount, prefix };
+			return result;
 		}
 	});
 }

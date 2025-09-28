@@ -10,10 +10,7 @@ router.get('/', async (req, res, next) => {
 		
 		res.render('content/problem_list.njk', {
 			title: "题目列表",
-			problems: result.problems,
-			page: result.currentPage,
-			pageCount: result.pageCount,
-			prefix: result.prefix
+			...result
 		});
 	} catch (error) {
 		next(error);

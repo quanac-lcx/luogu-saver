@@ -1,14 +1,14 @@
 /**
- * Task Service Module
+ * 任务服务模块
  * 
- * This module provides services for managing background tasks, including:
- * - Task creation and queuing
- * - Task status updates and tracking  
- * - Task retrieval and status mapping
- * - Queue management for pending and processing tasks
+ * 该模块提供后台任务管理服务，包括：
+ * - 任务创建和排队
+ * - 任务状态更新和跟踪
+ * - 任务检索和状态映射
+ * - 待处理和处理中任务的队列管理
  * 
- * Note: Tasks are NOT cached due to their highly dynamic nature.
- * Task status changes very frequently and caching would provide stale data.
+ * 注意：由于任务具有高度动态的性质，任务不会被缓存。
+ * 任务状态变化非常频繁，缓存会提供过期数据。
  * 
  * @author Copilot
  */
@@ -16,15 +16,15 @@
 import Task from "../models/task.js";
 
 /**
- * Create a new task in the queue
+ * 在队列中创建新任务
  * 
- * Generates a new task with a unique ID and sets it to pending status.
- * Tasks are created with a 7-day expiration time.
+ * 生成具有唯一ID的新任务并设置为待处理状态。
+ * 任务创建时设置7天过期时间。
  * 
- * @param {Object} task - Task configuration object
- * @param {string} task.aid - Associated article/paste ID
- * @param {number} task.type - Task type (0=article, 1=paste)
- * @returns {Promise<string>} Generated task ID
+ * @param {Object} task - 任务配置对象
+ * @param {string} task.aid - 关联的文章/粘贴板ID
+ * @param {number} task.type - 任务类型（0=文章, 1=粘贴板）
+ * @returns {Promise<string>} 生成的任务ID
  */
 export async function createTask(task) {
 	const id = utils.generateRandomString();
@@ -41,14 +41,14 @@ export async function createTask(task) {
 }
 
 /**
- * Update task status and information
+ * 更新任务状态和信息
  * 
- * Updates a task's status and optional information message.
- * This method does NOT use caching as task status changes frequently.
+ * 更新任务的状态和可选信息消息。
+ * 由于任务状态变化频繁，此方法不使用缓存。
  * 
- * @param {string} id - Task ID to update
- * @param {number} status - New status code (0=pending, 1=processing, 2=completed, 3=failed)
- * @param {string} [info=""] - Optional status information message
+ * @param {string} id - 要更新的任务ID
+ * @param {number} status - 新的状态码（0=待处理, 1=处理中, 2=已完成, 3=失败）
+ * @param {string} [info=""] - 可选的状态信息消息
  */
 export async function updateTask(id, status, info = "") {
 	const task = await Task.findById(id);
@@ -58,13 +58,13 @@ export async function updateTask(id, status, info = "") {
 }
 
 /**
- * Get all waiting tasks (pending or processing)
+ * 获取所有等待中的任务（待处理或处理中）
  * 
- * Retrieves tasks that are either pending (status 0) or processing (status 1).
- * Results are ordered by ID for consistent processing order.
- * This method does NOT use caching as task queues change frequently.
+ * 检索状态为待处理（status 0）或处理中（status 1）的任务。
+ * 结果按ID排序以保持一致的处理顺序。
+ * 由于任务队列变化频繁，此方法不使用缓存。
  * 
- * @returns {Promise<Array>} Array of waiting task objects
+ * @returns {Promise<Array>} 等待中任务对象数组
  */
 export async function getWaitingTasks() {
 	return await Task.createQueryBuilder("t")
@@ -73,7 +73,7 @@ export async function getWaitingTasks() {
 		.getMany();
 }
 
-// Status code mapping for human-readable status names
+// 状态码映射，用于人类可读的状态名称
 const statusMap = {
 	0: 'Pending',
 	1: 'Processing', 
@@ -82,14 +82,14 @@ const statusMap = {
 };
 
 /**
- * Get task by ID with status mapping
+ * 通过ID获取任务并进行状态映射
  * 
- * Retrieves a task by its ID and formats the status for display.
- * This method does NOT use caching as task status changes very frequently
- * and users need to see real-time status updates.
+ * 通过ID检索任务并格式化状态以供显示。
+ * 由于任务状态变化非常频繁，此方法不使用缓存，
+ * 用户需要看到实时状态更新。
  * 
- * @param {string} id - Task ID to retrieve
- * @returns {Promise<Object|null>} Task object with formatted status, or null if not found
+ * @param {string} id - 要检索的任务ID
+ * @returns {Promise<Object|null>} 包含格式化状态的任务对象，如果未找到则返回null
  */
 export async function getTaskById(id) {
 	const task = await Task.findById(id);

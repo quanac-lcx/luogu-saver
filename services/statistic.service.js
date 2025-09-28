@@ -1,11 +1,11 @@
 /**
- * Statistics Service Module
+ * 统计服务模块
  * 
- * This module provides statistical data services for the application, including:
- * - Article and paste count statistics
- * - Time series data generation for charts and analytics
- * - Comprehensive statistics with daily breakdowns
- * - Cached results for performance optimization
+ * 该模块为应用程序提供统计数据服务，包括：
+ * - 文章和粘贴板计数统计
+ * - 用于图表和分析的时间序列数据生成
+ * - 包含每日明细的综合统计
+ * - 为性能优化而缓存的结果
  * 
  * @author Copilot
  */
@@ -15,13 +15,13 @@ import Paste from "../models/paste.js";
 import { withCache } from "../core/cache.js";
 
 /**
- * Generate time series data for a given entity type
+ * 为给定实体类型生成时间序列数据
  * 
- * Creates daily statistics from the earliest record to today,
- * including cumulative totals and daily deltas.
+ * 创建从最早记录到今天的每日统计数据，
+ * 包括累计总数和每日增量。
  * 
- * @param {Object} entityClass - Database entity class (Article or Paste)
- * @returns {Promise<Array>} Array of daily statistics objects
+ * @param {Object} entityClass - 数据库实体类（Article或Paste）
+ * @returns {Promise<Array>} 每日统计对象数组
  * @private
  */
 
@@ -79,13 +79,13 @@ async function getTimeSeriesData(entityClass) {
 }
 
 /**
- * Get comprehensive statistics with caching support
+ * 获取包含缓存支持的综合统计信息
  * 
- * Retrieves complete statistical overview including totals, today's counts,
- * and time series data for both articles and pastes. Results are cached
- * for 5 minutes due to expensive time series calculations.
+ * 检索完整的统计概览，包括总数、今日计数
+ * 以及文章和粘贴板的时间序列数据。由于昂贵的时间序列计算，
+ * 结果缓存5分钟。
  * 
- * @returns {Promise<Object>} Complete statistics object with time series data
+ * @returns {Promise<Object>} 包含时间序列数据的完整统计对象
  */
 export async function getStatistics() {
 	return await withCache({
@@ -131,12 +131,12 @@ export async function getStatistics() {
 }
 
 /**
- * Get simple count statistics with caching support
+ * 获取包含缓存支持的简单计数统计
  * 
- * Retrieves basic article and paste counts. Results are cached
- * for 2 minutes as these are frequently accessed but simple queries.
+ * 检索基本的文章和粘贴板计数。由于这些是频繁访问
+ * 但查询简单的数据，结果缓存2分钟。
  * 
- * @returns {Promise<Object>} Object with articlesCount and pastesCount
+ * @returns {Promise<Object>} 包含articlesCount和pastesCount的对象
  */
 export async function getCounts() {
 	return await withCache({

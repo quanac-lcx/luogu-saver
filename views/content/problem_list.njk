@@ -1,5 +1,6 @@
 
 {% extends "layout.njk" %}
+{% from "components/pagination.njk" import pagination %}
 
 {% block extra_header %}
     <script src="/static/self/js/problem_list.js"></script>
@@ -63,7 +64,7 @@
                     <i class="list icon"></i>
                     搜索结果
                 </h3>
-                {% if pageCount == 0 %}
+                {% if totalPages == 0 %}
                     <div class="ui icon message">
                         <i class="search icon"></i>
                         <div class="content">
@@ -96,16 +97,8 @@
             </div>
 
             <div id="pagination" class="card shadow padding-10" style="text-align: center;">
-                <div id="pagination-content"></div>
+                {{ pagination(currentPage, totalPages, '/problem', {accept_solution: accept_solution, difficulty: difficulty, prefix: prefix}) }}
             </div>
         </div>
     </div>
-
-    <script>
-		window.problemPageData = {
-			currentPage: {{ page }},
-			totalPages: {{ pageCount }},
-			prefix: "{{ prefix | default('') }}"
-		};
-    </script>
 {% endblock %}

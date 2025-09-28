@@ -1,4 +1,6 @@
 {% extends "../layout.njk" %}
+{% from "../components/pagination.njk" import pagination %}
+{% from "../components/search.njk" import searchBox %}
 
 {% block content %}
 <div class="ui grid">
@@ -13,9 +15,12 @@
     </div>
 </div>
 
-{% if tokens.length > 0 %}
+{# 搜索框 #}
+{{ searchBox(search, '搜索 UID...') }}
+
+{% if items.length > 0 %}
 <div class="ui three column stackable grid">
-    {% for token in tokens %}
+    {% for token in items %}
     <div class="column">
         <div class="card shadow outline">
             <h4 class="ui header">#{{ token.id }}</h4>
@@ -32,37 +37,8 @@
     {% endfor %}
 </div>
 
-{% if totalPages > 1 %}
-<div class="card shadow" style="text-align: center;">
-    <div class="ui pagination menu">
-        {% if currentPage > 1 %}
-        <a class="item" href="?page={{ currentPage - 1 }}">
-            <i class="left chevron icon"></i>
-        </a>
-        {% endif %}
-        
-        {% set startPage = currentPage - 2 %}
-        {% set endPage = currentPage + 2 %}
-        {% if startPage < 1 %}
-            {% set startPage = 1 %}
-        {% endif %}
-        {% if endPage > totalPages %}
-            {% set endPage = totalPages %}
-        {% endif %}
-        
-        {% for i in range(startPage, endPage + 1) %}
-        <a class="item {% if i == currentPage %}active{% endif %}" 
-           href="?page={{ i }}">{{ i }}</a>
-        {% endfor %}
-        
-        {% if currentPage < totalPages %}
-        <a class="item" href="?page={{ currentPage + 1 }}">
-            <i class="right chevron icon"></i>
-        </a>
-        {% endif %}
-    </div>
-</div>
-{% endif %}
+{# 使用可重用的分页组件 #}
+{{ pagination(currentPage, totalPages, '/admin/tokens', {search: search}) }}
 
 {% else %}
 <div class="card shadow" style="text-align: center; padding: 60px 30px;">

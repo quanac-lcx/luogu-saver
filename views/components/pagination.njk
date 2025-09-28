@@ -1,0 +1,59 @@
+{# 可重用的分页组件 #}
+{# 
+参数:
+- currentPage: 当前页码
+- totalPages: 总页数  
+- baseUrl: 基础URL（不含查询参数）
+- queryParams: 额外的查询参数对象（可选）
+#}
+{% macro pagination(currentPage, totalPages, baseUrl = '', queryParams = {}) %}
+{% if totalPages > 1 %}
+<div class="card shadow" style="text-align: center;">
+    <div class="ui pagination menu">
+        {% if currentPage > 1 %}
+        {% set prevUrl = baseUrl + '?page=' + (currentPage - 1) %}
+        {% for key, value in queryParams %}
+            {% if value %}
+                {% set prevUrl = prevUrl + '&' + key + '=' + value %}
+            {% endif %}
+        {% endfor %}
+        <a class="item" href="{{ prevUrl }}">
+            <i class="left chevron icon"></i>
+        </a>
+        {% endif %}
+        
+        {% set startPage = currentPage - 2 %}
+        {% set endPage = currentPage + 2 %}
+        {% if startPage < 1 %}
+            {% set startPage = 1 %}
+        {% endif %}
+        {% if endPage > totalPages %}
+            {% set endPage = totalPages %}
+        {% endif %}
+        
+        {% for i in range(startPage, endPage + 1) %}
+        {% set pageUrl = baseUrl + '?page=' + i %}
+        {% for key, value in queryParams %}
+            {% if value %}
+                {% set pageUrl = pageUrl + '&' + key + '=' + value %}
+            {% endif %}
+        {% endfor %}
+        <a class="item {% if i == currentPage %}active{% endif %}" 
+           href="{{ pageUrl }}">{{ i }}</a>
+        {% endfor %}
+        
+        {% if currentPage < totalPages %}
+        {% set nextUrl = baseUrl + '?page=' + (currentPage + 1) %}
+        {% for key, value in queryParams %}
+            {% if value %}
+                {% set nextUrl = nextUrl + '&' + key + '=' + value %}
+            {% endif %}
+        {% endfor %}
+        <a class="item" href="{{ nextUrl }}">
+            <i class="right chevron icon"></i>
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endmacro %}

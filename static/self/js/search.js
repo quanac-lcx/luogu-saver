@@ -102,17 +102,30 @@ function renderPagination() {
 	
 	paginationSection.style.display = 'block';
 	
-	paginationContent.innerHTML = `
-        <button class="ui icon button ${currentPage > 1 ? '' : 'disabled'}"
-                ${currentPage > 1 ? `onclick="changePage(${currentPage - 1})"` : ''}>
-            <i class="chevron left icon"></i> 上一页
-        </button>
-        <span style="margin-left: 10px; margin-right: 10px; width: auto;">${currentPage}/${totalPages}</span>
-        <button class="ui icon button ${currentPage < totalPages ? '' : 'disabled'}"
-                ${currentPage < totalPages ? `onclick="changePage(${currentPage + 1})"` : ''}>
-            下一页 <i class="chevron right icon"></i>
-        </button>
-    `;
+	// Create a more comprehensive pagination similar to the template component
+	let paginationHTML = '<div class="ui pagination menu">';
+	
+	// Previous button
+	if (currentPage > 1) {
+		paginationHTML += `<a class="item" onclick="changePage(${currentPage - 1})"><i class="left chevron icon"></i></a>`;
+	}
+	
+	// Page numbers (show current page ±2)
+	const startPage = Math.max(1, currentPage - 2);
+	const endPage = Math.min(totalPages, currentPage + 2);
+	
+	for (let i = startPage; i <= endPage; i++) {
+		const activeClass = i === currentPage ? 'active' : '';
+		paginationHTML += `<a class="item ${activeClass}" onclick="changePage(${i})">${i}</a>`;
+	}
+	
+	// Next button  
+	if (currentPage < totalPages) {
+		paginationHTML += `<a class="item" onclick="changePage(${currentPage + 1})"><i class="right chevron icon"></i></a>`;
+	}
+	
+	paginationHTML += '</div>';
+	paginationContent.innerHTML = paginationHTML;
 }
 
 function changePage(page) {

@@ -1,10 +1,10 @@
 /**
- * Token Service Module
+ * Token服务模块
  * 
- * This module provides user authentication token services, including:
- * - Token generation from paste verification
- * - Cached token validation for performance
- * - Token lifecycle management with cache synchronization
+ * 该模块提供用户认证Token服务，包括：
+ * - 从粘贴板验证生成Token
+ * - 为性能优化而缓存的Token验证
+ * - 与缓存同步的Token生命周期管理
  * 
  * @author Copilot
  */
@@ -15,16 +15,16 @@ import { handleFetch } from "../handlers/index.handler.js";
 import { withCache, invalidateCache } from "../core/cache.js";
 
 /**
- * Generate authentication token from paste verification
+ * 从粘贴板验证生成认证Token
  * 
- * Validates user identity through a special paste containing verification content,
- * then creates and caches a new authentication token. Removes any existing tokens
- * for the user and invalidates their cache entries.
+ * 通过包含验证内容的特殊粘贴板验证用户身份，
+ * 然后创建并缓存新的认证Token。移除用户的任何现有Token
+ * 并使其缓存条目失效。
  * 
- * @param {string} pasteId - ID of the verification paste
- * @param {string|number} uid - User ID to generate token for
- * @returns {Promise<string>} Generated token string
- * @throws {Error} If paste fetch fails, content doesn't match, or UID mismatch
+ * @param {string} pasteId - 验证粘贴板的ID
+ * @param {string|number} uid - 要生成Token的用户ID
+ * @returns {Promise<string>} 生成的Token字符串
+ * @throws {Error} 如果粘贴板获取失败、内容不匹配或UID不匹配
  */
 export async function generateToken(pasteId, uid) {
 	// Fetch and validate the verification paste
@@ -76,14 +76,13 @@ export async function generateToken(pasteId, uid) {
 }
 
 /**
- * Validate authentication token with caching support
+ * 验证认证Token（支持缓存）
  * 
- * Checks if a token is valid and returns the associated token object.
- * Results are cached for 10 minutes to reduce database queries for
- * frequently accessed tokens.
+ * 检查Token是否有效并返回关联的Token对象。
+ * 为了减少频繁访问Token的数据库查询，结果缓存10分钟。
  * 
- * @param {string} tokenText - Token string to validate
- * @returns {Promise<Object|null>} Token object if valid, null if invalid
+ * @param {string} tokenText - 要验证的Token字符串
+ * @returns {Promise<Object|null>} 如果有效返回Token对象，无效则返回null
  */
 export async function validateToken(tokenText) {
 	return await withCache({

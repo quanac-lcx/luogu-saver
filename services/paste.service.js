@@ -1,10 +1,10 @@
 /**
- * Paste Service Module
+ * 粘贴板服务模块
  * 
- * This module provides services for managing paste content, including:
- * - Paste creation with automatic cache invalidation
- * - Cached retrieval of pastes with content rendering
- * - Automatic cache bypass support
+ * 该模块提供粘贴板内容管理相关的服务功能，包括：
+ * - 粘贴板创建并自动缓存失效
+ * - 带内容渲染的粘贴板缓存检索
+ * - 自动缓存绕过支持
  * 
  * @author Copilot
  */
@@ -13,16 +13,16 @@ import Paste from "../models/paste.js";
 import { withCache, invalidateCache } from "../core/cache.js";
 
 /**
- * Save a new paste and invalidate related caches
+ * 保存新的粘贴板并使相关缓存失效
  * 
- * Creates a new paste entry and automatically invalidates related cache entries
- * to ensure data consistency across the application.
+ * 创建新的粘贴板条目并自动使相关缓存条目失效，
+ * 以确保整个应用程序的数据一致性。
  * 
- * @param {Object} task - Task object containing paste metadata
- * @param {string} task.aid - Paste ID
- * @param {Object} obj - Paste data object
- * @param {string} obj.content - Paste content
- * @param {Object} obj.userData - User data with uid
+ * @param {Object} task - 包含粘贴板元数据的任务对象
+ * @param {string} task.aid - 粘贴板ID
+ * @param {Object} obj - 粘贴板数据对象
+ * @param {string} obj.content - 粘贴板内容
+ * @param {Object} obj.userData - 包含uid的用户数据
  */
 export async function savePaste(task, obj) {
 	// Create new paste entry
@@ -42,14 +42,14 @@ export async function savePaste(task, obj) {
 }
 
 /**
- * Get paste by ID with caching support
+ * 通过ID获取粘贴板（支持缓存）
  * 
- * Retrieves a specific paste by its ID, including rendered content.
- * Results are cached for 30 minutes. Throws error for deleted pastes.
+ * 通过ID检索特定的粘贴板，包括渲染的内容。
+ * 结果缓存30分钟。对已删除的粘贴板会抛出错误。
  * 
- * @param {string} id - Paste ID (must be 8 characters)
- * @returns {Promise<Object|null>} Object with paste and renderedContent, or null if not found
- * @throws {Error} If ID is invalid or paste is deleted
+ * @param {string} id - 粘贴板ID（必须是8个字符）
+ * @returns {Promise<Object|null>} 包含paste和renderedContent的对象，如果未找到则返回null
+ * @throws {Error} 如果ID无效或粘贴板已被删除
  */
 export async function getPasteById(id) {
 	if (id.length !== 8) throw new Error("Invalid paste ID.");

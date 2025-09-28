@@ -6,7 +6,7 @@
  * @author Copilot
  */
 
-import { Like } from "typeorm";
+import { Like, Or } from "typeorm";
 
 /**
  * 计算分页偏移量
@@ -110,4 +110,29 @@ export function createSearchCondition(searchValue) {
         return {};
     }
     return Like(`%${searchValue.trim()}%`);
+}
+
+/**
+ * 创建增强搜索条件（支持 ID 和标题搜索）
+ * 
+ * @param {string} searchValue - 搜索值
+ * @returns {Object} TypeORM 查询条件，支持按 ID 或标题搜索
+ */
+export function createEnhancedSearchCondition(searchValue) {
+    if (!searchValue || searchValue.trim() === '') {
+        return {};
+    }
+    
+    const trimmedValue = searchValue.trim();
+    
+    // 如果搜索值是数字，则按 ID 精确搜索和标题模糊搜索
+    if (/^\d+$/.test(trimmedValue)) {
+        return Or([
+            { id: parseInt(trimmedValue) },
+            { title: Like(`%${trimmedValue}%`) }
+        ]);
+    }
+    
+    // 否则仅按标题模糊搜索
+    return { title: Like(`%${trimmedValue}%`) };
 }

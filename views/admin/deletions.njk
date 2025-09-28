@@ -32,6 +32,19 @@
                 </div>
             </div>
             <div class="field" style="margin-left: 20px;">
+                <label>状态：</label>
+                <div class="ui radio checkbox">
+                    <input type="radio" name="status" value="deleted" {% if status == 'deleted' or not status %}checked{% endif %} onchange="filterStatus('deleted')">
+                    <label>已删除</label>
+                </div>
+            </div>
+            <div class="field">
+                <div class="ui radio checkbox">
+                    <input type="radio" name="status" value="undeleted" {% if status == 'undeleted' %}checked{% endif %} onchange="filterStatus('undeleted')">
+                    <label>未删除</label>
+                </div>
+            </div>
+            <div class="field" style="margin-left: 20px;">
                 <button class="ui red button" onclick="showMassDeleteModal()">
                     <i class="trash alternate outline icon"></i>
                     批量标记删除
@@ -42,7 +55,7 @@
 </div>
 
 {# 搜索框 #}
-{{ searchBox(search, '搜索标题...', '', 'search-form', {type: type}) }}
+{{ searchBox(search, '搜索 ID 或标题...', '', 'search-form', {type: type, status: status}) }}
 
 {% if items.length > 0 %}
 <div class="card shadow">
@@ -51,21 +64,26 @@
         <div class="item">
             <div class="ui small image">
                 <div style="display: flex; align-items: center; justify-content: center; width: 80px; height: 80px; background: #f8f9fa; border-radius: 4px;">
-                    <i class="{% if type == 'article' %}file alternate{% else %}clipboard{% endif %} icon huge" style="color: #dc3545;"></i>
+                    <i class="{% if type == 'article' %}file alternate{% else %}clipboard{% endif %} icon huge" style="color: {% if status == 'undeleted' %}#28a745{% else %}#dc3545{% endif %};"></i>
                 </div>
             </div>
             <div class="content">
                 <div class="header">
                     {{ item.title }}
+                    {% if status == 'undeleted' %}
+                    <span class="ui mini green label">正常</span>
+                    {% else %}
                     <span class="ui mini red label">已删除</span>
+                    {% endif %}
                 </div>
                 <div class="meta">
+                    <span>ID: {{ item.id }}</span> • 
                     {% if type == 'paste' and item.author %}
                     <span>作者: {{ item.author.name }}</span> • 
                     {% endif %}
-                    <span>删除时间: {{ item.updated_at }}</span>
+                    <span>{% if status == 'undeleted' %}更新时间{% else %}删除时间{% endif %}: {{ item.updated_at }}</span>
                 </div>
-                {% if item.deleted_reason %}
+                {% if item.deleted_reason and status != 'undeleted' %}
                 <div class="description">
                     <strong>删除原因:</strong> {{ item.deleted_reason }}
                 </div>
@@ -76,6 +94,12 @@
                             <i class="eye icon"></i>
                             查看
                         </a>
+                        {% if status == 'undeleted' %}
+                        <button class="ui red button" onclick="markItemDeleted('{{ type }}', '{{ item.id }}')">
+                            <i class="trash alternate outline icon"></i>
+                            标记删除
+                        </button>
+                        {% else %}
                         <button class="ui green button" onclick="restoreItem('{{ type }}', '{{ item.id }}')">
                             <i class="undo icon"></i>
                             恢复
@@ -84,6 +108,7 @@
                             <i class="trash alternate icon"></i>
                             永久删除
                         </button>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -93,13 +118,13 @@
 </div>
 
 {# 使用可重用的分页组件 #}
-{{ pagination(currentPage, totalPages, '/admin/deletions', {type: type, search: search}) }}
+{{ pagination(currentPage, totalPages, '/admin/deletions', {type: type, status: status, search: search}) }}
 
 {% else %}
 <div class="card shadow" style="text-align: center; padding: 60px 30px;">
     <div class="ui icon header">
         <i class="search icon"></i>
-        没有找到已删除的{{ type == 'article' and '专栏' or '剪贴板' }}
+        没有找到{% if status == 'undeleted' %}未删除{% else %}已删除{% endif %}的{{ type == 'article' and '专栏' or '剪贴板' }}
     </div>
 </div>
 {% endif %}
@@ -110,6 +135,63 @@ function filterType(type) {
     currentUrl.searchParams.set('type', type);
     currentUrl.searchParams.delete('page'); // Reset to first page
     window.location.href = currentUrl.toString();
+}
+
+function filterStatus(status) {
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.set('status', status);
+    currentUrl.searchParams.delete('page'); // Reset to first page
+    window.location.href = currentUrl.toString();
+}
+
+function markItemDeleted(type, id) {
+    const typeName = type === 'article' ? '专栏' : '剪贴板';
+    
+    Swal.fire({
+        title: `标记删除 ${typeName}`,
+        html: `
+            <p style="margin-bottom: 15px;">将此${typeName}标记为删除状态。</p>
+            <div style="text-align: left;">
+                <label for="delete-reason" style="font-weight: bold; margin-bottom: 5px; display: block;">删除原因：</label>
+                <input type="text" id="delete-reason" class="swal2-input" placeholder="请输入删除原因" value="手动删除" style="margin: 0;">
+            </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '确认标记删除',
+        cancelButtonText: '取消',
+        confirmButtonColor: '#dc3545',
+        preConfirm: () => {
+            const reason = document.getElementById('delete-reason').value;
+            if (!reason || reason.trim() === '') {
+                Swal.showValidationMessage('请输入删除原因');
+                return false;
+            }
+            return reason.trim();
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const reason = result.value;
+            $.ajax({
+                url: `/admin/api/mark-deleted/${type}/${id}`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ reason })
+            })
+            .done(function(res) {
+                if (res.success) {
+                    Swal.fire('操作成功', res.message, 'success').then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire('操作失败', res.message, 'error');
+                }
+            })
+            .fail(function() {
+                Swal.fire('错误', '网络或服务器异常', 'error');
+            });
+        }
+    });
 }
 
 function restoreItem(type, id) {

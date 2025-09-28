@@ -55,13 +55,21 @@ router.get('/queue', requireAdmin, async (req, res, next) => {
 router.get('/deletions', requireAdmin, async (req, res, next) => {
 	try {
 		const type = req.query.type || 'article';
+		const status = req.query.status || 'deleted'; // 'deleted' or 'undeleted'
 		const page = parseInt(req.query.page) || 1;
 		const search = req.query.search || '';
-		const result = await adminService.getDeletedItems(type, page, 20, search);
-
+		
+		let result;
+		if (status === 'undeleted') {
+			result = await adminService.getUndeletedItems(type, page, 20, search);
+		} else {
+			result = await adminService.getDeletedItems(type, page, 20, search);
+		}
+		
 		res.render('admin/deletions.njk', {
 			title: "删除管理",
 			...result,
+			status,
 			user: req.user
 		});
 	} catch (error) {
@@ -186,6 +194,18 @@ router.post('/api/mass-delete/pastes', requireAdmin, async (req, res, next) => {
 	try {
 		const { reason } = req.body;
 		const result = await adminService.markAllPastesDeleted(reason);
+		res.json(makeResponse(true, result));
+	} catch (error) {
+		res.json(makeResponse(false, { message: error.message }));
+	}
+});
+
+// Mark single item as deleted
+router.post('/api/mark-deleted/:type/:id', requireAdmin, async (req, res, next) => {
+	try {
+		const { type, id } = req.params;
+		const { reason } = req.body;
+		const result = await adminService.markItemDeleted(type, id, reason);
 		res.json(makeResponse(true, result));
 	} catch (error) {
 		res.json(makeResponse(false, { message: error.message }));

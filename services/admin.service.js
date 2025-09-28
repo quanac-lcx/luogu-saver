@@ -101,11 +101,130 @@ export async function getQueueStatus() {
  * @returns {Promise<Object>} Object containing items, currentPage, totalPages, type
  */
 export async function getDeletedItems(type = 'article', page = 1, limit = 20, search = '') {
-    const whereCondition = { deleted: true };
+    let whereCondition = { deleted: true };
     
-    // Add search functionality for title
+    // Add enhanced search functionality for both ID and title
     if (search && search.trim()) {
-        whereCondition.title = createSearchCondition(search);
+        const trimmedSearch = search.trim();
+        const model = type === 'article' ? Article : Paste;
+        
+        // If search is numeric, search by both ID and title
+        if (/^\d+$/.test(trimmedSearch)) {
+            const id = parseInt(trimmedSearch);
+            const items = await model.find({
+                where: [
+                    { id, deleted: true },
+                    { title: createSearchCondition(trimmedSearch), deleted: true }
+                ],
+                order: { updated_at: "DESC" },
+                skip: (page - 1) * limit,
+                take: limit
+            });
+            
+            // Process items if needed
+            if (type === 'paste') {
+                for (const paste of items) {
+                    await paste.loadRelationships();
+                }
+            }
+            
+            const totalCount = await model.count({
+                where: [
+                    { id, deleted: true },
+                    { title: createSearchCondition(trimmedSearch), deleted: true }
+                ]
+            });
+            
+            return {
+                items,
+                currentPage: page,
+                totalPages: Math.ceil(totalCount / limit),
+                totalCount,
+                limit,
+                hasNextPage: page < Math.ceil(totalCount / limit),
+                hasPrevPage: page > 1,
+                type,
+                search
+            };
+        } else {
+            // Search only by title
+            whereCondition.title = createSearchCondition(trimmedSearch);
+        }
+    }
+    
+    const model = type === 'article' ? Article : Paste;
+    
+    return await paginateQuery(model, {
+        where: whereCondition,
+        order: { updated_at: "DESC" },
+        page,
+        limit,
+        extra: { type, search },
+        processItems: type === 'paste' ? async (paste) => {
+            await paste.loadRelationships();
+        } : null
+    });
+}
+
+/**
+ * Get undeleted items (articles or pastes) with pagination for deletion marking
+ * 
+ * @param {string} type - Type of items ('article' or 'paste')
+ * @param {number} page - Page number
+ * @param {number} limit - Items per page
+ * @param {string} search - Search query (optional)
+ * @returns {Promise<Object>} Object containing items, currentPage, totalPages, type
+ */
+export async function getUndeletedItems(type = 'article', page = 1, limit = 20, search = '') {
+    let whereCondition = { deleted: false };
+    
+    // Add enhanced search functionality for both ID and title
+    if (search && search.trim()) {
+        const trimmedSearch = search.trim();
+        const model = type === 'article' ? Article : Paste;
+        
+        // If search is numeric, search by both ID and title
+        if (/^\d+$/.test(trimmedSearch)) {
+            const id = parseInt(trimmedSearch);
+            const items = await model.find({
+                where: [
+                    { id, deleted: false },
+                    { title: createSearchCondition(trimmedSearch), deleted: false }
+                ],
+                order: { updated_at: "DESC" },
+                skip: (page - 1) * limit,
+                take: limit
+            });
+            
+            // Process items if needed
+            if (type === 'paste') {
+                for (const paste of items) {
+                    await paste.loadRelationships();
+                }
+            }
+            
+            const totalCount = await model.count({
+                where: [
+                    { id, deleted: false },
+                    { title: createSearchCondition(trimmedSearch), deleted: false }
+                ]
+            });
+            
+            return {
+                items,
+                currentPage: page,
+                totalPages: Math.ceil(totalCount / limit),
+                totalCount,
+                limit,
+                hasNextPage: page < Math.ceil(totalCount / limit),
+                hasPrevPage: page > 1,
+                type,
+                search
+            };
+        } else {
+            // Search only by title
+            whereCondition.title = createSearchCondition(trimmedSearch);
+        }
     }
     
     const model = type === 'article' ? Article : Paste;
@@ -288,6 +407,48 @@ export async function markAllPastesDeleted(reason = "批量删除") {
     }
     
     return { message: `已标记 ${count} 个剪贴板为删除状态`, count };
+}
+
+/**
+ * Mark a single item as deleted with specified reason
+ * 
+ * @param {string} type - Type of item ('article' or 'paste')
+ * @param {string} id - Item ID
+ * @param {string} reason - Deletion reason (cannot be null)
+ * @returns {Promise<Object>} Success result with message
+ */
+export async function markItemDeleted(type, id, reason = "手动删除") {
+    if (!reason || reason.trim() === '') {
+        throw new Error("删除原因不能为空");
+    }
+    
+    if (type === 'article') {
+        const article = await Article.findById(id);
+        if (!article) {
+            throw new Error("专栏不存在");
+        }
+        if (article.deleted) {
+            throw new Error("该专栏已经被删除");
+        }
+        article.deleted = true;
+        article.deleted_reason = reason.trim();
+        await article.save();
+        return { message: "专栏已标记为删除" };
+    } else if (type === 'paste') {
+        const paste = await Paste.findById(id);
+        if (!paste) {
+            throw new Error("剪贴板不存在");
+        }
+        if (paste.deleted) {
+            throw new Error("该剪贴板已经被删除");
+        }
+        paste.deleted = true;
+        paste.deleted_reason = reason.trim();
+        await paste.save();
+        return { message: "剪贴板已标记为删除" };
+    } else {
+        throw new Error("不支持的类型");
+    }
 }
 
 /**

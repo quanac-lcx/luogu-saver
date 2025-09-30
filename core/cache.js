@@ -14,7 +14,8 @@
  * @author Copilot
  */
 
-import { shouldBypassCache } from "../middleware/cache_context.js";
+import logger from './logger.js';
+import { shouldBypassCache as contextShouldBypassCache } from '../middleware/cache_context.js';
 
 /**
  * Cached execution wrapper with automatic bypass support
@@ -40,8 +41,14 @@ import { shouldBypassCache } from "../middleware/cache_context.js";
  */
 export async function withCache({ cacheKey, ttl, fetchFn }) {
 	// Check if cache should be bypassed via middleware context
-	if (shouldBypassCache()) {
+	if (contextShouldBypassCache()) {
 		logger.debug(`Cache bypassed for key: ${cacheKey}`);
+		return await fetchFn();
+	}
+	
+	// Skip cache entirely if Redis is not connected
+	if (!isRedisConnected()) {
+		logger.debug(`Redis not connected, bypassing cache for key: ${cacheKey}`);
 		return await fetchFn();
 	}
 	
@@ -88,13 +95,22 @@ export async function withCache({ cacheKey, ttl, fetchFn }) {
  * await invalidateCache(['article:123', 'recent_articles:10']);
  */
 export async function invalidateCache(keys) {
+	// Skip if Redis is not connected
+	if (!isRedisConnected()) {
+		logger.debug('Redis not connected, skipping cache invalidation');
+		return;
+	}
+	
 	try {
 		if (typeof keys === 'string') {
 			await redis.del(keys);
 			logger.debug(`Invalidated cache key: ${keys}`);
 		} else if (Array.isArray(keys)) {
 			if (keys.length > 0) {
-				await redis.redis.del(...keys);
+				// Use our own del method which already checks connection
+				for (const key of keys) {
+					await redis.del(key);
+				}
 				logger.debug(`Invalidated cache keys: ${keys.join(', ')}`);
 			}
 		}
@@ -116,10 +132,19 @@ export async function invalidateCache(keys) {
  * await invalidateCacheByPattern('recent_articles:*'); // Remove all recent article caches
  */
 export async function invalidateCacheByPattern(pattern) {
+	// Skip if Redis is not connected
+	if (!isRedisConnected()) {
+		logger.debug('Redis not connected, skipping pattern-based cache invalidation');
+		return;
+	}
+	
 	try {
-		const keys = await redis.redis.keys(pattern);
+		const keys = await redis.keys(pattern);
 		if (keys.length > 0) {
-			await redis.redis.del(...keys);
+			// Use our own del method which already checks connection
+			for (const key of keys) {
+				await redis.del(key);
+			}
 			logger.debug(`Invalidated ${keys.length} cache keys matching pattern: ${pattern}`);
 		} else {
 			logger.debug(`No cache keys found for pattern: ${pattern}`);
@@ -127,4 +152,13 @@ export async function invalidateCacheByPattern(pattern) {
 	} catch (error) {
 		logger.warn(`Cache pattern invalidation failed for ${pattern}: ${error.message}`);
 	}
+}
+
+/**
+ * Check if Redis is connected
+ * 
+ * @returns {boolean} - Whether Redis is connected
+ */
+function isRedisConnected() {
+	return redis && typeof redis.isConnected === 'function' && redis.isConnected();
 }

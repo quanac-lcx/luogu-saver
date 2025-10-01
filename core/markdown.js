@@ -113,7 +113,7 @@ export function createMarkdownRenderer() {
 		try {
 			resultHtml = md.render(processed);
 		} catch (err) {
-			logger.warn('md.render failed' + err);
+			logger.warn('Markdown 渲染失败:' + err);
 			return `<p>渲染失败：${md.utils ? md.utils.escapeHtml(err.message) : 'render error'}</p>`;
 		}
 		
@@ -142,7 +142,7 @@ export function createMarkdownRenderer() {
 		resultHtml = replaceUI(resultHtml);
 		
 		const endTime = Date.now();
-		logger.debug(`Markdown rendered in ${endTime - startTime}ms. Size: ${size} bytes. Output: ${resultHtml.length} chars.`);
+		logger.debug(`Markdown 渲染完成, 耗时 ${endTime - startTime}ms, 大小: ${size} 字节, 输出: ${resultHtml.length} 字符`);
 		return resultHtml;
 	}
 	

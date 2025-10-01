@@ -105,11 +105,11 @@ export async function logError(error, req = null, logger = null) {
 	
 	if (logger) {
 		if (userError) {
-			logger.info(`User error: ${error.message}`);
+			logger.info(`${error.message}`);
 		} else if (level === 'warn') {
-			logger.warn(`System warning: ${error.message}`);
+			logger.warn(`${error.message}`);
 		} else {
-			logger.error(`System error: ${error.message}`);
+			logger.error(`${error.message}`);
 		}
 	}
 	
@@ -123,7 +123,7 @@ export async function logError(error, req = null, logger = null) {
 		);
 	} catch (logError) {
 		if (logger) {
-			logger.error(`Failed to log error to database: ${logError.message}`);
+			logger.error(`记录错误日志失败: ${logError.message}`);
 		}
 	}
 }

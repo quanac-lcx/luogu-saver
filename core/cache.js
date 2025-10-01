@@ -14,8 +14,7 @@
  * @author Copilot
  */
 
-import logger from './logger.js';
-import { shouldBypassCache as contextShouldBypassCache } from '../middleware/cache_context.js';
+import{shouldBypassCache} from '../middleware/cache_context.js';
 
 /**
  * Cached execution wrapper with automatic bypass support

@@ -51,7 +51,7 @@ export async function executeTask(task) {
 			throw err;
 		}
 	} catch (err) {
-		logger.error(`任务 #${task.id} 执行失败: ${err.message}`);
+		err.message = `任务 #${task.id} 执行失败: ${err.message}`;
 		await logError(err, null, logger);
 		await updateTask(task.id, 3, err.message);
 	}

@@ -139,7 +139,7 @@ export async function invalidateCacheByPattern(pattern) {
 	}
 	
 	try {
-		const keys = await redis.keys(pattern);
+		const keys = await this.redis.keys(pattern);
 		if (keys.length > 0) {
 			// Use our own del method which already checks connection
 			for (const key of keys) {

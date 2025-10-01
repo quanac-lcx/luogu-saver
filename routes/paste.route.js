@@ -9,7 +9,7 @@ router.get('/save/:id', asyncJsonHandler(async (req, res) => {
 	if (s.length !== 8) throw new ValidationError("剪贴板 ID 无效");
 	const url = `https://www.luogu.com/paste/${s}`;
 	const id = await worker.pushTaskToQueue({ url, aid: s, type: 1 });
-	res.send(utils.makeResponse(true, { message: "Request queued.", result: id }));
+	res.send(utils.makeResponse(true, { message: "请求已入队", result: id }));
 }));
 
 router.get('/:id', asyncHandler(async (req, res, next) => {

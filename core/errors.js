@@ -72,11 +72,7 @@ export function isUserError(error) {
 		return error.isUserError;
 	}
 	
-	if (error instanceof UserError) {
-		return true;
-	}
-	
-	return false;
+	return error instanceof UserError;
 }
 
 /**
@@ -85,17 +81,14 @@ export function isUserError(error) {
  * @returns {string} - The error level: 'info' for user errors, 'warn' or 'error' for system errors
  */
 export function getErrorLevel(error) {
-	// User errors are logged as 'info' level
 	if (isUserError(error)) {
 		return 'info';
 	}
 	
-	// System errors check severity property
 	if (error.severity) {
-		return error.severity; // 'warn' or 'error'
+		return error.severity;
 	}
 	
-	// Default to 'error' for unknown errors
 	return 'error';
 }
 
@@ -110,7 +103,6 @@ export async function logError(error, req = null, logger = null) {
 	const userError = isUserError(error);
 	const level = getErrorLevel(error);
 	
-	// Log to console with appropriate level
 	if (logger) {
 		if (userError) {
 			logger.info(`User error: ${error.message}`);
@@ -121,9 +113,7 @@ export async function logError(error, req = null, logger = null) {
 		}
 	}
 	
-	// Log to database
 	try {
-		// Dynamic import to avoid circular dependency
 		const { default: ErrorLog } = await import('../models/error_log.js');
 		await ErrorLog.logError(
 			error.message,
@@ -149,28 +139,18 @@ export function asyncHandler(fn, options = {}) {
 	return (req, res, next) => {
 		Promise.resolve(fn(req, res, next))
 			.catch(async (error) => {
-				// Log error to database and console
 				await logError(error, req, logger);
-				
-				// Determine response type
 				let isJsonResponse;
-				
 				if (options.json !== undefined) {
-					// Explicitly specified by options
 					isJsonResponse = options.json;
 				} else {
-					// Auto-detect: Check if path starts with /api/, or if Accept header indicates JSON
-					isJsonResponse = req.path.startsWith('/api/') || 
+					isJsonResponse = req.path.startsWith('/api/') ||
 					                 req.xhr || 
 					                 req.headers.accept?.includes('application/json');
 				}
-				
-				// For JSON endpoints, send error response
 				if (isJsonResponse) {
 					return res.json(utils.makeResponse(false, { message: error.message }));
 				}
-				
-				// For page requests, pass to error display middleware
 				next(error);
 			});
 	};

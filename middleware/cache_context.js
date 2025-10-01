@@ -1,59 +1,56 @@
 /**
- * Cache Context Middleware
- * 
- * This middleware automatically detects cache bypass requests and stores
- * the information in a global context accessible by the cache utility.
- * This eliminates the need to manually pass request objects to service methods.
- * 
- * Usage:
- * - Add ?_bypassRedis=1 to any URL to bypass Redis cache
- * - The cache utility will automatically detect this and fetch fresh data
- * 
+ * 缓存上下文中间件
+ *
+ * 此中间件自动检测缓存绕过请求并将信息存储在
+ * 缓存工具可访问的全局上下文中。
+ * 这消除了手动将请求对象传递给服务方法的需要。
+ *
+ * 用法:
+ * - 在任何 URL 后添加 ?_bypassRedis=1 来绕过 Redis 缓存
+ * - 缓存工具将自动检测并获取新数据
+ *
  * @author Copilot
  */
 
 import { AsyncLocalStorage } from 'async_hooks';
 
-// Create async local storage for cache context
 const cacheContextStorage = new AsyncLocalStorage();
 
 /**
- * Middleware function to handle cache context
- * Detects cache bypass parameters and stores context for the request lifecycle
- * 
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object  
- * @param {Function} next - Next middleware function
+ * 处理缓存上下文的中间件函数
+ * 检测缓存绕过参数并为请求生命周期存储上下文
+ *
+ * @param {Object} req - Express 请求对象
+ * @param {Object} res - Express 响应对象
+ * @param {Function} next - 下一个中间件函数
  */
 function cacheContextMiddleware(req, res, next) {
-	// Create cache context with bypass information
 	const context = {
 		shouldBypassCache: req.query && req.query._bypassRedis === '1',
 		requestId: req.headers['x-request-id'] || `${Date.now()}-${Math.random()}`,
 		originalUrl: req.originalUrl
 	};
 	
-	// Store context for this request's async execution
 	cacheContextStorage.run(context, () => {
 		next();
 	});
 }
 
 /**
- * Get the current cache context
- * Returns context information for cache bypass decisions
- * 
- * @returns {Object|null} Cache context object or null if not in middleware context
+ * 获取当前缓存上下文
+ * 返回用于缓存绕过决策的上下文信息
+ *
+ * @returns {Object|null} 缓存上下文对象，如果不在中间件上下文中则返回 null
  */
 export function getCacheContext() {
 	return cacheContextStorage.getStore() || null;
 }
 
 /**
- * Check if cache should be bypassed for the current request
- * Uses async local storage to access request context without manual passing
- * 
- * @returns {boolean} true if cache should be bypassed
+ * 检查当前请求是否应该绕过缓存
+ * 使用异步本地存储访问请求上下文，无需手动传递
+ *
+ * @returns {boolean} 如果应该绕过缓存则返回 true
  */
 export function shouldBypassCache() {
 	const context = getCacheContext();

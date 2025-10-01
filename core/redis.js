@@ -10,11 +10,11 @@ export default class RedisManager {
 		});
 		
 		this.redis.on('connect', () => {
-			console.log('Redis connected');
+			logger.info("Redis 连接成功");
 		});
 		
 		this.redis.on('error', (err) => {
-			console.error('Redis error:', err);
+			logger.error("Redis 错误:", err);
 		});
 	}
 	

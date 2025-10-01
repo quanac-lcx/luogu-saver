@@ -39,7 +39,6 @@ async function saveProblems(problems) {
 	if (!problems.length) return;
 	
 	try {
-		// Perform bulk upsert operation
 		await Problem.upsert(problems.map(p => ({
 			id: p.id,
 			difficulty: p.difficulty,
@@ -49,12 +48,11 @@ async function saveProblems(problems) {
 			updated_at: new Date()
 		})), ["id"], { skipUpdateIfNoValuesChanged: true });
 		
-		logger.debug(`Bulk upsert completed: ${problems.length} problems processed.`);
+		logger.debug(`批量更新完成: 已处理 ${problems.length} 道题目`);
 		
-		// Invalidate all problem-related cache entries
 		await invalidateCacheByPattern('problems:*');
 	} catch (error) {
-		logger.error(`Error saving problems: ${error.message}`);
+		logger.error(`更新题目失败: ${error.message}`);
 	}
 }
 
@@ -67,14 +65,14 @@ async function fetchProblemPage(page, type, retry = 0) {
 		const html = (await fetchContent(url, defaultHeaders, { c3vk: "new" })).resp.data;
 		const $ = cheerio.load(html);
 		const json = JSON.parse($("#lentille-context").html());
-		logger.debug(`Fetched problem page ${page} of type ${type}, ${json.data.problems.result.length} problems found.`);
+		logger.debug(`已抓取 ${type} 题库的第 ${page} 页, 找到 ${json.data.problems.result.length} 道题目`);
 		return json.data.problems.result.map(i => ({
 			id: i.pid,
 			difficulty: i.difficulty,
 			title: i.title
 		}));
 	} catch (e) {
-		logger.debug(`Error fetching problem page ${page} of type ${type} (attempt ${retry + 1}): ${e.message}`);
+		logger.debug(`抓取题库 ${type} 的第 ${page} 页时出错 (attempt ${retry + 1}): ${e.message}`);
 		return fetchProblemPage(page, type, retry + 1);
 	}
 }
@@ -88,10 +86,10 @@ async function fetchProblemTotal(type, retry = 0) {
 		const html = (await fetchContent(url, defaultHeaders, { c3vk: "new" })).resp.data;
 		const json = JSON.parse(cheerio.load(html)("#lentille-context").html());
 		const total = json.data.problems.count;
-		logger.debug(`Total problems of type ${type}: ${total}`);
+		logger.debug(`${type} 题库题目总是: ${total}`);
 		return Math.ceil(total / 50);
 	} catch (e) {
-		logger.debug(`Error fetching total problem pages of type ${type} (attempt ${retry + 1}): ${e.message}`);
+		logger.debug(`抓取题库 ${type} 总页数时出错 (attempt ${retry + 1}): ${e.message}`);
 		return fetchProblemTotal(type, retry + 1);
 	}
 }
@@ -117,7 +115,7 @@ async function fetchProblemSolution(pid, retry = 0) {
 			solution_count: json.data.solutions ? parseInt(json.data.solutions.count) : 0
 		};
 	} catch (e) {
-		logger.debug(`Error fetching solution for problem ${pid} (attempt ${retry + 1}): ${e.message}`);
+		logger.debug(`抓取 ${pid} 的题解信息时出错 (attempt ${retry + 1}): ${e.message}`);
 		return fetchProblemSolution(pid, retry + 1);
 	}
 }
@@ -148,7 +146,7 @@ export async function updateProblemSet(type) {
 				allProblems.push(p);
 			}
 		}
-		logger.debug(`Page ${page}/${total} of type ${type}: ${problems.length} problems fetched, ${allProblems.length} to update.`);
+		logger.debug(`${type} 题库已抓取 ${page}/${total}: 已抓取 ${problems.length} 道题目, ${allProblems.length} 道待更新`);
 		if (allProblems.length > 0) await saveProblems(allProblems);
 		await utils.sleep(500);
 	}
@@ -191,9 +189,8 @@ export async function getProblems({ page, accept_solution, difficulty, prefix })
 	
 	return await withCache({
 		cacheKey,
-		ttl: 900, // 15 minutes
+		ttl: 900,
 		fetchFn: async () => {
-			// Build where clause based on filters
 			const where = {};
 			
 			if (prefix) {
@@ -213,7 +210,6 @@ export async function getProblems({ page, accept_solution, difficulty, prefix })
 				}
 			}
 			
-			// Use pagination utility
 			const result = await paginateQuery(Problem, {
 				where,
 				order: { id: 'ASC' },
@@ -225,7 +221,6 @@ export async function getProblems({ page, accept_solution, difficulty, prefix })
 				}
 			});
 			
-			// Rename for compatibility
 			result.problems = result.items;
 			result.pageCount = result.totalPages;
 			delete result.items;

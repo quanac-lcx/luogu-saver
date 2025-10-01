@@ -53,7 +53,6 @@ export async function getDashboardStats() {
  * @param {number} page - 页码
  * @param {number} limit - 每页数量
  * @param {string} level - 日志级别筛选
- * @param {string} search - 搜索查询（可选）
  * @returns {Promise<Object>} 包含错误列表、当前页、总页数的对象
  */
 export async function getErrorLogs(page = 1, limit = 50, level = '') {

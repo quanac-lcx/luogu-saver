@@ -25,7 +25,7 @@ const execAsync = promisify(exec);
  * @returns {Promise<Object>} 包含消息的成功结果
  */
 export async function executeCleanupJob() {
-    logger.debug("Admin triggered cleanup job.");
+    logger.debug("管理员启动了清理任务");
     cleanup();
     return { message: "清理任务已启动" };
 }
@@ -36,7 +36,7 @@ export async function executeCleanupJob() {
  * @returns {Promise<Object>} 包含消息的成功结果
  */
 export async function executeUpdateProblemsJob() {
-    logger.debug("Admin triggered update problems job.");
+    logger.debug("管理员启动了题目更新任务");
     updateAllProblemSets();
     return { message: "题目更新任务已启动" };
 }
@@ -52,7 +52,7 @@ export async function restartService() {
         await execAsync(`pm2 restart ${config.service.name} || pm2 restart all`);
         return { success: true, message: "PM2 重启命令已执行" };
     } catch (pm2Error) {
-        logger.debug("PM2 restart failed, trying systemctl");
+        logger.debug("PM2 restart 失败, 尝试使用 systemctl");
     }
 
     // 备用方案：使用 systemctl
@@ -60,7 +60,7 @@ export async function restartService() {
         await execAsync(`systemctl restart ${config.service.name}`);
         return { success: true, message: "systemctl 重启命令已执行" };
     } catch (systemctlError) {
-        logger.debug("systemctl restart failed");
+        logger.debug("systemctl restart 失败");
     }
 
     // 如果两种方法都失败，建议手动重启

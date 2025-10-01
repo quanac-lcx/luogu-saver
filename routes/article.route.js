@@ -16,7 +16,7 @@ router.get('/save/:id', asyncJsonHandler(async (req, res) => {
 	if (s.length !== 8) throw new ValidationError("文章 ID 无效");
 	const url = `https://www.luogu.com/article/${s}`;
 	const id = await worker.pushTaskToQueue({ url, aid: s, type: 0 });
-	res.send(utils.makeResponse(true, { message: "Request queued.", result: id }));
+	res.send(utils.makeResponse(true, { message: "请求已入队", result: id }));
 }));
 
 router.get('/:id', asyncHandler(async (req, res, next) => {

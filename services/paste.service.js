@@ -26,7 +26,6 @@ import { ValidationError, NotFoundError } from "../core/errors.js";
  * @param {Object} obj.userData - 包含uid的用户数据
  */
 export async function savePaste(task, obj) {
-	// Create new paste entry
 	const newPaste = Paste.create({
 		id: task.aid,
 		title: task.aid,
@@ -35,7 +34,6 @@ export async function savePaste(task, obj) {
 	});
 	await newPaste.save();
 	
-	// Invalidate related cache entries
 	await Promise.all([
 		invalidateCache(`paste:${task.aid}`),
 		invalidateCache(['statistics:full', 'statistics:counts'])

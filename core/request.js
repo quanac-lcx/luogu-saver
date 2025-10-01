@@ -23,7 +23,7 @@ export function mergeSetCookieToHeaders(response, headers) {
 }
 
 export async function fetchContent(url, headers = {}, { c3vk = "new", timeout = 30000 } = {}) {
-	logger.debug(`Fetching URL: ${url} with c3vk mode: ${c3vk}`);
+	logger.debug(`抓取网页: ${url}, c3vk 模式: ${c3vk}`);
 	const h = { ...defaultHeaders, ...headers };
 	let resp;
 	try {
@@ -33,11 +33,10 @@ export async function fetchContent(url, headers = {}, { c3vk = "new", timeout = 
 			timeout
 		});
 	} catch (err) {
-		// Wrap axios network errors as NetworkError
-		if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' || 
+		if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' ||
 		    err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' ||
 		    err.code === 'ECONNRESET' || err.message?.includes('timeout')) {
-			throw new NetworkError(`Network request failed: ${err.message}`);
+			throw new NetworkError(`网络请求失败: ${err.message}`);
 		}
 		throw err;
 	}
@@ -56,15 +55,14 @@ export async function fetchContent(url, headers = {}, { c3vk = "new", timeout = 
 			if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' || 
 			    err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' ||
 			    err.code === 'ECONNRESET' || err.message?.includes('timeout')) {
-				throw new NetworkError(`Network request failed: ${err.message}`);
+				throw new NetworkError(`网络请求失败: ${err.message}`);
 			}
 			throw err;
 		}
 	}
-	logger.debug(`Fetched URL: ${url} with status: ${resp.status}`);
+	logger.debug(`已抓取网页: ${url}, 状态码: ${resp.status}`);
 	if (resp.status === 401) {
-		logger.debug(`It seems that your cookies have expired.`);
-		logger.debug(`Your cookies: ${headers.Cookie}`);
+		logger.debug(`Cookies 过期: ${headers.Cookie}`);
 	}
 	return { resp, headers: h };
 }

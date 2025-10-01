@@ -3,12 +3,12 @@ import { saveArticle } from "../services/article.service.js";
 import { savePaste } from "../services/paste.service.js";
 import { fetchContent } from "../core/request.js";
 import { handleFetch } from "../handlers/index.handler.js";
-import { SystemError, NetworkError, DatabaseError } from "../core/errors.js";
+import { SystemError, NetworkError, DatabaseError, logError } from "../core/errors.js";
 
 export async function executeTask(task) {
 	try {
-		logger.debug(`Start processing task #${task.id}, type=${task.type}`);
-		await updateTask(task.id, 1, "Processing...");
+		logger.debug(`开始处理任务 #${task.id}, 类型: ${task.type}`);
+		await updateTask(task.id, 1, "处理中...");
 		
 		let resp;
 		try {
@@ -21,11 +21,10 @@ export async function executeTask(task) {
 				task.type
 			);
 		} catch (err) {
-			// Network-related errors during fetch
-			if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' || 
+			if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' ||
 			    err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' ||
 			    err.message?.includes('timeout') || err.message?.includes('network')) {
-				throw new NetworkError(`Failed to fetch content: ${err.message}`);
+				throw new NetworkError(`爬取内容失败: ${err.message}`);
 			}
 			throw err;
 		}
@@ -42,18 +41,18 @@ export async function executeTask(task) {
 				});
 			} else {
 				await savePaste(task, obj);
+				await updateTask(task.id, 2, "任务完成");
 			}
-			await updateTask(task.id, 2, "Task completed successfully.");
 		} catch (err) {
-			// Database-related errors during save
-			if (err.name === 'QueryFailedError' || err.code?.startsWith('ER_') || 
+			if (err.name === 'QueryFailedError' || err.code?.startsWith('ER_') ||
 			    err.message?.includes('database') || err.message?.includes('query')) {
-				throw new DatabaseError(`Failed to save data: ${err.message}`);
+				throw new DatabaseError(`保存数据失败: ${err.message}`);
 			}
 			throw err;
 		}
 	} catch (err) {
-		logger.error(`Task #${task.id} failed: ${err.message}`);
+		logger.error(`任务 #${task.id} 执行失败: ${err.message}`);
+		await logError(err, null, logger);
 		await updateTask(task.id, 3, err.message);
 	}
 }

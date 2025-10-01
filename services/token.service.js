@@ -1,10 +1,10 @@
 /**
- * Token服务模块
+ * Token 服务模块
  * 
- * 该模块提供用户认证Token服务，包括：
- * - 从粘贴板验证生成Token
- * - 为性能优化而缓存的Token验证
- * - 与缓存同步的Token生命周期管理
+ * 该模块提供用户认证 Token 服务，包括：
+ * - 从粘贴板验证生成 Token
+ * - 为性能优化而缓存的 Token 验证
+ * - 与缓存同步的 Token 生命周期管理
  * 
  * @author Copilot
  */
@@ -16,16 +16,16 @@ import { withCache, invalidateCache } from "../core/cache.js";
 import { ValidationError, ExternalServiceError } from "../core/errors.js";
 
 /**
- * 从粘贴板验证生成认证Token
+ * 从粘贴板验证生成认证 Token
  * 
  * 通过包含验证内容的特殊粘贴板验证用户身份，
- * 然后创建并缓存新的认证Token。移除用户的任何现有Token
+ * 然后创建并缓存新的认证 Token。移除用户的任何现有 Token
  * 并使其缓存条目失效。
  * 
- * @param {string} pasteId - 验证粘贴板的ID
- * @param {string|number} uid - 要生成Token的用户ID
- * @returns {Promise<string>} 生成的Token字符串
- * @throws {Error} 如果粘贴板获取失败、内容不匹配或UID不匹配
+ * @param {string} pasteId - 验证粘贴板的 ID
+ * @param {string|number} uid - 要生成Token的用户 ID
+ * @returns {Promise<string>} 生成的 Token 字符串
+ * @throws {Error} 如果粘贴板获取失败、内容不匹配或 UID 不匹配
  */
 export async function generateToken(pasteId, uid) {
 	const url = `https://www.luogu.com/paste/${pasteId}`;
@@ -63,20 +63,20 @@ export async function generateToken(pasteId, uid) {
 	try {
 		await redis.set(`token:${tokenText}`, JSON.stringify(token), 600);
 	} catch (error) {
-		logger.warn(`Failed to cache new token: ${error.message}`);
+		logger.warn(`创建 Token 时出错: ${error.message}`);
 	}
 	
 	return tokenText;
 }
 
 /**
- * 验证认证Token（支持缓存）
+ * 验证认证 Token（支持缓存）
  * 
- * 检查Token是否有效并返回关联的Token对象。
- * 为了减少频繁访问Token的数据库查询，结果缓存10分钟。
+ * 检查 Token 是否有效并返回关联的 Token 对象。
+ * 为了减少频繁访问 Token 的数据库查询，结果缓存 10 分钟。
  * 
- * @param {string} tokenText - 要验证的Token字符串
- * @returns {Promise<Object|null>} 如果有效返回Token对象，无效则返回null
+ * @param {string} tokenText - 要验证的 Token 字符串
+ * @returns {Promise<Object|null>} 如果有效返回 Token 对象，无效则返回 null
  */
 export async function validateToken(tokenText) {
 	return await withCache({

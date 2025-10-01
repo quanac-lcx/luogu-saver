@@ -33,7 +33,7 @@ function isKnownUserError(err) {
 		'Missing required parameters',
 		'Invalid input',
 		'Invalid article ID',
-		'Invalid paste Id',
+		'Invalid paste ID',
 		'not found',
 		'is required',
 		'Invalid token',

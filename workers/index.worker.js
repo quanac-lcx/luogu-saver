@@ -14,6 +14,7 @@ import * as queue from "./queue.worker.js";
 import { executeTask } from "./processor.worker.js";
 import { createTask, getWaitingTasks, updateTask } from "../services/task.service.js";
 import { defaultHeaders } from "../core/request.js";
+import { SystemError } from "../core/errors.js";
 import config from "../config.js";
 
 // 并发限制配置
@@ -59,11 +60,11 @@ export function startQueueProcessor() {
  * 
  * @param {Object} task - 任务配置对象
  * @returns {Promise<string>} 生成的任务ID
- * @throws {Error} 当队列已满时抛出错误
+ * @throws {SystemError} 当队列已满时抛出错误
  */
 export async function pushTaskToQueue(task) {
 	if (queue.getQueueLength() >= config.queue.maxLength)
-		throw new Error('队列已满，请稍后再试');
+		throw new SystemError('队列已满，请稍后再试');
 	task.id = await createTask(task);
 	logger.debug(`Task #${task.id} queued.`);
 	queue.pushTask(task);

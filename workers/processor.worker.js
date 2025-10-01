@@ -30,7 +30,7 @@ export async function executeTask(task) {
 		}
 		
 		if (!resp.success) {
-			throw new SystemError(resp.message);
+			throw new NetworkError(resp.message);
 		}
 		const obj = resp.data;
 		

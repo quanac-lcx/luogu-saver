@@ -1,10 +1,11 @@
 import * as cheerio from "cheerio";
+import { ExternalServiceError } from "./errors.js";
 
 export function getResponseObject(response, type = 0) {
 	if (!type) {
 		const $ = cheerio.load(response.data);
 		const contextElement = $('#lentille-context');
-		if (!contextElement.length) throw new Error("Context not found.");
+		if (!contextElement.length) throw new ExternalServiceError("文章结构出错", "Luogu API");
 		const dataObj = JSON.parse(contextElement.text().trim());
 		return dataObj.data?.article;
 	}

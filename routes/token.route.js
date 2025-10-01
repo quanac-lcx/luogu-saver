@@ -1,5 +1,6 @@
 import express from "express";
 import { generateToken } from "../services/token.service.js";
+import { ValidationError } from "../core/errors.js";
 
 const router = express.Router();
 
@@ -14,7 +15,7 @@ router.get("/apply", async (req, res, next) => {
 router.post("/generate", async (req, res) => {
 	try {
 		if (!req.body || !req.body.pasteId || !req.body.uid) {
-			throw new Error("Missing required parameters.");
+			throw new ValidationError("Missing required parameters.");
 		}
 		
 		const { pasteId, uid } = req.body;

@@ -13,6 +13,7 @@ import Token from "../models/token.js";
 import { defaultHeaders, fetchContent } from "../core/request.js";
 import { handleFetch } from "../handlers/index.handler.js";
 import { withCache, invalidateCache } from "../core/cache.js";
+import { ValidationError, ExternalServiceError } from "../core/errors.js";
 
 /**
  * 从粘贴板验证生成认证Token
@@ -32,7 +33,7 @@ export async function generateToken(pasteId, uid) {
 	const resp = await handleFetch(await fetchContent(url, defaultHeaders, { c3vk: "legacy" }), 1);
 	
 	if (!resp.success) {
-		throw new Error(resp.message || "Failed to fetch paste content.");
+		throw new ExternalServiceError(resp.message || "Failed to fetch paste content.", "Luogu API");
 	}
 	
 	const value = resp.data;
@@ -40,12 +41,12 @@ export async function generateToken(pasteId, uid) {
 	// Verify paste content matches expected verification string
 	const content = value.content || "";
 	if (content !== "lgs_register_verification") {
-		throw new Error("Verification content does not match.");
+		throw new ValidationError("Verification content does not match.");
 	}
 	
 	// Verify user ID matches paste owner
 	if (parseInt(uid) !== value.userData.uid) {
-		throw new Error("UID does not match.");
+		throw new ValidationError("UID does not match.");
 	}
 	
 	// Remove existing token for this user

@@ -11,6 +11,7 @@
 
 import Paste from "../models/paste.js";
 import { withCache, invalidateCache } from "../core/cache.js";
+import { ValidationError, NotFoundError } from "../core/errors.js";
 
 /**
  * 保存新的粘贴板并使相关缓存失效
@@ -52,7 +53,7 @@ export async function savePaste(task, obj) {
  * @throws {Error} 如果ID无效或粘贴板已被删除
  */
 export async function getPasteById(id) {
-	if (id.length !== 8) throw new Error("Invalid paste ID.");
+	if (id.length !== 8) throw new ValidationError("Invalid paste ID.");
 	
 	return await withCache({
 		cacheKey: `paste:${id}`,
@@ -66,7 +67,7 @@ export async function getPasteById(id) {
 			paste.formatDate();
 			
 			// Check if paste is deleted
-			if (paste.deleted) throw new Error(`The paste (ID: ${id}) has been deleted: ${paste.deleted_reason}`);
+			if (paste.deleted) throw new NotFoundError(`The paste (ID: ${id}) has been deleted: ${paste.deleted_reason}`);
 			
 			// Process and render content
 			const sanitizedContent = utils.sanitizeLatex(paste.content);

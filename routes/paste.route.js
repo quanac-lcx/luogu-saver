@@ -1,12 +1,13 @@
 import express from 'express';
 import { getPasteById } from "../services/paste.service.js";
+import { ValidationError } from "../core/errors.js";
 
 const router = express.Router();
 
 router.get('/save/:id', async (req, res) => {
 	try {
 		const s = req.params.id;
-		if (s.length !== 8) throw new Error('Invalid paste ID.');
+		if (s.length !== 8) throw new ValidationError('Invalid paste ID.');
 		const url = `https://www.luogu.com/paste/${s}`;
 		const id = await worker.pushTaskToQueue({ url, aid: s, type: 1 });
 		res.send(utils.makeResponse(true, { message: "Request queued.", result: id }));

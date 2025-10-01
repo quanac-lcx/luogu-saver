@@ -15,6 +15,7 @@ import { saveArticle } from "../services/article.service.js";
 import { savePaste } from "../services/paste.service.js";
 import { fetchContent } from "../core/request.js";
 import { handleFetch } from "../handlers/index.handler.js";
+import { SystemError } from "../core/errors.js";
 
 /**
  * 执行单个任务的处理逻辑
@@ -38,7 +39,7 @@ export async function executeTask(task) {
 			task.type
 		);
 		if (!resp.success) {
-			throw new Error(resp.message);
+			throw new SystemError(resp.message);
 		}
 		const obj = resp.data;
 		if (task.type === 0) {
@@ -49,7 +50,7 @@ export async function executeTask(task) {
 			await updateTask(task.id, 2, "Task completed successfully.");
 		}
 	} catch (err) {
-		logger.warn(`Task #${task.id} failed: ${err.message}`);
+		logger.error(`Task #${task.id} failed: ${err.message}`);
 		await updateTask(task.id, 3, err.message);
 	}
 }

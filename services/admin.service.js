@@ -19,6 +19,7 @@ import * as queue from "../workers/queue.worker.js";
 import { paginateQuery, createSearchCondition } from "../core/pagination.js";
 import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
+import { NotFoundError, ValidationError } from "../core/errors.js";
 
 /**
  * Get admin dashboard statistics
@@ -168,19 +169,19 @@ export async function restoreItem(type, id) {
     if (type === 'article') {
         const article = await Article.findById(id);
         if (!article) {
-            throw new Error("专栏不存在");
+            throw new NotFoundError("专栏不存在");
         }
         article.deleted = false;
         await article.save();
     } else if (type === 'paste') {
         const paste = await Paste.findById(id);
         if (!paste) {
-            throw new Error("剪贴板不存在");
+            throw new NotFoundError("剪贴板不存在");
         }
         paste.deleted = false;
         await paste.save();
     } else {
-        throw new Error("不支持的类型");
+        throw new ValidationError("不支持的类型");
     }
 
     return { message: "恢复成功" };
@@ -197,17 +198,17 @@ export async function deleteItem(type, id) {
     if (type === 'article') {
         const article = await Article.findById(id);
         if (!article) {
-            throw new Error("专栏不存在");
+            throw new NotFoundError("专栏不存在");
         }
         await article.remove();
     } else if (type === 'paste') {
         const paste = await Paste.findById(id);
         if (!paste) {
-            throw new Error("剪贴板不存在");
+            throw new NotFoundError("剪贴板不存在");
         }
         await paste.remove();
     } else {
-        throw new Error("不支持的类型");
+        throw new ValidationError("不支持的类型");
     }
 
     return { message: "删除成功" };
@@ -250,7 +251,7 @@ export async function getTokens(page = 1, limit = 30, search = '') {
 export async function deleteToken(id) {
     const token = await Token.findById(id);
     if (!token) {
-        throw new Error("Token 不存在");
+        throw new NotFoundError("Token 不存在");
     }
     
     await token.remove();
@@ -283,16 +284,16 @@ export async function getAccountsConfig() {
  */
 export async function markItemDeleted(type, id, reason = "手动删除") {
     if (!reason || reason.trim() === '') {
-        throw new Error("删除原因不能为空");
+        throw new ValidationError("删除原因不能为空");
     }
     
     if (type === 'article') {
         const article = await Article.findById(id);
         if (!article) {
-            throw new Error("专栏不存在");
+            throw new NotFoundError("专栏不存在");
         }
         if (article.deleted) {
-            throw new Error("该专栏已经被删除");
+            throw new ValidationError("该专栏已经被删除");
         }
         article.deleted = true;
         article.deleted_reason = reason.trim();
@@ -301,17 +302,17 @@ export async function markItemDeleted(type, id, reason = "手动删除") {
     } else if (type === 'paste') {
         const paste = await Paste.findById(id);
         if (!paste) {
-            throw new Error("剪贴板不存在");
+            throw new NotFoundError("剪贴板不存在");
         }
         if (paste.deleted) {
-            throw new Error("该剪贴板已经被删除");
+            throw new ValidationError("该剪贴板已经被删除");
         }
         paste.deleted = true;
         paste.deleted_reason = reason.trim();
         await paste.save();
         return { message: "剪贴板已标记为删除" };
     } else {
-        throw new Error("不支持的类型");
+        throw new ValidationError("不支持的类型");
     }
 }
 
@@ -326,13 +327,13 @@ export async function updateAccountsConfig(accounts) {
     
     // Validate accounts format
     if (!Array.isArray(accounts)) {
-        throw new Error("Accounts must be an array");
+        throw new ValidationError("Accounts must be an array");
     }
 
     // Basic validation for account structure
     for (const account of accounts) {
         if (!account._uid || !account.__client_id) {
-            throw new Error("Each account must have _uid and __client_id");
+            throw new ValidationError("Each account must have _uid and __client_id");
         }
     }
     

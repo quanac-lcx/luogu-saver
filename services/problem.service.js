@@ -54,7 +54,7 @@ async function saveProblems(problems) {
 		// Invalidate all problem-related cache entries
 		await invalidateCacheByPattern('problems:*');
 	} catch (error) {
-		logger.warn(`Error saving problems: ${error.message}`);
+		logger.error(`Error saving problems: ${error.message}`);
 	}
 }
 

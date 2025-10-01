@@ -16,6 +16,7 @@
 import Article from "../models/article.js";
 import ArticleVersion from "../models/article_version.js";
 import { withCache, invalidateCache, invalidateCacheByPattern } from "../core/cache.js";
+import { ValidationError, NotFoundError } from "../core/errors.js";
 
 /**
  * 保存或更新带版本历史的文章
@@ -147,7 +148,7 @@ export async function getRecentArticles(count) {
  * @throws {Error} 如果ID无效或文章已被删除
  */
 export async function getArticleById(id) {
-	if (id.length !== 8) throw new Error("Invalid article ID.");
+	if (id.length !== 8) throw new ValidationError("Invalid article ID.");
 	
 	return await withCache({
 		cacheKey: `article:${id}`,
@@ -161,7 +162,7 @@ export async function getArticleById(id) {
 			article.formatDate();
 			
 			// Check if article is deleted
-			if (article.deleted) throw new Error(`The article (ID: ${id}) has been deleted: ${article.deleted_reason}`);
+			if (article.deleted) throw new NotFoundError(`The article (ID: ${id}) has been deleted: ${article.deleted_reason}`);
 			
 			// Process and render content
 			const sanitizedContent = utils.sanitizeLatex(article.content);

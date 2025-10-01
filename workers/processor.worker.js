@@ -42,8 +42,8 @@ export async function executeTask(task) {
 				});
 			} else {
 				await savePaste(task, obj);
-				await updateTask(task.id, 2, "Task completed successfully.");
 			}
+			await updateTask(task.id, 2, "Task completed successfully.");
 		} catch (err) {
 			// Database-related errors during save
 			if (err.name === 'QueryFailedError' || err.code?.startsWith('ER_') || 

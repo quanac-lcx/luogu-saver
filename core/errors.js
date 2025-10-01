@@ -52,6 +52,13 @@ export class ExternalServiceError extends SystemError {
 	}
 }
 
+export class NetworkError extends SystemError {
+	constructor(message) {
+		super(message);
+		this.name = 'NetworkError';
+	}
+}
+
 export class DatabaseError extends SystemError {
 	constructor(message) {
 		super(message);

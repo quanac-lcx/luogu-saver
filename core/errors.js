@@ -8,10 +8,11 @@ export class UserError extends Error {
 }
 
 export class SystemError extends Error {
-	constructor(message) {
+	constructor(message, severity = 'error') {
 		super(message);
 		this.name = 'SystemError';
 		this.isUserError = false;
+		this.severity = severity; // 'warn' or 'error'
 		Error.captureStackTrace(this, this.constructor);
 	}
 }
@@ -46,7 +47,7 @@ export class ForbiddenError extends UserError {
 
 export class ExternalServiceError extends SystemError {
 	constructor(message, serviceName = 'external service') {
-		super(message);
+		super(message, 'warn'); // External service errors are warnings by default
 		this.name = 'ExternalServiceError';
 		this.serviceName = serviceName;
 	}
@@ -54,14 +55,14 @@ export class ExternalServiceError extends SystemError {
 
 export class NetworkError extends SystemError {
 	constructor(message) {
-		super(message);
+		super(message, 'warn'); // Network errors are warnings by default
 		this.name = 'NetworkError';
 	}
 }
 
 export class DatabaseError extends SystemError {
 	constructor(message) {
-		super(message);
+		super(message, 'error'); // Database errors are critical
 		this.name = 'DatabaseError';
 	}
 }
@@ -79,6 +80,26 @@ export function isUserError(error) {
 }
 
 /**
+ * Get the error level for logging
+ * @param {Error} error - The error object
+ * @returns {string} - The error level: 'info' for user errors, 'warn' or 'error' for system errors
+ */
+export function getErrorLevel(error) {
+	// User errors are logged as 'info' level
+	if (isUserError(error)) {
+		return 'info';
+	}
+	
+	// System errors check severity property
+	if (error.severity) {
+		return error.severity; // 'warn' or 'error'
+	}
+	
+	// Default to 'error' for unknown errors
+	return 'error';
+}
+
+/**
  * Helper function to log errors to database and console
  * @param {Error} error - The error object
  * @param {Object} req - Express request object (optional)
@@ -87,12 +108,14 @@ export function isUserError(error) {
  */
 export async function logError(error, req = null, logger = null) {
 	const userError = isUserError(error);
-	const level = userError ? 'warn' : 'error';
+	const level = getErrorLevel(error);
 	
-	// Log to console
+	// Log to console with appropriate level
 	if (logger) {
 		if (userError) {
-			logger.warn(`User error: ${error.message}`);
+			logger.info(`User error: ${error.message}`);
+		} else if (level === 'warn') {
+			logger.warn(`System warning: ${error.message}`);
 		} else {
 			logger.error(`System error: ${error.message}`);
 		}

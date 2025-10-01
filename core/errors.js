@@ -114,3 +114,26 @@ export async function logError(error, req = null, logger = null) {
 		}
 	}
 }
+
+/**
+ * Async handler wrapper that automatically catches and logs errors
+ * @param {Function} fn - Async route handler function
+ * @returns {Function} - Wrapped handler that catches errors and logs them
+ */
+export function asyncHandler(fn) {
+	return (req, res, next) => {
+		Promise.resolve(fn(req, res, next))
+			.catch(async (error) => {
+				// Log error to database and console
+				await logError(error, req, logger);
+				
+				// For API endpoints that return JSON, send error response
+				if (req.path.startsWith('/api/') || req.xhr || req.headers.accept?.includes('application/json')) {
+					return res.json(utils.makeResponse(false, { message: error.message }));
+				}
+				
+				// For page requests, pass to error display middleware
+				next(error);
+			});
+	};
+}

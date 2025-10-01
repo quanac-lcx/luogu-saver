@@ -1,12 +1,13 @@
 import express from "express";
 import { getCounts } from "../services/statistic.service.js";
+import { asyncHandler } from "../core/errors.js";
 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
+router.get('/', asyncHandler(async (req, res) => {
 	const { articlesCount, pastesCount } = await getCounts();
 	res.render('index.njk', { title: "首页", paste_count: pastesCount, article_count: articlesCount });
-});
+}));
 
 router.get('/search', (req, res) => {
 	res.render('content/search.njk', { title: "搜索" });

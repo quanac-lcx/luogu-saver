@@ -1,10 +1,10 @@
 import express from 'express';
 import { getTaskById } from '../services/task.service.js';
-import { ValidationError, NotFoundError, asyncHandler } from '../core/errors.js';
+import { ValidationError, NotFoundError, asyncHandler, asyncJsonHandler } from '../core/errors.js';
 
 const router = express.Router();
 
-router.get('/query', asyncHandler(async (req, res) => {
+router.get('/query', asyncJsonHandler(async (req, res) => {
 	const id = req.query.id;
 	if (!id) throw new ValidationError("任务 ID 不能为空");
 	const task = await getTaskById(id);

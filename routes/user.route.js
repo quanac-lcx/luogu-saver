@@ -1,15 +1,15 @@
 import express from 'express';
 import { validateToken } from "../services/token.service.js";
-import { ValidationError, UnauthorizedError, asyncHandler } from "../core/errors.js";
+import { ValidationError, UnauthorizedError, asyncJsonHandler } from "../core/errors.js";
 
 const router = express.Router();
 
-router.post('/logout', asyncHandler(async (req, res, next) => {
+router.post('/logout', asyncJsonHandler(async (req, res, next) => {
 	res.clearCookie('token');
 	res.json(utils.makeResponse(true));
 }));
 
-router.post('/login', asyncHandler(async (req, res, next) => {
+router.post('/login', asyncJsonHandler(async (req, res, next) => {
 	if (!req.body || !req.body.token) {
 		throw new ValidationError("Token 不能为空");
 	}

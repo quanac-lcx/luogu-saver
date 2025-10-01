@@ -1,7 +1,7 @@
 import express from 'express';
 import config from "../config.js";
 import { getArticleById, getRecentArticles } from "../services/article.service.js";
-import { ValidationError, asyncHandler } from "../core/errors.js";
+import { ValidationError, asyncHandler, asyncJsonHandler } from "../core/errors.js";
 
 const router = express.Router();
 
@@ -11,7 +11,7 @@ router.get('/recent', asyncHandler(async (req, res, next) => {
 	res.render('content/article_recent.njk', { title: "最近更新", articles });
 }));
 
-router.get('/save/:id', asyncHandler(async (req, res) => {
+router.get('/save/:id', asyncJsonHandler(async (req, res) => {
 	const s = req.params.id;
 	if (s.length !== 8) throw new ValidationError("文章 ID 无效");
 	const url = `https://www.luogu.com/article/${s}`;

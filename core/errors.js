@@ -141,24 +141,31 @@ export async function logError(error, req = null, logger = null) {
 /**
  * Async handler wrapper that automatically catches and logs errors
  * @param {Function} fn - Async route handler function
+ * @param {Object} options - Configuration options
+ * @param {boolean} options.json - If true, returns JSON error response; if false, passes to error middleware
  * @returns {Function} - Wrapped handler that catches errors and logs them
  */
-export function asyncHandler(fn) {
+export function asyncHandler(fn, options = {}) {
 	return (req, res, next) => {
 		Promise.resolve(fn(req, res, next))
 			.catch(async (error) => {
 				// Log error to database and console
 				await logError(error, req, logger);
 				
-				// Detect if response should be JSON
-				// Check if path starts with /api/, or if Accept header indicates JSON,
-				// or if response has already sent JSON (check for res.send/res.json usage patterns)
-				const isJsonResponse = req.path.startsWith('/api/') || 
-				                       req.path.includes('/save/') ||
-				                       req.xhr || 
-				                       req.headers.accept?.includes('application/json');
+				// Determine response type
+				let isJsonResponse;
 				
-				// For API endpoints that return JSON, send error response
+				if (options.json !== undefined) {
+					// Explicitly specified by options
+					isJsonResponse = options.json;
+				} else {
+					// Auto-detect: Check if path starts with /api/, or if Accept header indicates JSON
+					isJsonResponse = req.path.startsWith('/api/') || 
+					                 req.xhr || 
+					                 req.headers.accept?.includes('application/json');
+				}
+				
+				// For JSON endpoints, send error response
 				if (isJsonResponse) {
 					return res.json(utils.makeResponse(false, { message: error.message }));
 				}
@@ -167,4 +174,13 @@ export function asyncHandler(fn) {
 				next(error);
 			});
 	};
+}
+
+/**
+ * Convenience wrapper for JSON/API endpoints
+ * @param {Function} fn - Async route handler function
+ * @returns {Function} - Wrapped handler that returns JSON error responses
+ */
+export function asyncJsonHandler(fn) {
+	return asyncHandler(fn, { json: true });
 }

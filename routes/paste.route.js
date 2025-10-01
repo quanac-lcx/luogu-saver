@@ -1,10 +1,10 @@
 import express from 'express';
 import { getPasteById } from "../services/paste.service.js";
-import { ValidationError, asyncHandler } from "../core/errors.js";
+import { ValidationError, asyncHandler, asyncJsonHandler } from "../core/errors.js";
 
 const router = express.Router();
 
-router.get('/save/:id', asyncHandler(async (req, res) => {
+router.get('/save/:id', asyncJsonHandler(async (req, res) => {
 	const s = req.params.id;
 	if (s.length !== 8) throw new ValidationError("剪贴板 ID 无效");
 	const url = `https://www.luogu.com/paste/${s}`;

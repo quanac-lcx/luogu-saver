@@ -1,10 +1,10 @@
 import express from "express";
 import { getStatistics } from "../services/statistic.service.js";
-import { asyncHandler } from "../core/errors.js";
+import { asyncJsonHandler } from "../core/errors.js";
 
 const router = express.Router();
 
-router.get("/statistic", asyncHandler(async (req, res) => {
+router.get("/statistic", asyncJsonHandler(async (req, res) => {
 	res.json(utils.makeResponse(true, await getStatistics()));
 }));
 

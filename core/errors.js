@@ -150,8 +150,16 @@ export function asyncHandler(fn) {
 				// Log error to database and console
 				await logError(error, req, logger);
 				
+				// Detect if response should be JSON
+				// Check if path starts with /api/, or if Accept header indicates JSON,
+				// or if response has already sent JSON (check for res.send/res.json usage patterns)
+				const isJsonResponse = req.path.startsWith('/api/') || 
+				                       req.path.includes('/save/') ||
+				                       req.xhr || 
+				                       req.headers.accept?.includes('application/json');
+				
 				// For API endpoints that return JSON, send error response
-				if (req.path.startsWith('/api/') || req.xhr || req.headers.accept?.includes('application/json')) {
+				if (isJsonResponse) {
 					return res.json(utils.makeResponse(false, { message: error.message }));
 				}
 				

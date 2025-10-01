@@ -1,6 +1,7 @@
 import express from 'express';
 import { requireAdmin } from "../middleware/permission.js";
 import { makeResponse } from "../core/utils.js";
+import { logError } from "../core/errors.js";
 import * as adminService from "../services/admin.service.js";
 import * as adminWorker from "../workers/admin.worker.js";
 
@@ -95,6 +96,7 @@ router.post('/api/jobs/cleanup', requireAdmin, async (req, res, next) => {
 		const result = await adminWorker.executeCleanupJob();
 		res.json(makeResponse(true, result));
 	} catch (error) {
+		await logError(error, req, logger);
 		res.json(makeResponse(false, { message: error.message }));
 	}
 });
@@ -104,6 +106,7 @@ router.post('/api/jobs/update-problems', requireAdmin, async (req, res, next) =>
 		const result = await adminWorker.executeUpdateProblemsJob();
 		res.json(makeResponse(true, result));
 	} catch (error) {
+		await logError(error, req, logger);
 		res.json(makeResponse(false, { message: error.message }));
 	}
 });
@@ -114,6 +117,7 @@ router.post('/api/restore/:type/:id', requireAdmin, async (req, res, next) => {
 		const result = await adminService.restoreItem(type, id);
 		res.json(makeResponse(true, result));
 	} catch (error) {
+		await logError(error, req, logger);
 		res.json(makeResponse(false, { message: error.message }));
 	}
 });
@@ -124,6 +128,7 @@ router.delete('/api/delete/:type/:id', requireAdmin, async (req, res, next) => {
 		const result = await adminService.deleteItem(type, id);
 		res.json(makeResponse(true, result));
 	} catch (error) {
+		await logError(error, req, logger);
 		res.json(makeResponse(false, { message: error.message }));
 	}
 });
@@ -133,6 +138,7 @@ router.delete('/api/tokens/:id', requireAdmin, async (req, res, next) => {
 		const result = await adminService.deleteToken(req.params.id);
 		res.json(makeResponse(true, result));
 	} catch (error) {
+		await logError(error, req, logger);
 		res.json(makeResponse(false, { message: error.message }));
 	}
 });
@@ -142,6 +148,7 @@ router.get('/api/queue/status', requireAdmin, async (req, res, next) => {
 		const queueStatus = await adminService.getQueueStatus();
 		res.json(makeResponse(true, { queueStatus }));
 	} catch (error) {
+		await logError(error, req, logger);
 		res.json(makeResponse(false, { message: error.message }));
 	}
 });
@@ -151,6 +158,7 @@ router.get('/api/accounts', requireAdmin, async (req, res, next) => {
 		const accounts = await adminService.getAccountsConfig();
 		res.json(makeResponse(true, { accounts }));
 	} catch (error) {
+		await logError(error, req, logger);
 		res.json(makeResponse(false, { message: error.message }));
 	}
 });
@@ -161,6 +169,7 @@ router.post('/api/accounts', requireAdmin, async (req, res, next) => {
 		const result = await adminService.updateAccountsConfig(accounts);
 		res.json(makeResponse(true, result));
 	} catch (error) {
+		await logError(error, req, logger);
 		res.json(makeResponse(false, { message: error.message }));
 	}
 });
@@ -170,6 +179,7 @@ router.post('/api/restart', requireAdmin, async (req, res, next) => {
 		const result = await adminWorker.restartService();
 		res.json(makeResponse(result.success, { message: result.message }));
 	} catch (error) {
+		await logError(error, req, logger);
 		res.json(makeResponse(false, { message: error.message }));
 	}
 });
@@ -181,6 +191,7 @@ router.post('/api/mass-delete/articles', requireAdmin, async (req, res, next) =>
 		const result = await adminService.markAllArticlesDeleted(reason);
 		res.json(makeResponse(true, result));
 	} catch (error) {
+		await logError(error, req, logger);
 		res.json(makeResponse(false, { message: error.message }));
 	}
 });
@@ -191,6 +202,7 @@ router.post('/api/mass-delete/pastes', requireAdmin, async (req, res, next) => {
 		const result = await adminService.markAllPastesDeleted(reason);
 		res.json(makeResponse(true, result));
 	} catch (error) {
+		await logError(error, req, logger);
 		res.json(makeResponse(false, { message: error.message }));
 	}
 });
@@ -203,6 +215,7 @@ router.post('/api/mark-deleted/:type/:id', requireAdmin, async (req, res, next) 
 		const result = await adminService.markItemDeleted(type, id, reason);
 		res.json(makeResponse(true, result));
 	} catch (error) {
+		await logError(error, req, logger);
 		res.json(makeResponse(false, { message: error.message }));
 	}
 });

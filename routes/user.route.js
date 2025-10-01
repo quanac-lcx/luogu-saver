@@ -1,6 +1,6 @@
 import express from 'express';
 import { validateToken } from "../services/token.service.js";
-import { ValidationError, UnauthorizedError } from "../core/errors.js";
+import { ValidationError, UnauthorizedError, logError } from "../core/errors.js";
 
 const router = express.Router();
 
@@ -9,6 +9,7 @@ router.post('/logout', async (req, res, next) => {
 		res.clearCookie('token');
 		res.json(utils.makeResponse(true));
 	} catch (error) {
+		await logError(error, req, logger);
 		res.json(utils.makeResponse(false));
 	}
 });
@@ -26,6 +27,7 @@ router.post('/login', async (req, res, next) => {
 		res.cookie('token', tokenText, { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000 });
 		res.json(utils.makeResponse(true));
 	} catch (error) {
+		await logError(error, req, logger);
 		res.json(utils.makeResponse(false, { message: error.message }));
 	}
 });

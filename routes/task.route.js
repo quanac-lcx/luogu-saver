@@ -1,6 +1,6 @@
 import express from 'express';
 import { getTaskById } from '../services/task.service.js';
-import { ValidationError, NotFoundError } from '../core/errors.js';
+import { ValidationError, NotFoundError, logError } from '../core/errors.js';
 
 const router = express.Router();
 
@@ -12,7 +12,7 @@ router.get('/query', async (req, res) => {
 		if (!task) throw new NotFoundError("任务未找到");
 		res.json(utils.makeResponse(true, { tasks: [task] }));
 	} catch (error) {
-		logger.warn(`An error occurred while fetching tasks: ${error.message}`);
+		await logError(error, req, logger);
 		res.json(utils.makeResponse(false, { message: error.message || "Failed to fetch tasks." }));
 	}
 });
@@ -25,7 +25,7 @@ router.get('/:id', async (req, res, next) => {
 		task.position = worker.getQueuePosition(task.id);
 		res.render('system/task.njk', { title: "任务详情", task });
 	} catch (error) {
-		logger.warn(`An error occurred while fetching task details: ${error.message}`);
+		await logError(error, req, logger);
 		next(error);
 	}
 });

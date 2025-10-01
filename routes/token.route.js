@@ -1,6 +1,6 @@
 import express from "express";
 import { generateToken } from "../services/token.service.js";
-import { ValidationError } from "../core/errors.js";
+import { ValidationError, logError } from "../core/errors.js";
 
 const router = express.Router();
 
@@ -23,7 +23,7 @@ router.post("/generate", async (req, res) => {
 		
 		res.json(utils.makeResponse(true, { token: tokenText }));
 	} catch (error) {
-		logger.warn(`An error occurred while generating token: ${error.message}`);
+		await logError(error, req, logger);
 		res.json(utils.makeResponse(false, { message: error.message || "Failed to generate token." }));
 	}
 });

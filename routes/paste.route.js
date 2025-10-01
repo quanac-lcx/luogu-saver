@@ -1,6 +1,6 @@
 import express from 'express';
 import { getPasteById } from "../services/paste.service.js";
-import { ValidationError } from "../core/errors.js";
+import { ValidationError, logError } from "../core/errors.js";
 
 const router = express.Router();
 
@@ -12,7 +12,7 @@ router.get('/save/:id', async (req, res) => {
 		const id = await worker.pushTaskToQueue({ url, aid: s, type: 1 });
 		res.send(utils.makeResponse(true, { message: "Request queued.", result: id }));
 	} catch (error) {
-		logger.warn('An error occurred when saving paste: ' + error.message);
+		await logError(error, req, logger);
 		res.send(utils.makeResponse(false, { message: error.message }));
 	}
 });

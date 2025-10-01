@@ -77,3 +77,40 @@ export function isUserError(error) {
 	
 	return false;
 }
+
+/**
+ * Helper function to log errors to database and console
+ * @param {Error} error - The error object
+ * @param {Object} req - Express request object (optional)
+ * @param {Object} logger - Logger instance
+ * @returns {Promise<void>}
+ */
+export async function logError(error, req = null, logger = null) {
+	const userError = isUserError(error);
+	const level = userError ? 'warn' : 'error';
+	
+	// Log to console
+	if (logger) {
+		if (userError) {
+			logger.warn(`User error: ${error.message}`);
+		} else {
+			logger.error(`System error: ${error.message}`);
+		}
+	}
+	
+	// Log to database
+	try {
+		// Dynamic import to avoid circular dependency
+		const { default: ErrorLog } = await import('../models/error_log.js');
+		await ErrorLog.logError(
+			error.message,
+			error.stack,
+			req,
+			level
+		);
+	} catch (logError) {
+		if (logger) {
+			logger.error(`Failed to log error to database: ${logError.message}`);
+		}
+	}
+}

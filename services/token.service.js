@@ -32,18 +32,18 @@ export async function generateToken(pasteId, uid) {
 	const resp = await handleFetch(await fetchContent(url, defaultHeaders, { c3vk: "legacy" }), 1);
 	
 	if (!resp.success) {
-		throw new ExternalServiceError(resp.message || "Failed to fetch paste content.", "Luogu API");
+		throw new ExternalServiceError(resp.message || "获取剪贴板内容失败", "Luogu API");
 	}
 	
 	const value = resp.data;
 	
 	const content = value.content || "";
 	if (content !== "lgs_register_verification") {
-		throw new ValidationError("Verification content does not match.");
+		throw new ValidationError("验证内容不匹配");
 	}
 	
 	if (parseInt(uid) !== value.userData.uid) {
-		throw new ValidationError("UID does not match.");
+		throw new ValidationError("用户 ID 不匹配");
 	}
 	
 	let token = await Token.findOne({ where: { uid: parseInt(uid) } });

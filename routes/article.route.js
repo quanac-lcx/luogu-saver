@@ -18,7 +18,7 @@ router.get('/recent', async (req, res, next) => {
 router.get('/save/:id', async (req, res) => {
 	try {
 		const s = req.params.id;
-		if (s.length !== 8) throw new ValidationError('Invalid article ID.');
+		if (s.length !== 8) throw new ValidationError("文章 ID 无效");
 		const url = `https://www.luogu.com/article/${s}`;
 		const id = await worker.pushTaskToQueue({ url, aid: s, type: 0 });
 		res.send(utils.makeResponse(true, { message: "Request queued.", result: id }));

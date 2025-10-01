@@ -15,7 +15,7 @@ router.get("/apply", async (req, res, next) => {
 router.post("/generate", async (req, res) => {
 	try {
 		if (!req.body || !req.body.pasteId || !req.body.uid) {
-			throw new ValidationError("Missing required parameters.");
+			throw new ValidationError("缺少必需参数");
 		}
 		
 		const { pasteId, uid } = req.body;

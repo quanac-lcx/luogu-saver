@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/save/:id', async (req, res) => {
 	try {
 		const s = req.params.id;
-		if (s.length !== 8) throw new ValidationError('Invalid paste ID.');
+		if (s.length !== 8) throw new ValidationError("剪贴板 ID 无效");
 		const url = `https://www.luogu.com/paste/${s}`;
 		const id = await worker.pushTaskToQueue({ url, aid: s, type: 1 });
 		res.send(utils.makeResponse(true, { message: "Request queued.", result: id }));

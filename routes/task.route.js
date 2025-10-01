@@ -7,9 +7,9 @@ const router = express.Router();
 router.get('/query', async (req, res) => {
 	try {
 		const id = req.query.id;
-		if (!id) throw new ValidationError("Task ID is required.");
+		if (!id) throw new ValidationError("任务 ID 不能为空");
 		const task = await getTaskById(id);
-		if (!task) throw new NotFoundError('Task not found.');
+		if (!task) throw new NotFoundError("任务未找到");
 		res.json(utils.makeResponse(true, { tasks: [task] }));
 	} catch (error) {
 		logger.warn(`An error occurred while fetching tasks: ${error.message}`);
@@ -21,7 +21,7 @@ router.get('/:id', async (req, res, next) => {
 	try {
 		const taskId = req.params.id;
 		const task = await getTaskById(taskId);
-		if (!task) throw new NotFoundError('Task not found.');
+		if (!task) throw new NotFoundError("任务未找到");
 		task.position = worker.getQueuePosition(task.id);
 		res.render('system/task.njk', { title: "任务详情", task });
 	} catch (error) {

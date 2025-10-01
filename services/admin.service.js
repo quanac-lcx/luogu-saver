@@ -319,12 +319,12 @@ export async function updateAccountsConfig(accounts) {
     const accountsPath = join(process.cwd(), 'accounts.json');
     
     if (!Array.isArray(accounts)) {
-        throw new ValidationError("Accounts must be an array");
+        throw new ValidationError("账户配置必须是数组");
     }
 
     for (const account of accounts) {
         if (!account._uid || !account.__client_id) {
-            throw new ValidationError("Each account must have _uid and __client_id");
+            throw new ValidationError("每个账户必须包含 _uid 和 __client_id");
         }
     }
     

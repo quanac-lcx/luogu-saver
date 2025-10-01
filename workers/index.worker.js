@@ -63,7 +63,7 @@ export function startQueueProcessor() {
  */
 export async function pushTaskToQueue(task) {
 	if (queue.getQueueLength() >= config.queue.maxLength)
-		throw new Error('The queue is full. Please try again later.');
+		throw new Error('队列已满，请稍后再试');
 	task.id = await createTask(task);
 	logger.debug(`Task #${task.id} queued.`);
 	queue.pushTask(task);

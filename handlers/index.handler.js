@@ -1,5 +1,6 @@
 import commonHandler from "./common.handler.js";
 import {makeResponse} from "../core/utils.js";
+import { SystemError } from "../core/errors.js";
 
 const handlers = {
 	0: commonHandler,

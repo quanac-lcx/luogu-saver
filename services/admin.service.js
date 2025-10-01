@@ -1,12 +1,12 @@
 /**
- * Admin Service Module
+ * 管理员服务模块
  * 
- * This module provides admin-specific services, including:
- * - Statistics and dashboard data retrieval
- * - Soft deletion management (restore/delete articles and pastes)
- * - Queue information and management
- * - Token management operations
- * - Accounts configuration management
+ * 该模块提供管理员专用服务功能，包括：
+ * - 统计和仪表板数据获取
+ * - 软删除管理（恢复/删除文章和剪贴板）
+ * - 队列信息和管理
+ * - Token 管理操作
+ * - 账户配置管理
  * 
  * @author Copilot
  */
@@ -19,11 +19,12 @@ import * as queue from "../workers/queue.worker.js";
 import { paginateQuery, createSearchCondition } from "../core/pagination.js";
 import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
+import { NotFoundError, ValidationError } from "../core/errors.js";
 
 /**
- * Get admin dashboard statistics
+ * 获取管理员仪表板统计信息
  * 
- * @returns {Promise<Object>} Dashboard statistics object
+ * @returns {Promise<Object>} 仪表板统计对象
  */
 export async function getDashboardStats() {
 	return {
@@ -47,13 +48,13 @@ export async function getDashboardStats() {
 }
 
 /**
- * Get error logs with pagination and filtering
+ * 获取带分页和筛选的错误日志
  * 
- * @param {number} page - Page number
- * @param {number} limit - Items per page
- * @param {string} level - Log level filter
- * @param {string} search - Search query (optional)
- * @returns {Promise<Object>} Object containing errors, currentPage, totalPages
+ * @param {number} page - 页码
+ * @param {number} limit - 每页数量
+ * @param {string} level - 日志级别筛选
+ * @param {string} search - 搜索查询（可选）
+ * @returns {Promise<Object>} 包含错误列表、当前页、总页数的对象
  */
 export async function getErrorLogs(page = 1, limit = 50, level = '') {
     const whereCondition = {};
@@ -61,9 +62,6 @@ export async function getErrorLogs(page = 1, limit = 50, level = '') {
     if (level) {
         whereCondition.level = level;
     }
-    
-    // Note: For TypeORM, we'll handle search separately with query builder if needed
-    // For now, we'll use the basic functionality
     
     return await paginateQuery(ErrorLog, {
         where: whereCondition,
@@ -79,31 +77,30 @@ export async function getErrorLogs(page = 1, limit = 50, level = '') {
 }
 
 /**
- * Get queue status with detailed information
+ * 获取队列状态和详细信息
  * 
- * @returns {Promise<Object>} Queue status with task details
+ * @returns {Promise<Object>} 包含任务详情的队列状态
  */
 export async function getQueueStatus() {
     return {
         length: queue.getQueueLength(),
         running: queue.getRunning(),
-        tasks: queue.getAllTasks ? queue.getAllTasks() : [] // Get all tasks if available
+        tasks: queue.getAllTasks ? queue.getAllTasks() : []
     };
 }
 
 /**
- * Get deleted items (articles or pastes) with pagination
+ * 获取已删除项目（文章或剪贴板）的分页列表
  * 
- * @param {string} type - Type of items ('article' or 'paste')
- * @param {number} page - Page number
- * @param {number} limit - Items per page
- * @param {string} search - Search query (optional)
- * @returns {Promise<Object>} Object containing items, currentPage, totalPages, type
+ * @param {string} type - 项目类型（'article' 或 'paste'）
+ * @param {number} page - 页码
+ * @param {number} limit - 每页数量
+ * @param {string} search - 搜索查询（可选）
+ * @returns {Promise<Object>} 包含项目列表、当前页、总页数、类型的对象
  */
 export async function getDeletedItems(type = 'article', page = 1, limit = 20, search = '') {
     let whereCondition = { deleted: true };
     
-    // Add enhanced search functionality for both ID and title
     if (search && search.trim()) {
         const trimmedSearch = search.trim();
         const model = type === 'article' ? Article : Paste;
@@ -125,18 +122,17 @@ export async function getDeletedItems(type = 'article', page = 1, limit = 20, se
 }
 
 /**
- * Get undeleted items (articles or pastes) with pagination for deletion marking
+ * 获取未删除项目（文章或剪贴板）的分页列表，用于标记删除
  * 
- * @param {string} type - Type of items ('article' or 'paste')
- * @param {number} page - Page number
- * @param {number} limit - Items per page
- * @param {string} search - Search query (optional)
- * @returns {Promise<Object>} Object containing items, currentPage, totalPages, type
+ * @param {string} type - 项目类型（'article' 或 'paste'）
+ * @param {number} page - 页码
+ * @param {number} limit - 每页数量
+ * @param {string} search - 搜索查询（可选）
+ * @returns {Promise<Object>} 包含项目列表、当前页、总页数、类型的对象
  */
 export async function getUndeletedItems(type = 'article', page = 1, limit = 20, search = '') {
     let whereCondition = { deleted: false };
     
-    // Add enhanced search functionality for both ID and title
     if (search && search.trim()) {
         const trimmedSearch = search.trim();
         const model = type === 'article' ? Article : Paste;
@@ -158,73 +154,72 @@ export async function getUndeletedItems(type = 'article', page = 1, limit = 20, 
 }
 
 /**
- * Restore a deleted item (article or paste)
+ * 恢复已删除的项目（文章或剪贴板）
  * 
- * @param {string} type - Type of item ('article' or 'paste')
- * @param {string} id - Item ID
- * @returns {Promise<Object>} Success result with message
+ * @param {string} type - 项目类型（'article' 或 'paste'）
+ * @param {string} id - 项目 ID
+ * @returns {Promise<Object>} 包含成功消息的结果
  */
 export async function restoreItem(type, id) {
     if (type === 'article') {
         const article = await Article.findById(id);
         if (!article) {
-            throw new Error("专栏不存在");
+            throw new NotFoundError("专栏不存在");
         }
         article.deleted = false;
         await article.save();
     } else if (type === 'paste') {
         const paste = await Paste.findById(id);
         if (!paste) {
-            throw new Error("剪贴板不存在");
+            throw new NotFoundError("剪贴板不存在");
         }
         paste.deleted = false;
         await paste.save();
     } else {
-        throw new Error("不支持的类型");
+        throw new ValidationError("不支持的类型");
     }
 
     return { message: "恢复成功" };
 }
 
 /**
- * Permanently delete an item (article or paste)
+ * 永久删除项目（文章或剪贴板）
  * 
- * @param {string} type - Type of item ('article' or 'paste')
- * @param {string} id - Item ID
- * @returns {Promise<Object>} Success result with message
+ * @param {string} type - 项目类型（'article' 或 'paste'）
+ * @param {string} id - 项目 ID
+ * @returns {Promise<Object>} 包含成功消息的结果
  */
 export async function deleteItem(type, id) {
     if (type === 'article') {
         const article = await Article.findById(id);
         if (!article) {
-            throw new Error("专栏不存在");
+            throw new NotFoundError("专栏不存在");
         }
         await article.remove();
     } else if (type === 'paste') {
         const paste = await Paste.findById(id);
         if (!paste) {
-            throw new Error("剪贴板不存在");
+            throw new NotFoundError("剪贴板不存在");
         }
         await paste.remove();
     } else {
-        throw new Error("不支持的类型");
+        throw new ValidationError("不支持的类型");
     }
 
     return { message: "删除成功" };
 }
 
 /**
- * Get tokens with pagination
+ * 获取带分页的 Token 列表
  * 
- * @param {number} page - Page number
- * @param {number} limit - Items per page
- * @param {string} search - Search query (optional)
- * @returns {Promise<Object>} Object containing tokens, currentPage, totalPages
+ * @param {number} page - 页码
+ * @param {number} limit - 每页数量
+ * @param {string} search - 搜索查询（可选）
+ * @returns {Promise<Object>} 包含 Token 列表、当前页、总页数的对象
  */
 export async function getTokens(page = 1, limit = 30, search = '') {
     const whereCondition = {};
     
-    // Add search functionality for UID
     if (search && search.trim()) {
         whereCondition.uid = createSearchCondition(search);
     }
@@ -242,15 +237,15 @@ export async function getTokens(page = 1, limit = 30, search = '') {
 }
 
 /**
- * Delete a token by ID
+ * 根据 ID 删除 Token
  * 
  * @param {string} id - Token ID
- * @returns {Promise<Object>} Success result with message
+ * @returns {Promise<Object>} 包含成功消息的结果
  */
 export async function deleteToken(id) {
     const token = await Token.findById(id);
     if (!token) {
-        throw new Error("Token 不存在");
+        throw new NotFoundError("Token 不存在");
     }
     
     await token.remove();
@@ -258,9 +253,9 @@ export async function deleteToken(id) {
 }
 
 /**
- * Get accounts configuration
+ * 获取账户配置
  * 
- * @returns {Promise<Array>} Accounts array
+ * @returns {Promise<Array>} 账户数组
  */
 export async function getAccountsConfig() {
     try {
@@ -268,31 +263,30 @@ export async function getAccountsConfig() {
         const content = await readFile(accountsPath, 'utf8');
         return JSON.parse(content);
     } catch (error) {
-        // If file doesn't exist, return empty array
         return [];
     }
 }
 
 /**
- * Mark a single item as deleted with specified reason
+ * 将单个项目标记为已删除并指定原因
  * 
- * @param {string} type - Type of item ('article' or 'paste')
- * @param {string} id - Item ID
- * @param {string} reason - Deletion reason (cannot be null)
- * @returns {Promise<Object>} Success result with message
+ * @param {string} type - 项目类型（'article' 或 'paste'）
+ * @param {string} id - 项目 ID
+ * @param {string} reason - 删除原因（不能为空）
+ * @returns {Promise<Object>} 包含成功消息的结果
  */
 export async function markItemDeleted(type, id, reason = "手动删除") {
     if (!reason || reason.trim() === '') {
-        throw new Error("删除原因不能为空");
+        throw new ValidationError("删除原因不能为空");
     }
     
     if (type === 'article') {
         const article = await Article.findById(id);
         if (!article) {
-            throw new Error("专栏不存在");
+            throw new NotFoundError("专栏不存在");
         }
         if (article.deleted) {
-            throw new Error("该专栏已经被删除");
+            throw new ValidationError("该专栏已经被删除");
         }
         article.deleted = true;
         article.deleted_reason = reason.trim();
@@ -301,38 +295,36 @@ export async function markItemDeleted(type, id, reason = "手动删除") {
     } else if (type === 'paste') {
         const paste = await Paste.findById(id);
         if (!paste) {
-            throw new Error("剪贴板不存在");
+            throw new NotFoundError("剪贴板不存在");
         }
         if (paste.deleted) {
-            throw new Error("该剪贴板已经被删除");
+            throw new ValidationError("该剪贴板已经被删除");
         }
         paste.deleted = true;
         paste.deleted_reason = reason.trim();
         await paste.save();
         return { message: "剪贴板已标记为删除" };
     } else {
-        throw new Error("不支持的类型");
+        throw new ValidationError("不支持的类型");
     }
 }
 
 /**
- * Update accounts configuration
+ * 更新账户配置
  * 
- * @param {Array} accounts - Updated accounts array
- * @returns {Promise<Object>} Success result with message
+ * @param {Array} accounts - 更新后的账户数组
+ * @returns {Promise<Object>} 包含成功消息的结果
  */
 export async function updateAccountsConfig(accounts) {
     const accountsPath = join(process.cwd(), 'accounts.json');
     
-    // Validate accounts format
     if (!Array.isArray(accounts)) {
-        throw new Error("Accounts must be an array");
+        throw new ValidationError("账户配置必须是数组");
     }
 
-    // Basic validation for account structure
     for (const account of accounts) {
         if (!account._uid || !account.__client_id) {
-            throw new Error("Each account must have _uid and __client_id");
+            throw new ValidationError("每个账户必须包含 _uid 和 __client_id");
         }
     }
     

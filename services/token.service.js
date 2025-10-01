@@ -13,6 +13,7 @@ import Token from "../models/token.js";
 import { defaultHeaders, fetchContent } from "../core/request.js";
 import { handleFetch } from "../handlers/index.handler.js";
 import { withCache, invalidateCache } from "../core/cache.js";
+import { ValidationError, ExternalServiceError } from "../core/errors.js";
 
 /**
  * 从粘贴板验证生成认证Token
@@ -27,36 +28,30 @@ import { withCache, invalidateCache } from "../core/cache.js";
  * @throws {Error} 如果粘贴板获取失败、内容不匹配或UID不匹配
  */
 export async function generateToken(pasteId, uid) {
-	// Fetch and validate the verification paste
 	const url = `https://www.luogu.com/paste/${pasteId}`;
 	const resp = await handleFetch(await fetchContent(url, defaultHeaders, { c3vk: "legacy" }), 1);
 	
 	if (!resp.success) {
-		throw new Error(resp.message || "Failed to fetch paste content.");
+		throw new ExternalServiceError(resp.message || "获取剪贴板内容失败", "Luogu API");
 	}
 	
 	const value = resp.data;
 	
-	// Verify paste content matches expected verification string
 	const content = value.content || "";
 	if (content !== "lgs_register_verification") {
-		throw new Error("Verification content does not match.");
+		throw new ValidationError("验证内容不匹配");
 	}
 	
-	// Verify user ID matches paste owner
 	if (parseInt(uid) !== value.userData.uid) {
-		throw new Error("UID does not match.");
+		throw new ValidationError("用户 ID 不匹配");
 	}
 	
-	// Remove existing token for this user
 	let token = await Token.findOne({ where: { uid: parseInt(uid) } });
 	if (token) {
-		// Invalidate old token from cache before removal
 		await invalidateCache(`token:${token.id}`);
 		await token.remove();
 	}
 	
-	// Generate new token
 	const tokenText = utils.generateRandomString(32);
 	token = Token.create({
 		id: tokenText,
@@ -65,7 +60,6 @@ export async function generateToken(pasteId, uid) {
 	});
 	await token.save();
 	
-	// Cache the new token immediately for performance
 	try {
 		await redis.set(`token:${tokenText}`, JSON.stringify(token), 600);
 	} catch (error) {
@@ -87,7 +81,7 @@ export async function generateToken(pasteId, uid) {
 export async function validateToken(tokenText) {
 	return await withCache({
 		cacheKey: `token:${tokenText}`,
-		ttl: 600, // 10 minutes
+		ttl: 600,
 		fetchFn: async () => {
 			const token = await Token.findById(tokenText);
 			return token || null;

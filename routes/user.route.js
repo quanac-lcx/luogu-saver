@@ -1,5 +1,6 @@
 import express from 'express';
 import { validateToken } from "../services/token.service.js";
+import { ValidationError, UnauthorizedError } from "../core/errors.js";
 
 const router = express.Router();
 
@@ -14,13 +15,13 @@ router.post('/logout', async (req, res, next) => {
 
 router.post('/login', async (req, res, next) => {
 	if (!req.body || !req.body.token) {
-		throw new Error('Token is required.');
+		throw new ValidationError("Token 不能为空");
 	}
 	const tokenText = req.body.token;
 	try {
 		const token = await validateToken(tokenText);
 		if (!token) {
-			throw new Error('Invalid token.');
+			throw new UnauthorizedError("Token 无效");
 		}
 		res.cookie('token', tokenText, { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000 });
 		res.json(utils.makeResponse(true));

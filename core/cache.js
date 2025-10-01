@@ -57,7 +57,7 @@ export async function withCache({ cacheKey, ttl, fetchFn }) {
 	if (ttl && result !== null && result !== undefined) {
 		try {
 			await redis.set(cacheKey, JSON.stringify(result), ttl);
-			logger.debug(`已缓存键: ${cacheKey}, TTL: ${ttl}秒`);
+			logger.debug(`已缓存键: ${cacheKey}, TTL: ${ttl} 秒`);
 		} catch (error) {
 			logger.warn(`缓存键 ${cacheKey} 失败: ${error.message}`);
 		}

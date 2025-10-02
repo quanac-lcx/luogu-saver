@@ -38,7 +38,7 @@ import{shouldBypassCache} from '../middleware/cache_context.js';
  * });
  */
 export async function withCache({ cacheKey, ttl, fetchFn }) {
-	if (contextShouldBypassCache()) {
+	if (shouldBypassCache()) {
 		logger.debug(`已绕过缓存: ${cacheKey}`);
 		return await fetchFn();
 	}

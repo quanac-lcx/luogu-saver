@@ -34,6 +34,7 @@
         padding: 10px 15px;
         cursor: pointer;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
     }
     
     .mobile-menu-toggle i {
@@ -46,11 +47,16 @@
         transform: translateX(0);
         width: 250px !important;
         z-index: 999;
+        padding-top: 60px;
     }
     
-    /* Hide menu toggle button when sidebar is visible */
+    /* Move menu toggle button to top of sidebar when visible */
     body.mobile-sidebar-visible .mobile-menu-toggle {
-        display: none;
+        left: 10px;
+        top: 10px;
+        z-index: 1001;
+        background: #f8f8f8;
+        border-color: #ccc;
     }
     
     /* Mobile sidebar overlay */
@@ -95,6 +101,21 @@
     .ui.vertical.footer.segment .grid .column {
         width: 100% !important;
         margin-bottom: 20px;
+        float: none !important;
+    }
+    
+    .ui.vertical.footer.segment .grid .column.right.floated {
+        text-align: left !important;
+    }
+    
+    /* Stack footer links vertically on mobile */
+    .ui.vertical.footer.segment p {
+        margin-bottom: 10px;
+    }
+    
+    .ui.vertical.footer.segment .footer-link {
+        display: inline-block;
+        margin-bottom: 5px;
     }
     
     /* Adjust form fields for mobile */

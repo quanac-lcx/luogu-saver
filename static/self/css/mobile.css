@@ -48,6 +48,11 @@
         z-index: 999;
     }
     
+    /* Hide menu toggle button when sidebar is visible */
+    body.mobile-sidebar-visible .mobile-menu-toggle {
+        display: none;
+    }
+    
     /* Mobile sidebar overlay */
     .mobile-sidebar-overlay {
         display: none;

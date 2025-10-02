@@ -39,18 +39,16 @@ export default class RedisManager {
 		});
 		
 		this.redis.on('connect', () => {
-			console.log('Redis connected');
+			console.log('Redis 成功连接！');
 			this.connected = true;
 			this.reconnectAttempts = 0;
 		});
 		
 		this.redis.on('error', (err) => {
 			this.connected = false;
-			console.error('Redis error:', err.message);
-			
-			// If it's a connection error and we've reached max attempts, disable further attempts
+			console.error('Redis 连接发生错误:', err.message);
 			if (err.code === 'ECONNREFUSED' && this.reconnectAttempts >= this.maxReconnectAttempts) {
-				console.warn('Redis connection failed. Disabling Redis.');
+				console.warn('Redis连接失败。正在禁用Redis……');
 				this.redis.disconnect();
 			}
 		});

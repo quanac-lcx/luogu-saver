@@ -63,8 +63,8 @@ export function getQueueLength() { return queue.length; }
 /**
  * 获取指定任务在队列中的位置
  * 
- * @param {string} taskId - 任务ID
- * @returns {number} 任务在队列中的位置（从1开始），如果未找到则返回0
+ * @param {string} taskId - 任务 ID
+ * @returns {number} 任务在队列中的位置（从 1 开始），如果未找到则返回 0
  */
 export function getQueuePosition(taskId) {
 	for (let i = 0; i < queue.length; i++) {

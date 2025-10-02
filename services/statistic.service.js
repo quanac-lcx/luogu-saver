@@ -26,7 +26,6 @@ import { withCache } from "../core/cache.js";
  */
 
 async function getTimeSeriesData(entityClass) {
-	// Find the earliest record to determine start date
 	const earliest = await entityClass
 		.createQueryBuilder("t")
 		.select("t.created_at", "created_at")
@@ -36,11 +35,9 @@ async function getTimeSeriesData(entityClass) {
 	
 	if (!earliest) return [];
 	
-	// Set start date to beginning of day
 	const startDate = new Date(earliest.created_at);
 	startDate.setHours(0, 0, 0, 0);
 	
-	// Get daily counts grouped by date
 	const dailyData = await entityClass
 		.createQueryBuilder("t")
 		.select("DATE(t.created_at)", "date")
@@ -49,14 +46,12 @@ async function getTimeSeriesData(entityClass) {
 		.orderBy("DATE(t.created_at)", "ASC")
 		.getRawMany();
 	
-	// Create lookup map for daily counts
 	const dailyMap = {};
 	dailyData.forEach((row) => {
 		const dateStr = utils.formatDate(row.date);
 		dailyMap[dateStr] = Number(row.count);
 	});
 	
-	// Generate complete time series with cumulative totals
 	let cumulativeCount = 0;
 	const result = [];
 	let currentDate = new Date(startDate);
@@ -90,17 +85,14 @@ async function getTimeSeriesData(entityClass) {
 export async function getStatistics() {
 	return await withCache({
 		cacheKey: 'statistics:full',
-		ttl: 300, // 5 minutes
+		ttl: 300,
 		fetchFn: async () => {
-			// Get basic counts
 			const articlesCount = await Article.count();
 			const pastesCount = await Paste.count();
 			
-			// Set up today's date for filtering
 			const today = new Date();
 			today.setHours(0, 0, 0, 0);
 			
-			// Get today's counts in parallel
 			const [todayArticles, todayPastes] = await Promise.all([
 				Article.createQueryBuilder("a")
 					.where("a.created_at >= :today", { today })
@@ -110,7 +102,6 @@ export async function getStatistics() {
 					.getCount()
 			]);
 			
-			// Generate time series data for both entity types
 			const [articlesData, pastesData] = await Promise.all([
 				getTimeSeriesData(Article),
 				getTimeSeriesData(Paste)
@@ -141,9 +132,8 @@ export async function getStatistics() {
 export async function getCounts() {
 	return await withCache({
 		cacheKey: 'statistics:counts',
-		ttl: 120, // 2 minutes
+		ttl: 120,
 		fetchFn: async () => {
-			// Get counts in parallel for better performance
 			const [articlesCount, pastesCount] = await Promise.all([
 				Article.count(),
 				Paste.count()

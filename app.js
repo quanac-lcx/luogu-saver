@@ -92,7 +92,7 @@ export const AppDataSource = new DataSource({
 });
 
 if (!import.meta.url.endsWith('app.js')) {
-	logger.info("app.js imported as a module, skipping initialization logic.");
+	logger.info("app.js 以 import 方式导入，跳过初始化");
 }
 else {
 	AppDataSource.initialize()
@@ -103,7 +103,7 @@ else {
 		.then(() => worker.restoreQueue())
 		.then(() => {
 			app.listen(port, () => {
-				logger.info("Server is running on port " + port);
+				logger.info("服务器监听端口: " + port);
 			})
 		});
 }

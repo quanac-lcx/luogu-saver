@@ -14,11 +14,10 @@ import * as queue from "./queue.worker.js";
 import { executeTask } from "./processor.worker.js";
 import { createTask, getWaitingTasks, updateTask } from "../services/task.service.js";
 import { defaultHeaders } from "../core/request.js";
+import { SystemError } from "../core/errors.js";
 import config from "../config.js";
 
-// 并发限制配置
 const CONCURRENCY_LIMIT = config.request.concurrency;
-// 当前可用的请求令牌数量
 let requestToken = config.request.maxRequestToken;
 
 /**
@@ -30,7 +29,7 @@ export function scheduleRequestTokens() {
 	setInterval(() => {
 		if (requestToken < config.request.maxRequestToken) {
 			requestToken++;
-			logger.debug(`Refilled 1 request point, now: ${requestToken}`);
+			logger.debug(`请求点恢复 1 点, 目前点数: ${requestToken}`);
 		}
 	}, 1000);
 }
@@ -59,13 +58,13 @@ export function startQueueProcessor() {
  * 
  * @param {Object} task - 任务配置对象
  * @returns {Promise<string>} 生成的任务ID
- * @throws {Error} 当队列已满时抛出错误
+ * @throws {SystemError} 当队列已满时抛出错误
  */
 export async function pushTaskToQueue(task) {
 	if (queue.getQueueLength() >= config.queue.maxLength)
-		throw new Error('The queue is full. Please try again later.');
+		throw new SystemError('队列已满，请稍后再试');
 	task.id = await createTask(task);
-	logger.debug(`Task #${task.id} queued.`);
+	logger.debug(`任务 #${task.id} 入队`);
 	queue.pushTask(task);
 	return task.id;
 }
@@ -88,10 +87,10 @@ export async function restoreQueue() {
 				aid: task.oid,
 				type: task.type
 			});
-			logger.debug(`Task #${task.id} restored to queue.`);
+			logger.debug(`任务 #${task.id} 已恢复`);
 		} else if (task.status === 1) {
-			await updateTask(task.id, 3, "The server was restarted while processing this task. Please try again.");
-			logger.debug(`Task #${task.id} was being processed during shutdown. Marked as failed.`);
+			await updateTask(task.id, 3, "服务器重启导致状态出错");
+			logger.debug(`任务 #${task.id} 在服务器重启时正在执行, 标记为失败`);
 		}
 	}
 }

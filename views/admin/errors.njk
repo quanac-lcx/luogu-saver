@@ -35,6 +35,12 @@
                     <label>警告</label>
                 </div>
             </div>
+            <div class="field">
+                <div class="ui radio checkbox">
+                    <input type="radio" name="level" value="info" {% if level == 'info' %}checked{% endif %} onchange="filterLevel('info')">
+                    <label>用户错误</label>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -47,7 +53,8 @@
             <h4 class="ui header">
                 <i class="ui icon 
                     {% if error.level == 'error' %}exclamation circle red
-                    {% elif error.level == 'warn' %}warning sign yellow
+                    {% elif error.level == 'warn' %}warning sign orange
+                    {% elif error.level == 'info' %}user blue
                     {% else %}info circle blue{% endif %}">
                 </i>
                 {{ error.message }}

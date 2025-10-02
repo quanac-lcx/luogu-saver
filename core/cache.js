@@ -1,80 +1,71 @@
 /**
- * Redis Caching Utility with Automatic Bypass Support
- * 
- * This module provides a comprehensive caching solution with automatic
- * bypass detection through middleware context. It handles cache operations
- * with proper error handling and fallback mechanisms.
- * 
- * Features:
- * - Automatic cache bypass detection (no need to pass request objects)
- * - Error-resilient operations (failures don't break functionality)
- * - Pattern-based cache invalidation
- * - Comprehensive logging for debugging
- * 
+ * 带自动绕过支持的Redis缓存工具
+ *
+ * 此模块通过中间件上下文提供带自动绕过检测的综合缓存解决方案。
+ * 它处理缓存操作，具有适当的错误处理和回退机制。
+ *
+ * 功能特性:
+ * - 自动缓存绕过检测（无需传递请求对象）
+ * - 错误弹性操作（失败不会破坏功能）
+ * - 基于模式的缓存失效
+ * - 用于调试的综合日志记录
+ *
  * @author Copilot
  */
 
 import{shouldBypassCache} from '../middleware/cache_context.js';
 
 /**
- * Cached execution wrapper with automatic bypass support
- * 
- * This function provides a complete caching solution that:
- * - Automatically detects cache bypass requests via middleware context
- * - Handles cache read/write errors gracefully
- * - Provides fallback to fresh data when cache operations fail
- * - Supports configurable TTL for different data types
- * 
- * @param {Object} options - Configuration object
- * @param {string} options.cacheKey - The Redis cache key to use
- * @param {number} options.ttl - Time to live in seconds (0 = no caching)
- * @param {Function} options.fetchFn - Function to fetch data when cache miss or bypass
- * @returns {Promise<*>} - The cached or fresh data
- * 
+ * 带自动绕过支持的缓存执行包装器
+ *
+ * 此函数提供完整的缓存解决���案：
+ * - 通过中间件上下文自动检测缓存绕过请求
+ * - 优雅地处理缓存读写错误
+ * - 当缓存操作失败时提供新数据回退
+ * - 支持不同数据类型的可配置TTL
+ *
+ * @param {Object} options - 配置对象
+ * @param {string} options.cacheKey - 要使用的Redis缓存键
+ * @param {number} options.ttl - 存活时间（秒）(0 = 不缓存)
+ * @param {Function} options.fetchFn - 缓存未命中或绕过时获取数据的函数
+ * @returns {Promise<*>} - 缓存的或新的数据
+ *
  * @example
  * const result = await withCache({
  *   cacheKey: 'article:123',
- *   ttl: 1800, // 30 minutes
+ *   ttl: 1800, // 30分钟
  *   fetchFn: async () => await Article.findById('123')
  * });
  */
 export async function withCache({ cacheKey, ttl, fetchFn }) {
-	// Check if cache should be bypassed via middleware context
 	if (contextShouldBypassCache()) {
-		logger.debug(`Cache bypassed for key: ${cacheKey}`);
+		logger.debug(`已绕过缓存: ${cacheKey}`);
 		return await fetchFn();
 	}
-	
-	// Skip cache entirely if Redis is not connected
 	if (!isRedisConnected()) {
-		logger.debug(`Redis not connected, bypassing cache for key: ${cacheKey}`);
+		logger.debug(`Redis 未连接，正在绕过缓存： ${cacheKey}`);
 		return await fetchFn();
 	}
 	
-	// Attempt to read from cache
+
 	try {
 		const cachedResult = await redis.get(cacheKey);
 		if (cachedResult) {
-			logger.debug(`Cache hit for key: ${cacheKey}`);
 			return JSON.parse(cachedResult);
 		}
-		logger.debug(`Cache miss for key: ${cacheKey}`);
+		logger.debug(`缓存未命中: ${cacheKey}`);
 	} catch (error) {
-		// Log cache read errors but continue with fresh data fetch
-		logger.warn(`Cache read failed for key ${cacheKey}: ${error.message}`);
+		logger.warn(`缓存无法读取 ${cacheKey}: ${error.message}`);
 	}
 	
-	// Fetch fresh data from the original source
 	const result = await fetchFn();
 	
-	// Attempt to cache the result if TTL is specified and result is valid
 	if (ttl && result !== null && result !== undefined) {
 		try {
 			await redis.set(cacheKey, JSON.stringify(result), ttl);
-			logger.debug(`Cached result for key: ${cacheKey}, TTL: ${ttl}s`);
+			logger.debug(`已缓存键: ${cacheKey}, TTL: ${ttl} 秒`);
 		} catch (error) {
-			// Log cache write errors but don't fail the request
-			logger.warn(`Cache write failed for key ${cacheKey}: ${error.message}`);
+			logger.warn(`缓存键 ${cacheKey} 失败: ${error.message}`);
 		}
 	}
 	
@@ -82,13 +73,13 @@ export async function withCache({ cacheKey, ttl, fetchFn }) {
 }
 
 /**
- * Invalidate specific cache keys
- * 
- * This function handles the removal of cached data when the underlying
- * data has been modified. It supports both single keys and arrays of keys.
- * 
- * @param {string|Array<string>} keys - Single key or array of keys to invalidate
- * 
+ * 使特定缓存键失效
+ *
+ * 此函数处理当底层数据被修改时移除缓存数据。
+ * 它支持单个键和键数组。
+ *
+ * @param {string|Array<string>} keys - 要使失效的单个键或键数组
+ *
  * @example
  * await invalidateCache('article:123');
  * await invalidateCache(['article:123', 'recent_articles:10']);
@@ -103,32 +94,31 @@ export async function invalidateCache(keys) {
 	try {
 		if (typeof keys === 'string') {
 			await redis.del(keys);
-			logger.debug(`Invalidated cache key: ${keys}`);
+			logger.debug(`已使缓存失效: ${keys}`);
 		} else if (Array.isArray(keys)) {
 			if (keys.length > 0) {
-				// Use our own del method which already checks connection
 				for (const key of keys) {
 					await redis.del(key);
 				}
-				logger.debug(`Invalidated cache keys: ${keys.join(', ')}`);
+				logger.debug(`已使缓存失效： ${keys.join(', ')}`);
 			}
 		}
 	} catch (error) {
-		logger.warn(`Cache invalidation failed: ${error.message}`);
+		logger.warn(`缓存失效操作失败: ${error.message}`);
 	}
 }
 
 /**
- * Invalidate cache keys by pattern matching
- * 
- * This function finds all keys matching a pattern and removes them.
- * Useful for bulk invalidation of related cache entries.
- * 
- * @param {string} pattern - Pattern to match keys (e.g., 'problems:*', 'recent_articles:*')
- * 
+ * 通过模式匹配使缓存键失效
+ *
+ * 此函数查找所有匹配模式的键并删除它们。
+ * 对于批量失效相关缓存条目很有用。
+ *
+ * @param {string} pattern - 匹配键的模式 (例如: 'problems:*', 'recent_articles:*')
+ *
  * @example
- * await invalidateCacheByPattern('problems:*'); // Remove all problem cache entries
- * await invalidateCacheByPattern('recent_articles:*'); // Remove all recent article caches
+ * await invalidateCacheByPattern('problems:*'); // 删除所有问题缓存条目
+ * await invalidateCacheByPattern('recent_articles:*'); // 删除所有最近文章缓存
  */
 export async function invalidateCacheByPattern(pattern) {
 	// Skip if Redis is not connected
@@ -140,16 +130,15 @@ export async function invalidateCacheByPattern(pattern) {
 	try {
 		const keys = await this.redis.keys(pattern);
 		if (keys.length > 0) {
-			// Use our own del method which already checks connection
 			for (const key of keys) {
 				await redis.del(key);
 			}
-			logger.debug(`Invalidated ${keys.length} cache keys matching pattern: ${pattern}`);
+			logger.debug(`已使 ${keys.length} 条缓存失效： ${pattern}`);
 		} else {
-			logger.debug(`No cache keys found for pattern: ${pattern}`);
+			logger.debug(`未找到匹配模式的缓存: ${pattern}`);
 		}
 	} catch (error) {
-		logger.warn(`Cache pattern invalidation failed for ${pattern}: ${error.message}`);
+		logger.warn(`匹配 ${pattern} 的缓存失效操作失败: ${error.message}`);
 	}
 }
 

@@ -12,10 +12,10 @@ export async function handleFetch({ resp }, type) {
 		try {
 			return makeResponse(true, { data: await handler(resp, type) });
 		} catch (err) {
-			return makeResponse(false, { message: `An error occurred while handling type ${type}: ${err.message}` });
+			return makeResponse(false, { message: `处理类型 ${type} 任务时出错: ${err.message}` });
 		}
 	}
 	else {
-		return makeResponse(false, { message: `No handler for type ${type}` });
+		return makeResponse(false, { message: `没有针对类型 ${type} 任务的处理器` });
 	}
 }

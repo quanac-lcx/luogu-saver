@@ -1,5 +1,6 @@
 import axios from 'axios';
 import config from "../config.js";
+import { NetworkError } from "./errors.js";
 
 export const defaultHeaders = config.requestHeader;
 
@@ -22,27 +23,46 @@ export function mergeSetCookieToHeaders(response, headers) {
 }
 
 export async function fetchContent(url, headers = {}, { c3vk = "new", timeout = 30000 } = {}) {
-	logger.debug(`Fetching URL: ${url} with c3vk mode: ${c3vk}`);
+	logger.debug(`抓取网页: ${url}, c3vk 模式: ${c3vk}`);
 	const h = { ...defaultHeaders, ...headers };
-	let resp = await axios.get(url, {
-		...frontendFetchConfig,
-		headers: h,
-		timeout
-	});
-	if (c3vk === "legacy") resp = await handleLegacyC3VK(resp, url, h, timeout);
-	mergeSetCookieToHeaders(resp, h);
-	if (c3vk === "new" && resp.status === 302 && resp.headers.location) {
-		mergeSetCookieToHeaders(resp, h);
+	let resp;
+	try {
 		resp = await axios.get(url, {
 			...frontendFetchConfig,
 			headers: h,
 			timeout
 		});
+	} catch (err) {
+		if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' ||
+		    err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' ||
+		    err.code === 'ECONNRESET' || err.message?.includes('timeout')) {
+			throw new NetworkError(`网络请求失败: ${err.message}`);
+		}
+		throw err;
 	}
-	logger.debug(`Fetched URL: ${url} with status: ${resp.status}`);
+	
+	if (c3vk === "legacy") resp = await handleLegacyC3VK(resp, url, h, timeout);
+	mergeSetCookieToHeaders(resp, h);
+	if (c3vk === "new" && resp.status === 302 && resp.headers.location) {
+		mergeSetCookieToHeaders(resp, h);
+		try {
+			resp = await axios.get(url, {
+				...frontendFetchConfig,
+				headers: h,
+				timeout
+			});
+		} catch (err) {
+			if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' || 
+			    err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' ||
+			    err.code === 'ECONNRESET' || err.message?.includes('timeout')) {
+				throw new NetworkError(`网络请求失败: ${err.message}`);
+			}
+			throw err;
+		}
+	}
+	logger.debug(`已抓取网页: ${url}, 状态码: ${resp.status}`);
 	if (resp.status === 401) {
-		logger.debug(`It seems that your cookies have expired.`);
-		logger.debug(`Your cookies: ${headers.Cookie}`);
+		logger.debug(`Cookies 过期: ${headers.Cookie}`);
 	}
 	return { resp, headers: h };
 }

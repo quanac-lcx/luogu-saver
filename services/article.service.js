@@ -16,6 +16,7 @@
 import Article from "../models/article.js";
 import ArticleVersion from "../models/article_version.js";
 import { withCache, invalidateCache, invalidateCacheByPattern } from "../core/cache.js";
+import { ValidationError, NotFoundError } from "../core/errors.js";
 
 /**
  * 保存或更新带版本历史的文章
@@ -24,13 +25,13 @@ import { withCache, invalidateCache, invalidateCacheByPattern } from "../core/ca
  * 它维护版本历史并自动使相关缓存条目失效。
  * 
  * @param {Object} task - 包含文章元数据的任务对象
- * @param {string} task.aid - 文章ID
+ * @param {string} task.aid - 文章 ID
  * @param {Object} obj - 文章数据对象
  * @param {string} obj.title - 文章标题
  * @param {string} obj.content - 文章内容
- * @param {Object} obj.userData - 包含uid的用户数据
+ * @param {Object} obj.userData - 包含 uid 的用户数据
  * @param {number} obj.category - 文章分类
- * @param {Object} obj.solutionFor - 题解元数据（用于分类2）
+ * @param {Object} obj.solutionFor - 题解元数据（用于分类 2）
  * @param {Function} [onProgress] - 可选的进度回调函数
  */
 
@@ -39,9 +40,8 @@ export async function saveArticle(task, obj, onProgress) {
 	let article = await Article.findById(aid);
 	const newHash = utils.hashContent(obj.content);
 	
-	// Create new article if it doesn't exist
 	if (!article) {
-		onProgress?.(1, "Creating new article...");
+		onProgress?.(1, "创建新文章...");
 		article = Article.create({
 			id: aid,
 			title: obj.title,
@@ -53,23 +53,19 @@ export async function saveArticle(task, obj, onProgress) {
 		});
 		await article.save();
 	} else {
-		// Update existing article if content has changed
 		let oldHash = article.content_hash;
 		if (!oldHash) {
-			// Generate hash for existing content if not present
 			oldHash = utils.hashContent(article.content);
 			article.content_hash = oldHash;
 			await article.save();
 		}
 		
-		// Skip update if title and content are unchanged
 		if (article.title === obj.title && oldHash === newHash) {
-			onProgress?.(2, "The article is already up-to-date.");
+			onProgress?.(2, "文章已是最新状态");
 			return;
 		}
 		
-		// Update article with new content
-		onProgress?.(1, "Updating existing article...");
+		onProgress?.(1, "更新文章...");
 		article.title = obj.title;
 		article.content = obj.content;
 		article.author_uid = obj.userData.uid;
@@ -79,8 +75,7 @@ export async function saveArticle(task, obj, onProgress) {
 		await article.save();
 	}
 	
-	// Create version history entry
-	onProgress?.(1, "Updating version history...");
+	onProgress?.(1, "更新版本历史...");
 	const latestVersion = await ArticleVersion.getLatestVersion(aid);
 	const nextVersion = latestVersion ? latestVersion.version + 1 : 1;
 	const newVersion = ArticleVersion.create({
@@ -91,20 +86,20 @@ export async function saveArticle(task, obj, onProgress) {
 	});
 	await newVersion.save();
 	
-	// Invalidate all related cache entries
 	await Promise.all([
 		invalidateCache(`article:${aid}`),
 		invalidateCacheByPattern('recent_articles:*'),
 		invalidateCache(['statistics:full', 'statistics:counts'])
 	]);
+	onProgress?.(2, "更新完成");
 }
 
 /**
  * 获取支持缓存的最新文章
  * 
  * 检索最近更新的文章，按优先级和更新时间排序。
- * 结果缓存10分钟以提高性能。缓存会自动识别
- * 通过_bypassRedis=1参数的绕过请求。
+ * 结果缓存 10 分钟以提高性能。缓存会自动识别
+ * 通过 _bypassRedis=1 参数的绕过请求。
  * 
  * @param {number} count - 要检索的最大文章数量
  * @returns {Promise<Array>} 包含格式化日期和摘要的文章对象数组
@@ -112,20 +107,17 @@ export async function saveArticle(task, obj, onProgress) {
 export async function getRecentArticles(count) {
 	return await withCache({
 		cacheKey: `recent_articles:${count}`,
-		ttl: 600, // 10 minutes
+		ttl: 600,
 		fetchFn: async () => {
-			// Fetch articles from database
 			let articles = await Article.find({
 				where: {deleted: false},
 				order: {priority: 'DESC', updated_at: 'DESC'},
 				take: count
 			});
 			
-			// Process each article with relationships and formatting
 			articles = await Promise.all(articles.map(async(article) => {
 				await article.loadRelationships();
 				article.formatDate();
-				article.summary = article.content.slice(0, 200); // Create summary
 				article.tags = JSON.parse(article.tags);
 				return article;
 			}));
@@ -136,34 +128,31 @@ export async function getRecentArticles(count) {
 }
 
 /**
- * 通过ID获取支持缓存的文章
+ * 通过 ID 获取支持缓存的文章
  * 
- * 通过ID检索特定文章，包括渲染的内容。
- * 结果缓存30分钟。对已删除的文章会抛出错误。
+ * 通过 ID 检索特定文章，包括渲染的内容。
+ * 结果缓存 30 分钟。对已删除的文章会抛出错误。
  * 缓存会自动识别绕过请求。
  * 
- * @param {string} id - 文章ID（必须是8个字符）
- * @returns {Promise<Object|null>} 包含article和renderedContent的对象，如果未找到则返回null
- * @throws {Error} 如果ID无效或文章已被删除
+ * @param {string} id - 文章 ID（必须是 8 个字符）
+ * @returns {Promise<Object|null>} 包含 article 和 renderedContent 的对象，如果未找到则返回 null
+ * @throws {Error} 如果 ID 无效或文章已被删除
  */
 export async function getArticleById(id) {
-	if (id.length !== 8) throw new Error("Invalid article ID.");
+	if (id.length !== 8) throw new ValidationError("文章 ID 无效");
 	
 	return await withCache({
 		cacheKey: `article:${id}`,
-		ttl: 1800, // 30 minutes
+		ttl: 1800,
 		fetchFn: async () => {
 			const article = await Article.findById(id);
 			if (!article) return null;
 			
-			// Load relationships and format dates
 			await article.loadRelationships();
 			article.formatDate();
 			
-			// Check if article is deleted
-			if (article.deleted) throw new Error(`The article (ID: ${id}) has been deleted: ${article.deleted_reason}`);
+			if (article.deleted) throw new NotFoundError(`文章 (ID: ${id}) 已被删除：${article.deleted_reason}`);
 			
-			// Process and render content
 			const sanitizedContent = utils.sanitizeLatex(article.content);
 			const renderedContent = renderer.renderMarkdown(sanitizedContent);
 			

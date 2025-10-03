@@ -129,7 +129,7 @@ export async function invalidateCacheByPattern(pattern) {
 			for (const key of keys) {
 				await redis.del(key);
 			}
-			logger.debug(`已使 ${keys.length} 条缓存失效： ${pattern}`);
+			logger.debug(`已使 ${keys.length} 条缓存失效: ${pattern}`);
 		} else {
 			logger.debug(`未找到匹配模式的缓存: ${pattern}`);
 		}

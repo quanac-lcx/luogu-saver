@@ -124,7 +124,7 @@ export async function invalidateCacheByPattern(pattern) {
 	}
 	
 	try {
-		const keys = await this.redis.keys(pattern);
+		const keys = await redis.keys(pattern);
 		if (keys.length > 0) {
 			for (const key of keys) {
 				await redis.del(key);

@@ -131,6 +131,24 @@
     }
     
     /* Adjust propaganda card for mobile */
+    /* Fallback for aspect-ratio using padding-top technique */
+    .card.propaganda {
+        position: relative;
+        width: 100%;
+        /* Fallback for older browsers */
+    }
+    .card.propaganda::before {
+        content: "";
+        display: block;
+        padding-top: 75%; /* 4:3 aspect ratio */
+    }
+    .card.propaganda > * {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
     .card.propaganda {
         aspect-ratio: 4 / 3;
     }

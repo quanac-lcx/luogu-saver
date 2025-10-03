@@ -1,5 +1,6 @@
 import { AppDataSource } from "../app.js";
 import { DatabaseError } from "../core/errors.js";
+import { formatDate } from "../core/utils.js";
 
 export class BaseModel {
 
@@ -127,9 +128,9 @@ export class BaseModel {
 	}
 	
 	formatDate() {
-		if (this.created_at) this.created_at = utils.formatDate(this.created_at);
-		if (this.updated_at) this.updated_at = utils.formatDate(this.updated_at);
-		if (this.expire_time) this.expire_time = utils.formatDate(this.expire_time);
+		if (this.created_at) this.created_at = formatDate(this.created_at);
+		if (this.updated_at) this.updated_at = formatDate(this.updated_at);
+		if (this.expire_time) this.expire_time = formatDate(this.expire_time);
 		return this;
 	}
 }

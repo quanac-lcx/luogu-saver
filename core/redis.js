@@ -46,6 +46,7 @@ export default class RedisManager {
 		
 		this.redis.on('error', (err) => {
 			this.connected = false;
+			this.reconnectAttempts++;
 			console.error('Redis 连接发生错误:', err.message);
 			if (err.code === 'ECONNREFUSED' && this.reconnectAttempts >= this.maxReconnectAttempts) {
 				console.warn('Redis连接失败。正在禁用Redis……');

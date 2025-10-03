@@ -9,7 +9,12 @@ export function getResponseObject(response, type = 0) {
 		const dataObj = JSON.parse(contextElement.text().trim());
 		return dataObj.data?.article;
 	}
-	else return response.data?.currentData?.paste;
+	else if (type === 1) {
+		return response.data?.currentData?.paste;
+	}
+	else if (type === 2) {
+		return response.data?.currentData;
+	}
 }
 
 export function getResponseUser(response) {

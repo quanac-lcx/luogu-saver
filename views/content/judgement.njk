@@ -1,0 +1,192 @@
+{% extends "layout.njk" %}
+
+{% block extra_header %}
+    <style>
+        .ostracon {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+        .ostracon-card {
+            border-radius: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+        }
+        .ostracon-header {
+            background-color: #f8f9fa;
+            border-radius: 1rem 1rem 0 0;
+            padding: 0.75rem 1.5rem;
+        }
+        .ostracon-body {
+            padding: 1rem 1.5rem;
+        }
+        .ostracon-time {
+            color: #6c757d;
+        }
+        .ostracon-avatar {
+            position: absolute;
+            right: 1rem;
+            bottom: 1rem;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+        }
+        .permission-list {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }
+        .permission-list li {
+            margin: 0.25rem 0;
+        }
+        .permission-list code {
+            background-color: #e9ecef;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-size: 0.9em;
+        }
+        .user-info {
+            color: #6c757d;
+        }
+        .pagination {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="ui grid">
+        <div class="sixteen wide column">
+            <div class="card shadow outline">
+                <h1 class="ui header">陶片放逐</h1>
+                <p>记录洛谷平台上的用户权限变更历史</p>
+                <a href="javascript:void(0)" id="save-btn" class="ui positive button">
+                    <i class="ui icon sync alternate"></i> 更新陶片放逐记录
+                </a>
+            </div>
+        </div>
+        
+        {% if judgements and judgements.length > 0 %}
+            {% for judgement in judgements %}
+            <div class="sixteen wide column">
+                <div class="ostracon">
+                    <div class="ostracon-card">
+                        <div class="ostracon-header">
+                            <span class="ostracon-time">{{ judgement.formatted_date }}</span>
+                        </div>
+                        <div class="ostracon-body">
+                            <div>
+                                {% if judgement.permission_granted > 0 or judgement.permission_revoked > 0 %}
+                                    <ul class="permission-list">
+                                        {% if judgement.permission_granted > 0 %}
+                                            {% set granted_names = judgement.permission_granted | getPermissionNames %}
+                                            {% for name in granted_names %}
+                                                <li>授予 <code>{{ name }}</code> 权限</li>
+                                            {% endfor %}
+                                        {% endif %}
+                                        {% if judgement.permission_revoked > 0 %}
+                                            {% set revoked_names = judgement.permission_revoked | getPermissionNames %}
+                                            {% for name in revoked_names %}
+                                                <li>撤销 <code>{{ name }}</code> 权限</li>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </ul>
+                                {% endif %}
+                                <p>{{ judgement.reason }}。</p>
+                            </div>
+                            <span class="user-info">
+                                <i class="ui icon arrow alternate circle right"></i>
+                                {% if judgement.user %}
+                                    <a href="/user/{{ judgement.user.id }}" class="user-{{ judgement.user.color }}">
+                                        {{ judgement.user.name }}
+                                    </a>
+                                {% else %}
+                                    <span class="user-Gray">用户 {{ judgement.user_uid }}</span>
+                                {% endif %}
+                            </span>
+                            {% if judgement.user %}
+                                <img class="ostracon-avatar d-none d-md-block" 
+                                     src="https://cdn.luogu.com.cn/upload/usericon/{{ judgement.user.id }}.png"
+                                     alt="user avatar">
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+            <div class="sixteen wide column">
+                <div class="pagination">
+                    {% if page > 1 %}
+                        <a href="/judgement?page={{ page - 1 }}&per_page={{ perPage }}" class="ui button">
+                            <i class="ui icon arrow left"></i> 上一页
+                        </a>
+                    {% endif %}
+                    <span class="ui button disabled">第 {{ page }} 页</span>
+                    {% if hasMore %}
+                        <a href="/judgement?page={{ page + 1 }}&per_page={{ perPage }}" class="ui button">
+                            下一页 <i class="ui icon arrow right"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="sixteen wide column">
+                <div class="card shadow outline">
+                    <div style="text-align: center; padding: 50px 0;">
+                        <i class="ui icon info circle" style="font-size: 3rem; color: gray;"></i>
+                        <div style="font-size: 1.5rem; color: gray; margin-top: 10px;">暂无陶片放逐记录</div>
+                        <div style="margin-top: 10px;">请点击上方的"更新陶片放逐记录"按钮以获取最新记录</div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <script>
+        document.getElementById("save-btn")?.addEventListener("click", async () => {
+            try {
+                const response = await fetch('/judgement/save');
+                
+                if (response.status === 429) {
+                    const retryAfter = response.headers.get("Retry-After");
+                    const waitSec = retryAfter ? parseInt(retryAfter, 10) : null;
+                    Swal.fire({
+                        title: "请求过于频繁",
+                        text: waitSec ? `请等待 ${waitSec} 秒后再试` : "请稍后再试",
+                        icon: "warning",
+                        confirmButtonText: "确定"
+                    });
+                    return;
+                }
+                
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || `HTTP ${response.status}`);
+                }
+                
+                const tid = data.result;
+                Swal.fire({
+                    title: "请求已入队",
+                    text: "您的请求已加入队列，任务 ID: " + tid,
+                    icon: "success",
+                    confirmButtonText: "查看进度",
+                    showCancelButton: true,
+                    cancelButtonText: "继续保存",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = "/task/" + encodeURIComponent(tid);
+                    }
+                });
+            } catch (err) {
+                console.error(err);
+                Swal.fire({
+                    title: "保存失败",
+                    text: err.message || "网络错误或请求过于频繁，请稍后再试",
+                    icon: "error",
+                    confirmButtonText: "确定"
+                });
+            }
+        });
+    </script>
+{% endblock %}

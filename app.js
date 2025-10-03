@@ -15,6 +15,7 @@ import indexRouter from './routes/index.route.js';
 import problemRouter from './routes/problem.route.js';
 import benbenRouter from './routes/benben.route.js';
 import adminRouter from './routes/admin.route.js';
+import judgementRouter from './routes/judgement.route.js';
 
 import * as renderer from "./core/markdown.js";
 import * as utils from "./core/utils.js";
@@ -41,7 +42,12 @@ import * as worker from "./workers/index.worker.js";
 
 const app = express();
 const port = config.port;
-nunjucks.configure("views", { autoescape: true, express: app, watch: true });
+const nunjucksEnv = nunjucks.configure("views", { autoescape: true, express: app, watch: true });
+
+// Add custom Nunjucks filters
+nunjucksEnv.addFilter('getPermissionNames', (permission) => {
+	return utils.getPermissionNames(permission);
+});
 
 app.use(cookieParser());
 app.set('trust proxy', true);
@@ -65,6 +71,7 @@ app.use('/api', apiRouter);
 app.use('/problem', problemRouter);
 app.use('/benben', benbenRouter);
 app.use('/admin', adminRouter);
+app.use('/judgement', judgementRouter);
 
 app.use(notFound);
 app.use(errorDisplay);

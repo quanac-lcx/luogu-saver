@@ -49,14 +49,21 @@ function executeCrawl(uid) {
 		.then(response => response.json())
 		.then(data => {
 			if (data.success) {
+				const tid = data.result;
 				Swal.fire({
-					title: '成功',
-					text: data.message || '抓取任务已提交',
+					title: '请求已入队',
+					text: '您的请求已加入队列，任务 ID: ' + tid,
 					icon: 'success',
-					confirmButtonText: '确定'
-				}).then(() => {
-					// 清空输入框
-					document.getElementById('uid-input').value = '';
+					confirmButtonText: '查看进度',
+					showCancelButton: true,
+					cancelButtonText: '继续抓取'
+				}).then((result) => {
+					if (result.isConfirmed) {
+						window.location.href = '/task/' + encodeURIComponent(tid);
+					} else {
+						// 清空输入框
+						document.getElementById('uid-input').value = '';
+					}
 				});
 			} else {
 				Swal.fire({

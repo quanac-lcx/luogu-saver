@@ -9,7 +9,10 @@ import { fetchContent } from "../core/request.js";
 import { withCache } from "../core/cache.js";
 import { benbenCallbacks } from "../core/storage.js";
 import config from "../config.js";
-import { formatDate, makeApiUrl } from "../core/utils.js";
+import { formatDate, makeApiUrl, sanitizeLatex } from "../core/utils.js";
+import { createMarkdownRenderer } from "../core/markdown.js";
+
+const renderer = createMarkdownRenderer();
 
 export async function getStatistics() {
 	return withCache({
@@ -36,10 +39,15 @@ function formatData(item) {
 	item.grabTime = undefined;
 	item.send_time = formatDate(new Date(item.time));
 	item.time = undefined;
+	item.user_color = item.userColor;
 	item.userColor = undefined;
 	item.user_id = item.userId;
 	item.userId = undefined;
+	item.user_name = item.username;
 	item.username = undefined;
+	// Render markdown content
+	const sanitizedContent = sanitizeLatex(item.content || '');
+	item.rendered_content = renderer.renderMarkdown(sanitizedContent);
 	return item;
 }
 

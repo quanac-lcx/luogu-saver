@@ -2,6 +2,11 @@
 
 {% block extra_header %}
 <script src="/static/self/js/benben_mentions.js"></script>
+<link rel="stylesheet" href="/static/self/css/markdown.css" />
+<link rel="stylesheet" href="/static/katex/katex.min.css">
+<script defer src="/static/katex/katex.min.js"></script>
+<script defer src="/static/katex/contrib/auto-render.min.js"></script>
+<script type="module" src="/static/self/js/render.js"></script>
 <style>
     .benben-item {
         padding: 15px;
@@ -17,6 +22,10 @@
     .benben-meta {
         color: #6b7280;
         font-size: 0.9em;
+    }
+    .benben-header img {
+        width: 48px;
+        height: 48px;
     }
 </style>
 {% endblock %}

@@ -144,11 +144,11 @@
     </div>
 
     <script>
-		{% if isMobile %}
 		function toggleMobileSidebar() {
+			{% if isMobile %}
 			document.body.classList.toggle('mobile-sidebar-visible');
+			{% endif %}
 		}
-		{% endif %}
 
 		const siteStartDate = new Date("2025-02-12T00:00:00Z");
 		const now = new Date();

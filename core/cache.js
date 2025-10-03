@@ -96,7 +96,7 @@ export async function invalidateCache(keys) {
 		} else if (Array.isArray(keys)) {
 			if (keys.length > 0) {
 				await redis.redis.del(...keys);
-				logger.debug(`已使缓存失效： ${keys.join(', ')}`);
+				logger.debug(`已使缓存失效: ${keys.join(', ')}`);
 			}
 		}
 	} catch (error) {

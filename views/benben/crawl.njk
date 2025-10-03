@@ -1,0 +1,56 @@
+{% extends "layout.njk" %}
+
+{% block extra_header %}
+<script src="/static/self/js/benben_crawl.js"></script>
+<style>
+    .info-section {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f0f9ff;
+        border-left: 4px solid #3b82f6;
+    }
+    .info-section h4 {
+        margin-top: 0;
+        color: #1e40af;
+    }
+    .info-section ul {
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="ui grid">
+        <div class="sixteen wide column">
+            <div class="card shadow">
+                <h1 class="ui center aligned header">
+                    <span><i class="ui cloud download icon colored"></i>犇犇抓取</span>
+                    <div class="sub header" style="margin-top: 10px;">抓取指定用户的犇犇到数据库</div>
+                </h1>
+            </div>
+        </div>
+    </div>
+    <div class="ui grid">
+        <div class="sixteen wide column">
+            <div class="card shadow outline">
+                <div class="ui icon fluid input">
+                    <input type="text" id="uid-input" placeholder="输入用户 UID">
+                    <i class="inverted circular save link icon" onclick="performCrawl()"></i>
+                </div>
+            </div>
+            
+            <div class="card shadow outline">
+                <div class="info-section">
+                    <h4><i class="info circle icon"></i>使用说明</h4>
+                    <ul>
+                        <li>输入要抓取的用户 UID</li>
+                        <li>点击保存图标或按回车键开始抓取</li>
+                        <li>抓取任务会被加入队列，系统会自动处理</li>
+                        <li>如果该用户已在队列中，将无法重复添加</li>
+                        <li>抓取完成后，可以在"用户历史"页面查看结果</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

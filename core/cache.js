@@ -41,6 +41,10 @@ export async function withCache({ cacheKey, ttl, fetchFn }) {
 	if (shouldBypassCache()) {
 		return await fetchFn();
 	}
+	if (!isRedisConnected()) {
+		logger.debug(`Redis 未连接，正在绕过缓存: ${cacheKey}`);
+		return await fetchFn();
+	}
 	
 	try {
 		const cachedResult = await redis.get(cacheKey);
@@ -79,6 +83,12 @@ export async function withCache({ cacheKey, ttl, fetchFn }) {
  * await invalidateCache(['article:123', 'recent_articles:10']);
  */
 export async function invalidateCache(keys) {
+	// Skip if Redis is not connected
+	if (!isRedisConnected()) {
+		logger.debug('Redis未连接，跳过缓存失效操作');
+		return;
+	}
+	
 	try {
 		if (typeof keys === 'string') {
 			await redis.del(keys);
@@ -107,10 +117,16 @@ export async function invalidateCache(keys) {
  * await invalidateCacheByPattern('recent_articles:*'); // 删除所有最近文章缓存
  */
 export async function invalidateCacheByPattern(pattern) {
+	// 如果 Redis 未连接，则跳过。
+	if (!isRedisConnected()) {
+		logger.debug('Redis 未连接，跳过基于模式的缓存失效');
+		return;
+	}
+	
 	try {
-		const keys = await redis.redis.keys(pattern);
+		const keys = await redis.keys(pattern);
 		if (keys.length > 0) {
-			await redis.redis.del(...keys);
+			await redis.del(...keys);
 			logger.debug(`已使 ${keys.length} 条缓存失效: ${pattern}`);
 		} else {
 			logger.debug(`未找到匹配模式的缓存: ${pattern}`);
@@ -118,4 +134,13 @@ export async function invalidateCacheByPattern(pattern) {
 	} catch (error) {
 		logger.warn(`匹配 ${pattern} 的缓存失效操作失败: ${error.message}`);
 	}
+}
+
+/**
+ * Check if Redis is connected
+ * 
+ * @returns {boolean} - Whether Redis is connected
+ */
+function isRedisConnected() {
+	return redis && typeof redis.isConnected === 'function' && redis.isConnected();
 }

@@ -35,6 +35,7 @@ import notFound from "./middleware/not_found.js";
 import errorDisplay from "./middleware/error_display.js";
 import getIP from "./middleware/get_ip.js";
 import cacheContextMiddleware from "./middleware/cache_context.js";
+import mobileDetect from "./middleware/mobile_detect.js";
 
 import * as worker from "./workers/index.worker.js";
 
@@ -51,6 +52,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(getIP);
 app.use(logging);
 app.use(cacheContextMiddleware);
+app.use(mobileDetect);
 app.use(auth);
 
 app.use('/', indexRouter);

@@ -1,0 +1,198 @@
+/* Mobile-specific styles */
+
+/* Mobile devices (max-width: 767px) */
+@media only screen and (max-width: 767px) {
+    /* Hide sidebar on mobile */
+    .ui.left.hover.sidebar.labeled.icon.menu.fixed.visible {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    
+    /* Remove body margin for mobile */
+    body {
+        width: 100% !important;
+        margin-left: 0 !important;
+        padding: 0 10px !important;
+    }
+    
+    /* Adjust main container for mobile */
+    .ui.main.container {
+        margin-top: 60px !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+    
+    /* Add mobile menu toggle button */
+    .mobile-menu-toggle {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 1000;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 10px 15px;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .mobile-menu-toggle i {
+        font-size: 1.5em;
+        color: #333;
+    }
+    
+    /* Show sidebar when active */
+    body.mobile-sidebar-visible .ui.left.hover.sidebar.labeled.icon.menu.fixed.visible {
+        transform: translateX(0);
+        width: 250px !important;
+        z-index: 999;
+        padding-top: 60px;
+    }
+    
+    /* Move menu toggle button to top of sidebar when visible */
+    body.mobile-sidebar-visible .mobile-menu-toggle {
+        left: 10px;
+        top: 10px;
+        z-index: 1001;
+        background: #f8f8f8;
+        border-color: #ccc;
+    }
+    
+    /* Mobile sidebar overlay */
+    .mobile-sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 998;
+    }
+    
+    body.mobile-sidebar-visible .mobile-sidebar-overlay {
+        display: block;
+    }
+    
+    /* Adjust card padding for mobile */
+    .card {
+        padding: 15px !important;
+        margin-top: 10px;
+    }
+    
+    /* Make tables responsive */
+    .ui.table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Adjust footer for mobile */
+    .ui.vertical.footer.segment {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+    
+    .ui.vertical.footer.segment .grid {
+        flex-direction: column;
+    }
+    
+    .ui.vertical.footer.segment .grid .column {
+        width: 100% !important;
+        margin-bottom: 20px;
+        float: none !important;
+    }
+    
+    .ui.vertical.footer.segment .grid .column.right.floated {
+        text-align: left !important;
+    }
+    
+    /* Stack footer links vertically on mobile */
+    .ui.vertical.footer.segment p {
+        margin-bottom: 10px;
+    }
+    
+    .ui.vertical.footer.segment .footer-link {
+        display: inline-block;
+        margin-bottom: 5px;
+    }
+    
+    /* Adjust form fields for mobile */
+    .ui.form .field {
+        margin-bottom: 1em;
+    }
+    
+    /* Make sidebar items always visible on mobile when sidebar is open */
+    body.mobile-sidebar-visible .ui.left.hover.sidebar.labeled.icon.menu > .item > span {
+        opacity: 1 !important;
+        margin-left: 12px !important;
+        display: inline !important;
+    }
+    
+    /* Adjust propaganda card for mobile */
+    /* Use aspect-ratio if supported */
+    @supports (aspect-ratio: 4 / 3) {
+        .card.propaganda {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+        }
+        .card.propaganda > * {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    }
+    /* Fallback for aspect-ratio using padding-top technique */
+    @supports not (aspect-ratio: 4 / 3) {
+        .card.propaganda {
+            position: relative;
+            width: 100%;
+        }
+        .card.propaganda::before {
+            content: "";
+            display: block;
+            padding-top: 75%; /* 4:3 aspect ratio */
+        }
+        .card.propaganda > * {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    }
+    /* Smaller text for mobile */
+    body {
+        font-size: 14px;
+    }
+    
+    h1.ui.header {
+        font-size: 1.5em !important;
+    }
+    
+    h2.ui.header {
+        font-size: 1.3em !important;
+    }
+    
+    h3.ui.header {
+        font-size: 1.1em !important;
+    }
+}
+
+/* Tablet devices (768px - 991px) */
+@media only screen and (min-width: 768px) and (max-width: 991px) {
+    /* Slightly reduce sidebar width for tablets */
+    .ui.left.hover.sidebar.labeled.icon.menu:hover {
+        width: 150px;
+    }
+    
+    /* Adjust body margin for tablets */
+    body {
+        margin-left: 80px !important;
+        width: calc(100% - 70px) !important;
+    }
+}

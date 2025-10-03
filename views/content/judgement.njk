@@ -8,7 +8,6 @@
         }
         .ostracon-card {
             border-radius: 1rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
         }
         .ostracon-header {
             background-color: #f8f9fa;
@@ -17,6 +16,8 @@
         }
         .ostracon-body {
             padding: 1rem 1.5rem;
+            position: relative;
+            min-height: 80px;
         }
         .ostracon-time {
             color: #6c757d;
@@ -45,7 +46,7 @@
         .user-info {
             color: #6c757d;
         }
-        .pagination {
+        .pagination-container {
             margin-top: 2rem;
             display: flex;
             justify-content: center;
@@ -70,7 +71,7 @@
             {% for judgement in judgements %}
             <div class="sixteen wide column">
                 <div class="ostracon">
-                    <div class="ostracon-card">
+                    <div class="card shadow outline ostracon-card">
                         <div class="ostracon-header">
                             <span class="ostracon-time">{{ judgement.formatted_date }}</span>
                         </div>
@@ -105,9 +106,10 @@
                                 {% endif %}
                             </span>
                             {% if judgement.user %}
-                                <img class="ostracon-avatar d-none d-md-block" 
+                                <img class="ostracon-avatar" 
                                      src="https://cdn.luogu.com.cn/upload/usericon/{{ judgement.user.id }}.png"
-                                     alt="user avatar">
+                                     alt="user avatar"
+                                     onerror="this.src='https://cdn.luogu.com.cn/upload/usericon/3.png'">
                             {% endif %}
                         </div>
                     </div>
@@ -116,7 +118,7 @@
             {% endfor %}
             
             <div class="sixteen wide column">
-                <div class="pagination">
+                <div class="pagination-container">
                     {% if page > 1 %}
                         <a href="/judgement?page={{ page - 1 }}&per_page={{ perPage }}" class="ui button">
                             <i class="ui icon arrow left"></i> 上一页

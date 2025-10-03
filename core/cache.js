@@ -126,9 +126,7 @@ export async function invalidateCacheByPattern(pattern) {
 	try {
 		const keys = await redis.keys(pattern);
 		if (keys.length > 0) {
-			for (const key of keys) {
-				await redis.del(key);
-			}
+			await redis.del(...keys);
 			logger.debug(`已使 ${keys.length} 条缓存失效: ${pattern}`);
 		} else {
 			logger.debug(`未找到匹配模式的缓存: ${pattern}`);

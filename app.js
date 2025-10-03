@@ -38,6 +38,8 @@ import cacheContextMiddleware from "./middleware/cache_context.js";
 import mobileDetect from "./middleware/mobile_detect.js";
 
 import * as worker from "./workers/index.worker.js";
+import { warmUpBenbenStatistics } from "./jobs/warm_up.js";
+import { startWebSocketWorker } from "./workers/websocket.worker.js";
 
 const app = express();
 const port = config.port;
@@ -69,7 +71,6 @@ app.use('/admin', adminRouter);
 app.use(notFound);
 app.use(errorDisplay);
 
-global.utils = utils;
 global.logger = logger;
 global.renderer = renderer.createMarkdownRenderer();
 global.worker = worker;
@@ -79,9 +80,9 @@ global.redis = new RedisManager({
 	password: config.redis.password,
 	db: config.redis.db
 });
+global.listener = startWebSocketWorker();
 
-worker.scheduleRequestTokens();
-worker.startQueueProcessor();
+worker.startWorker();
 
 export const AppDataSource = new DataSource({
 	...ormConfig,
@@ -99,8 +100,9 @@ if (!import.meta.url.endsWith('app.js')) {
 else {
 	AppDataSource.initialize()
 		.then(() => {
-			scheduleJob('0/10 * * * *', cleanup)
-			scheduleJob('0 0 * * *', updateProblems)
+			scheduleJob('0/10 * * * *', cleanup);
+			scheduleJob('0 0 * * *', updateProblems);
+			scheduleJob('0/5 * * * *', warmUpBenbenStatistics);
 		})
 		.then(() => worker.restoreQueue())
 		.then(() => {

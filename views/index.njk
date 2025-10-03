@@ -37,7 +37,7 @@
         </div>
     </div>
     <div class="ui grid" style="margin-top: -20px;">
-        <div class="eleven wide column">
+        <div class="{% if isMobile %}sixteen wide{% else %}eleven wide{% endif %} column">
             <div class="card shadow">
                 <h3 class="ui header">
                     <i class="ui icon bullhorn colored"></i> 公告
@@ -67,19 +67,21 @@
                 </div>
             </div>
         </div>
-        <div class="five wide column">
-            <div class="row">
-                <div class="card outline shadow" style="text-align: center;">
-                    <i class="ui icon newspaper colored" style="font-size: 3rem;"></i>
-                    <div style="font-size: 2.5rem; font-weight: 550; margin-top: 8px;">{{ article_count }}</div>
-                    <div style="font-size: 1.2rem; margin-top: 12px;">专栏文章</div>
+        <div class="{% if isMobile %}sixteen wide{% else %}five wide{% endif %} column">
+            <div class="ui {% if isMobile %}two column grid{% endif %}">
+                <div class="{% if isMobile %}column{% else %}row{% endif %}">
+                    <div class="card outline shadow" style="text-align: center;">
+                        <i class="ui icon newspaper colored" style="font-size: 3rem;"></i>
+                        <div style="font-size: 2.5rem; font-weight: 550; margin-top: 8px;">{{ article_count }}</div>
+                        <div style="font-size: 1.2rem; margin-top: 12px;">专栏文章</div>
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="card outline shadow" style="text-align: center;">
-                    <i class="ui icon paste colored" style="font-size: 3rem;"></i>
-                    <div style="font-size: 2.5rem; font-weight: 550; margin-top: 8px;">{{ paste_count }}</div>
-                    <div style="font-size: 1.2rem; margin-top: 12px;">剪贴板</div>
+                <div class="{% if isMobile %}column{% else %}row{% endif %}">
+                    <div class="card outline shadow" style="text-align: center;">
+                        <i class="ui icon paste colored" style="font-size: 3rem;"></i>
+                        <div style="font-size: 2.5rem; font-weight: 550; margin-top: 8px;">{{ paste_count }}</div>
+                        <div style="font-size: 1.2rem; margin-top: 12px;">剪贴板</div>
+                    </div>
                 </div>
             </div>
             <div class="card propaganda shadow" id="propaganda">

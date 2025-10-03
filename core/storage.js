@@ -1,0 +1,1 @@
+export const benbenCallbacks = new Map(); // 犇犇任务回调函数

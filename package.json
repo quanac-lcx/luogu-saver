@@ -27,7 +27,8 @@
     "nunjucks": "^3.2.4",
     "reflect-metadata": "^0.2.2",
     "sqlite3": "^5.1.7",
-    "typeorm": "^0.3.26"
+    "typeorm": "^0.3.26",
+    "ws": "^8.18.3"
   },
   "type": "module"
 }

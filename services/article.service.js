@@ -17,6 +17,7 @@ import Article from "../models/article.js";
 import ArticleVersion from "../models/article_version.js";
 import { withCache, invalidateCache, invalidateCacheByPattern } from "../core/cache.js";
 import { ValidationError, NotFoundError } from "../core/errors.js";
+import { hashContent, sanitizeLatex } from "../core/utils.js";
 
 /**
  * 保存或更新带版本历史的文章
@@ -38,7 +39,7 @@ import { ValidationError, NotFoundError } from "../core/errors.js";
 export async function saveArticle(task, obj, onProgress) {
 	const aid = task.aid;
 	let article = await Article.findById(aid);
-	const newHash = utils.hashContent(obj.content);
+	const newHash = hashContent(obj.content);
 	
 	if (!article) {
 		onProgress?.(1, "创建新文章...");
@@ -55,7 +56,7 @@ export async function saveArticle(task, obj, onProgress) {
 	} else {
 		let oldHash = article.content_hash;
 		if (!oldHash) {
-			oldHash = utils.hashContent(article.content);
+			oldHash = hashContent(article.content);
 			article.content_hash = oldHash;
 			await article.save();
 		}
@@ -153,7 +154,7 @@ export async function getArticleById(id) {
 			
 			if (article.deleted) throw new NotFoundError(`文章 (ID: ${id}) 已被删除：${article.deleted_reason}`);
 			
-			const sanitizedContent = utils.sanitizeLatex(article.content);
+			const sanitizedContent = sanitizeLatex(article.content);
 			const renderedContent = renderer.renderMarkdown(sanitizedContent);
 			
 			return { article, renderedContent };

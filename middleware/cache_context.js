@@ -16,17 +16,10 @@ import { AsyncLocalStorage } from 'async_hooks';
 
 const cacheContextStorage = new AsyncLocalStorage();
 
-/**
- * 处理缓存上下文的中间件函数
- * 检测缓存绕过参数并为请求生命周期存储上下文
- *
- * @param {Object} req - Express 请求对象
- * @param {Object} res - Express 响应对象
- * @param {Function} next - 下一个中间件函数
- */
 function cacheContextMiddleware(req, res, next) {
 	const context = {
 		shouldBypassCache: req.query && req.query._bypassRedis === '1',
+		shouldForceUpdateCache: req.query && req.query._forceUpdateCache === '1',
 		requestId: req.headers['x-request-id'] || `${Date.now()}-${Math.random()}`,
 		originalUrl: req.originalUrl
 	};
@@ -54,7 +47,16 @@ export function getCacheContext() {
  */
 export function shouldBypassCache() {
 	const context = getCacheContext();
-	return context ? context.shouldBypassCache : false;
+	return context ? (context.shouldBypassCache || false) : false;
+}
+
+export function shouldForceUpdateCache() {
+	const context = getCacheContext();
+	return context ? (context.shouldForceUpdateCache || false) : false;
+}
+
+export function runWithCacheContext(context, fn) {
+	return cacheContextStorage.run(context, fn);
 }
 
 export default cacheContextMiddleware;

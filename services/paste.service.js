@@ -12,6 +12,7 @@
 import Paste from "../models/paste.js";
 import { withCache, invalidateCache } from "../core/cache.js";
 import { ValidationError, NotFoundError } from "../core/errors.js";
+import { sanitizeLatex } from "../core/utils.js";
 
 /**
  * 保存新的粘贴板并使相关缓存失效
@@ -65,7 +66,7 @@ export async function getPasteById(id) {
 			
 			if (paste.deleted) throw new NotFoundError(`剪贴板 (ID: ${id}) 已被删除：${paste.deleted_reason}`);
 			
-			const sanitizedContent = utils.sanitizeLatex(paste.content);
+			const sanitizedContent = sanitizeLatex(paste.content);
 			const renderedContent = renderer.renderMarkdown(sanitizedContent);
 			
 			return { paste, renderedContent };

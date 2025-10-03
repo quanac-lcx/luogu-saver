@@ -14,6 +14,7 @@
  */
 
 import Task from "../models/task.js";
+import { generateRandomString } from "../core/utils.js";
 
 /**
  * 在队列中创建新任务
@@ -27,7 +28,7 @@ import Task from "../models/task.js";
  * @returns {Promise<string>} 生成的任务 ID
  */
 export async function createTask(task) {
-	const id = utils.generateRandomString();
+	const id = generateRandomString();
 	const newTask = Task.create({
 		id,
 		status: 0,
@@ -61,9 +62,9 @@ export async function updateTask(id, status, info = "") {
  * 获取所有等待中的任务（待处理或处理中）
  * 
  * 检索状态为待处理（status 0）或处理中（status 1）的任务。
- * 结果按 ID 排序以保持一致的处理顺序。
+ * 结果按 ID 排序以保持处理顺序一致。
  * 由于任务队列变化频繁，此方法不使用缓存。
- * 
+ *
  * @returns {Promise<Array>} 等待中任务对象数组
  */
 export async function getWaitingTasks() {
@@ -95,7 +96,6 @@ export async function getTaskById(id) {
 	const task = await Task.findById(id);
 	if (!task) return null;
 	
-	// Format date and status for display
 	task.formatDate();
 	task.status = statusMap[task.status] || 'Unknown';
 	

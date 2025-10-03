@@ -1,4 +1,5 @@
 import { createHash } from 'crypto';
+import config from "../config.js";
 
 export function formatDate(date, format = "YYYY-MM-DD HH:mm:ss") {
 	const padZero = (num) => (num < 10 ? "0" + num : num);
@@ -54,4 +55,8 @@ export function sanitizeLatex(src) {
 				'$$\\color{red}\\text{\\textbackslash rule haven\'t supported yet.}$$';
 		return match;
 	});
+}
+
+export function makeApiUrl(path) {
+	return config.service.api_url.replace(/\/+$/, '') + '/' + path.replace(/^\/+/, '');
 }

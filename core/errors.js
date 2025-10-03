@@ -1,3 +1,6 @@
+import { type } from "node:os";
+import { makeResponse } from "./utils.js";
+
 export class UserError extends Error {
 	constructor(message) {
 		super(message);
@@ -96,21 +99,18 @@ export function getErrorLevel(error) {
  * Helper function to log errors to database and console
  * @param {Error} error - The error object
  * @param {Object} req - Express request object (optional)
- * @param {Object} logger - Logger instance
  * @returns {Promise<void>}
  */
-export async function logError(error, req = null, logger = null) {
+export async function logError(error, req = null) {
 	const userError = isUserError(error);
 	const level = getErrorLevel(error);
 	
-	if (logger) {
-		if (userError) {
-			logger.info(`${error.message}`);
-		} else if (level === 'warn') {
-			logger.warn(`${error.message}`);
-		} else {
-			logger.error(`${error.message}`);
-		}
+	if (userError) {
+		logger.info(`${error.message}`);
+	} else if (level === 'warn') {
+		logger.warn(`${error.message}`);
+	} else {
+		logger.error(`${error.message}`);
 	}
 	
 	try {
@@ -139,7 +139,7 @@ export function asyncHandler(fn, options = {}) {
 	return (req, res, next) => {
 		Promise.resolve(fn(req, res, next))
 			.catch(async (error) => {
-				await logError(error, req, logger);
+				await logError(error, req);
 				let isJsonResponse;
 				if (options.json !== undefined) {
 					isJsonResponse = options.json;
@@ -149,7 +149,7 @@ export function asyncHandler(fn, options = {}) {
 					                 req.headers.accept?.includes('application/json');
 				}
 				if (isJsonResponse) {
-					return res.json(utils.makeResponse(false, { message: error.message }));
+					return res.json(makeResponse(false, { message: error.message }));
 				}
 				next(error);
 			});
@@ -163,4 +163,24 @@ export function asyncHandler(fn, options = {}) {
  */
 export function asyncJsonHandler(fn) {
 	return asyncHandler(fn, { json: true });
+}
+
+export function changeErrorType(error, NewErrorClass) {
+	const newError = new NewErrorClass(error.message);
+	newError.stack = error.stack;
+	for (const key of Object.keys(error)) {
+		if (!(key in newError)) {
+			newError[key] = error[key];
+		}
+	}
+	return newError;
+}
+
+export function getError(obj) {
+	if (obj.error && obj.error instanceof Error) {
+		return obj.error;
+	}
+	else if (obj.message) return new SystemError(obj.message);
+	else if (typeof obj === 'string') return new SystemError(obj);
+	else return new SystemError('未知错误');
 }

@@ -23,7 +23,7 @@ export function mergeSetCookieToHeaders(response, headers) {
 }
 
 export async function fetchContent(url, headers = {}, { c3vk = "new", timeout = 30000 } = {}) {
-	logger.debug(`抓取网页: ${url}, c3vk 模式: ${c3vk}`);
+	logger.debug(`抓取网页: ${url}，c3vk 模式: ${c3vk}`);
 	const h = { ...defaultHeaders, ...headers };
 	let resp;
 	try {
@@ -36,13 +36,12 @@ export async function fetchContent(url, headers = {}, { c3vk = "new", timeout = 
 		if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' ||
 		    err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' ||
 		    err.code === 'ECONNRESET' || err.message?.includes('timeout')) {
-			throw new NetworkError(`网络请求失败: ${err.message}`);
+			throw new NetworkError(`网络请求失败: ${err.message || err.code}`);
 		}
 		throw err;
 	}
 	
 	if (c3vk === "legacy") resp = await handleLegacyC3VK(resp, url, h, timeout);
-	mergeSetCookieToHeaders(resp, h);
 	if (c3vk === "new" && resp.status === 302 && resp.headers.location) {
 		mergeSetCookieToHeaders(resp, h);
 		try {
@@ -55,12 +54,12 @@ export async function fetchContent(url, headers = {}, { c3vk = "new", timeout = 
 			if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' || 
 			    err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' ||
 			    err.code === 'ECONNRESET' || err.message?.includes('timeout')) {
-				throw new NetworkError(`网络请求失败: ${err.message}`);
+				throw new NetworkError(`网络请求失败: ${err.message || err.code}`);
 			}
 			throw err;
 		}
 	}
-	logger.debug(`已抓取网页: ${url}, 状态码: ${resp.status}`);
+	logger.debug(`已抓取网页: ${url}，状态码: ${resp.status}`);
 	if (resp.status === 401) {
 		logger.debug(`Cookies 过期: ${headers.Cookie}`);
 	}

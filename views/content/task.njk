@@ -82,7 +82,17 @@
                                 <i class="info circle icon"></i>
                                 任务类型
                             </div>
-                            <div>{{ '剪贴板保存 (Type = 1)' if task.type else '专栏文章保存 (Type = 0)' }}</div>
+                            <div>
+                                {% if task.type == 0 %}
+                                专栏保存 (Type = 0)
+                                {% elif task.type == 1 %}
+                                剪贴板保存 (Type = 1)
+                                {% elif task.type == 2 %}
+                                犇犇保存 (Type = 2)
+                                {% else %}
+                                未知类型 (Type = {{ task.type }})
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                     <div class="item">
@@ -100,7 +110,7 @@
                                 <i class="cog icon"></i>
                                 操作
                             </div>
-                            <button id="goto-btn" class="ui mini positive button" {{ '' if task.status == 'Completed' else 'disabled' }} onclick="window.location.href='/{{ 'paste' if task.type else 'article' }}/{{ task.oid }}'">
+                            <button id="goto-btn" class="ui mini positive button" {{ '' if task.status == 'Completed' else 'disabled' }} onclick="handleGotoClick({{ task.type }}, '{{ task.oid }}')">
                                 <i class="ui icon paper plane"></i> 跳转
                             </button>
                             <button id="save-btn" class="ui mini teal button" style="display: {{ 'inline-block' if task.status == 'Failed' else 'none' }};">
@@ -114,6 +124,20 @@
     </div>
 
     <script>
+		const TASK_TYPE_ROUTES = {
+			0: (oid) => `/article/${oid}`,
+			1: (oid) => `/paste/${oid}`,
+			2: (oid) => `/benben/history?uid=${oid}`,
+		};
+
+		function handleGotoClick(taskType, oid) {
+			const routeGenerator = TASK_TYPE_ROUTES[taskType];
+			if (routeGenerator) {
+				window.location.href = routeGenerator(oid);
+			} else {
+				console.error(`未知的任务类型: ${taskType}`);
+			}
+		}
 		document.addEventListener("DOMContentLoaded", () => {
 			const statusLabel = document.getElementById("task-status");
 			const infoEl = document.getElementById("task-info");

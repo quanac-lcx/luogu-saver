@@ -14,6 +14,7 @@ import { defaultHeaders, fetchContent } from "../core/request.js";
 import { handleFetch } from "../handlers/index.handler.js";
 import { withCache, invalidateCache } from "../core/cache.js";
 import { ValidationError, ExternalServiceError } from "../core/errors.js";
+import { generateRandomString } from "../core/utils.js";
 
 /**
  * 从粘贴板验证生成认证 Token
@@ -52,20 +53,14 @@ export async function generateToken(pasteId, uid) {
 		await token.remove();
 	}
 	
-	const tokenText = utils.generateRandomString(32);
+	const tokenText = generateRandomString(32);
 	token = Token.create({
 		id: tokenText,
 		uid: parseInt(uid),
 		role: 0
 	});
 	await token.save();
-	
-	try {
-		await redis.set(`token:${tokenText}`, JSON.stringify(token), 600);
-	} catch (error) {
-		logger.warn(`创建 Token 时出错: ${error.message}`);
-	}
-	
+	await redis.set(`token:${tokenText}`, JSON.stringify(token), 600);
 	return tokenText;
 }
 

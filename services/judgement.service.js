@@ -25,6 +25,8 @@ import { withCache, invalidateCache, invalidateCacheByPattern } from "../core/ca
 export async function saveJudgements(task, obj) {
 	const logs = obj.logs || [];
 	
+	logger.debug(`保存陶片放逐记录，获取到 ${logs.length} 条记录`);
+	
 	for (const log of logs) {
 		// 检查是否已存在
 		const existing = await Judgement.findOne({
@@ -35,6 +37,7 @@ export async function saveJudgements(task, obj) {
 		});
 		
 		if (existing) {
+			logger.debug(`跳过已存在的记录: 用户 ${log.user.uid}, 时间 ${new Date(log.time * 1000)}`);
 			continue;
 		}
 		
@@ -46,7 +49,10 @@ export async function saveJudgements(task, obj) {
 			time: new Date(log.time * 1000)
 		});
 		await judgement.save();
+		logger.debug(`保存陶片放逐记录: 用户 ${log.user.uid}, 时间 ${new Date(log.time * 1000)}`);
 	}
+	
+	logger.info(`成功保存 ${logs.length} 条陶片放逐记录`);
 	
 	await Promise.all([
 		invalidateCacheByPattern('recent_judgements:*'),

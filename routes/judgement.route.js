@@ -17,8 +17,8 @@ router.get('/debug-html', asyncHandler(async (req, res) => {
 		const url = `https://www.luogu.com.cn/judgement`;
 		const response = await fetchContent(url, {}, { c3vk: "new" });
 		
-		const htmlData = response.data || '';
-		const dataLength = typeof htmlData === 'string' ? htmlData.length : JSON.stringify(htmlData).length;
+		const htmlData = response?.data || '';
+		const dataLength = htmlData ? (typeof htmlData === 'string' ? htmlData.length : JSON.stringify(htmlData).length) : 0;
 		
 		// Return the raw HTML with syntax highlighting
 		res.setHeader('Content-Type', 'text/html; charset=utf-8');

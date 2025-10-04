@@ -17,6 +17,9 @@ router.get('/debug-html', asyncHandler(async (req, res) => {
 		const url = `https://www.luogu.com.cn/judgement`;
 		const response = await fetchContent(url, {}, { c3vk: "new" });
 		
+		const htmlData = response.data || '';
+		const dataLength = typeof htmlData === 'string' ? htmlData.length : JSON.stringify(htmlData).length;
+		
 		// Return the raw HTML with syntax highlighting
 		res.setHeader('Content-Type', 'text/html; charset=utf-8');
 		res.send(`
@@ -55,6 +58,13 @@ router.get('/debug-html', asyncHandler(async (req, res) => {
 			border-radius: 5px;
 			margin-bottom: 15px;
 		}
+		.error {
+			background: #ffebee;
+			color: #c62828;
+			padding: 10px;
+			border-radius: 5px;
+			margin-bottom: 15px;
+		}
 	</style>
 </head>
 <body>
@@ -62,11 +72,12 @@ router.get('/debug-html', asyncHandler(async (req, res) => {
 		<h1>陶片放逐页面源代码调试</h1>
 		<div class="info">
 			<strong>URL:</strong> ${url}<br>
-			<strong>状态码:</strong> ${response.status}<br>
-			<strong>内容长度:</strong> ${response.data.length} 字符
+			<strong>状态码:</strong> ${response.status || 'N/A'}<br>
+			<strong>内容类型:</strong> ${typeof htmlData}<br>
+			<strong>内容长度:</strong> ${dataLength} 字符
 		</div>
 		<h2>HTML 源代码：</h2>
-		<pre>${response.data.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+		<pre>${typeof htmlData === 'string' ? htmlData.replace(/</g, '&lt;').replace(/>/g, '&gt;') : JSON.stringify(htmlData, null, 2)}</pre>
 	</div>
 </body>
 </html>

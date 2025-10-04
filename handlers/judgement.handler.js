@@ -1,7 +1,8 @@
+import { getResponseObject } from "../core/response.js";
 import { upsertUser } from "../services/user.service.js";
 
 export default async (resp, type) => {
-	const obj = resp;
+	const obj = getResponseObject(resp, type);
 	
 	logger.debug(`处理陶片放逐数据，logs 数量: ${obj.logs?.length || 0}`);
 	

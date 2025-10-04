@@ -15,9 +15,9 @@ router.get('/save', asyncJsonHandler(async (req, res) => {
 router.get('/debug-html', asyncHandler(async (req, res) => {
 	try {
 		const url = `https://www.luogu.com.cn/judgement`;
-		const response = await fetchContent(url, {}, { c3vk: "new" });
+		const { resp } = await fetchContent(url, {}, { c3vk: "new" });
 		
-		const htmlData = response?.data || '';
+		const htmlData = resp?.data || '';
 		const dataLength = htmlData ? (typeof htmlData === 'string' ? htmlData.length : JSON.stringify(htmlData).length) : 0;
 		
 		// Return the raw HTML with syntax highlighting
@@ -72,7 +72,7 @@ router.get('/debug-html', asyncHandler(async (req, res) => {
 		<h1>陶片放逐页面源代码调试</h1>
 		<div class="info">
 			<strong>URL:</strong> ${url}<br>
-			<strong>状态码:</strong> ${response.status || 'N/A'}<br>
+			<strong>状态码:</strong> ${resp.status || 'N/A'}<br>
 			<strong>内容类型:</strong> ${typeof htmlData}<br>
 			<strong>内容长度:</strong> ${dataLength} 字符
 		</div>

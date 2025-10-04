@@ -70,16 +70,29 @@ function renderResults(results) {
 	
 	let html = '';
 	results.forEach(item => {
+		const avatarUrl = `https://cdn.luogu.com.cn/upload/usericon/${item.user_id || 3}.png`;
+		const userName = item.user_name || '未知用户';
+		const userColor = item.user_color || 'Gray';
+		
 		html += `
             <div class="benben-item">
-                <div class="benben-meta firacode">
-                    <span><i class="fa fa-hashtag"></i> ${item.id}</span>
-                    <span><i class="fa fa-user"></i> UID: ${item.user_id}</span>
-                    <span><i class="fa fa-clock"></i> 发送时间: ${item.send_time}</span>
-                    <span><i class="fa fa-download"></i> 抓取时间: ${item.grab_time}</span>
+                <div class="benben-header" style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <img class="ui mini circular image" 
+                         src="${avatarUrl}" 
+                         alt="${userName}" 
+                         style="margin-right: 10px;">
+                    <div style="flex: 1;">
+                        <div>
+                            <a href="/user/${item.user_id}" class="user-${userColor}" style="font-weight: 550; font-size: 1.1em;">${userName}</a>
+                        </div>
+                        <div class="benben-meta firacode" style="margin-top: 5px;">
+                            <span><i class="fa fa-hashtag"></i> ${item.id}</span>
+                            <span><i class="fa fa-clock"></i> ${item.send_time}</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="benben-content">
-                    ${escapeHtml(item.content)}
+                <div class="benben-content md-container">
+                    ${item.rendered_content || escapeHtml(item.content)}
                 </div>
             </div>
         `;

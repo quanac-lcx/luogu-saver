@@ -45,7 +45,6 @@ function formatData(item) {
 	item.userId = undefined;
 	item.user_name = item.username;
 	item.username = undefined;
-	// Render markdown content
 	const sanitizedContent = sanitizeLatex(item.content || '');
 	item.rendered_content = renderer.renderMarkdown(sanitizedContent);
 	return item;

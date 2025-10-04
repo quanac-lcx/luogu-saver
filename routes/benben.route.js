@@ -7,7 +7,6 @@ import { benbenCallbacks } from "../core/storage.js";
 
 const router = express.Router();
 
-// 页面路由
 router.get('/mentions', (req, res) => {
 	res.render('benben/mentions.njk', { title: "被 at 查询" });
 });
@@ -19,8 +18,6 @@ router.get('/history', (req, res) => {
 router.get('/crawl', (req, res) => {
 	res.render('benben/crawl.njk', { title: "犇犇抓取" });
 });
-
-// API 路由
 
 router.get('/api/statistic', asyncJsonHandler(async (req, res) => {
 	res.json(makeResponse(true, { ...await getStatistics() }));

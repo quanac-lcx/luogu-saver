@@ -43,7 +43,7 @@ export async function saveJudgements(task, obj) {
 		
 		const judgement = Judgement.create({
 			user_uid: log.user.uid,
-			reason: log.reason,
+			reason: log.reason || null,
 			permission_granted: log.addedPermission || 0,
 			permission_revoked: log.revokedPermission || 0,
 			time: new Date(log.time * 1000)

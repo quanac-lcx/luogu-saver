@@ -23,7 +23,8 @@ export function getResponseObject(response, type = 0) {
 		if (result && result.logs) {
 			console.log(`[DEBUG] 陶片放逐 API 返回 ${result.logs.length} 条记录`);
 		} else {
-			console.log('[DEBUG] 陶片放逐数据结构:', JSON.stringify(result, null, 2).substring(0, 1000));
+			const resultStr = JSON.stringify(result, null, 2) || '';
+			console.log('[DEBUG] 陶片放逐数据结构:', resultStr.substring(0, 1000));
 		}
 		return result;
 	}

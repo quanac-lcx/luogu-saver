@@ -1,6 +1,7 @@
 import express from 'express';
 import { getRecentJudgements } from "../services/judgement.service.js";
 import { ValidationError, asyncHandler, asyncJsonHandler } from "../core/errors.js";
+import { fetchContent } from "../core/request.js";
 
 const router = express.Router();
 
@@ -8,6 +9,71 @@ router.get('/save', asyncJsonHandler(async (req, res) => {
 	const url = `https://www.luogu.com.cn/judgement`;
 	const id = await worker.pushTaskToQueue({ url, aid: 'JDGMNT00', type: 2 });
 	res.send(utils.makeResponse(true, { message: "请求已入队", result: id }));
+}));
+
+// Debug endpoint to view raw HTML
+router.get('/debug-html', asyncHandler(async (req, res) => {
+	try {
+		const url = `https://www.luogu.com.cn/judgement`;
+		const response = await fetchContent(url, {}, { c3vk: "new" });
+		
+		// Return the raw HTML with syntax highlighting
+		res.setHeader('Content-Type', 'text/html; charset=utf-8');
+		res.send(`
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>陶片放逐页面源代码调试</title>
+	<style>
+		body {
+			font-family: monospace;
+			margin: 20px;
+			background-color: #f5f5f5;
+		}
+		.container {
+			background: white;
+			padding: 20px;
+			border-radius: 5px;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+		}
+		h1 {
+			color: #333;
+		}
+		pre {
+			background: #272822;
+			color: #f8f8f2;
+			padding: 15px;
+			border-radius: 5px;
+			overflow-x: auto;
+			white-space: pre-wrap;
+			word-wrap: break-word;
+		}
+		.info {
+			background: #e3f2fd;
+			padding: 10px;
+			border-radius: 5px;
+			margin-bottom: 15px;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>陶片放逐页面源代码调试</h1>
+		<div class="info">
+			<strong>URL:</strong> ${url}<br>
+			<strong>状态码:</strong> ${response.status}<br>
+			<strong>内容长度:</strong> ${response.data.length} 字符
+		</div>
+		<h2>HTML 源代码：</h2>
+		<pre>${response.data.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+	</div>
+</body>
+</html>
+		`);
+	} catch (err) {
+		res.status(500).send(`<h1>错误</h1><pre>${err.message}\n${err.stack}</pre>`);
+	}
 }));
 
 router.get('/', asyncHandler(async (req, res, next) => {

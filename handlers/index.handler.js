@@ -5,7 +5,7 @@ import {makeResponse} from "../core/utils.js";
 const handlers = {
 	0: commonHandler,
 	1: commonHandler,
-	2: judgementHandler
+	3: judgementHandler
 };
 
 export async function handleFetch({ resp }, type) {

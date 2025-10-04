@@ -23,41 +23,76 @@ import { withCache, invalidateCache, invalidateCacheByPattern } from "../core/ca
  * @param {Array} obj.logs - 陶片放逐记录数组
  */
 export async function saveJudgements(task, obj) {
+	// 确保 obj 存在且包含 logs 属性
+	if (!obj || typeof obj !== 'object') {
+		logger.error('陶片放逐数据对象为空或无效');
+		throw new Error('陶片放逐数据对象为空或无效');
+	}
+	
 	const logs = obj.logs || [];
+	
+	// 验证 logs 是否为数组
+	if (!Array.isArray(logs)) {
+		logger.error(`陶片放逐数据中 logs 不是数组类型，而是: ${typeof logs}`);
+		throw new Error(`陶片放逐数据中 logs 不是数组类型，而是: ${typeof logs}`);
+	}
 	
 	logger.debug(`保存陶片放逐记录，获取到 ${logs.length} 条记录`);
 	
+	if (logs.length === 0) {
+		logger.warn('没有获取到陶片放逐记录，可能是页面结构发生变化或当前没有新记录');
+		return;
+	}
+	
+	let savedCount = 0;
+	let skippedCount = 0;
+	
 	for (const log of logs) {
-		// 检查是否已存在
-		const existing = await Judgement.findOne({
-			where: {
-				user_uid: log.user.uid,
-				time: new Date(log.time * 1000)
-			}
-		});
-		
-		if (existing) {
-			logger.debug(`跳过已存在的记录: 用户 ${log.user.uid}, 时间 ${new Date(log.time * 1000)}`);
+		// 验证单条记录的数据完整性
+		if (!log || !log.user || !log.user.uid || !log.time) {
+			logger.warn('跳过无效的陶片放逐记录：缺少必要字段');
 			continue;
 		}
 		
-		const judgement = Judgement.create({
-			user_uid: log.user.uid,
-			reason: log.reason || null,
-			permission_granted: log.addedPermission || 0,
-			permission_revoked: log.revokedPermission || 0,
-			time: new Date(log.time * 1000)
-		});
-		await judgement.save();
-		logger.debug(`保存陶片放逐记录: 用户 ${log.user.uid}, 时间 ${new Date(log.time * 1000)}`);
+		try {
+			// 检查是否已存在
+			const existing = await Judgement.findOne({
+				where: {
+					user_uid: log.user.uid,
+					time: new Date(log.time * 1000)
+				}
+			});
+			
+			if (existing) {
+				logger.debug(`跳过已存在的记录: 用户 ${log.user.uid}, 时间 ${new Date(log.time * 1000)}`);
+				skippedCount++;
+				continue;
+			}
+			
+			const judgement = Judgement.create({
+				user_uid: log.user.uid,
+				reason: log.reason || null,
+				permission_granted: log.addedPermission || 0,
+				permission_revoked: log.revokedPermission || 0,
+				time: new Date(log.time * 1000)
+			});
+			await judgement.save();
+			logger.debug(`保存陶片放逐记录: 用户 ${log.user.uid}, 时间 ${new Date(log.time * 1000)}`);
+			savedCount++;
+		} catch (saveError) {
+			logger.error(`保存单条陶片放逐记录失败 (用户 ${log.user.uid}): ${saveError.message}`);
+		}
 	}
 	
-	logger.info(`成功保存 ${logs.length} 条陶片放逐记录`);
+	logger.info(`陶片放逐记录处理完成: 新保存 ${savedCount} 条，跳过 ${skippedCount} 条`);
 	
-	await Promise.all([
-		invalidateCacheByPattern('recent_judgements:*'),
-		invalidateCache(['statistics:full', 'statistics:counts'])
-	]);
+	// 只有在实际保存了记录时才清理缓存
+	if (savedCount > 0) {
+		await Promise.all([
+			invalidateCacheByPattern('recent_judgements:*'),
+			invalidateCache(['statistics:full', 'statistics:counts'])
+		]);
+	}
 }
 
 /**

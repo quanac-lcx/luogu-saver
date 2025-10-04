@@ -43,7 +43,7 @@ export async function executeTask(task) {
 			} else if (task.type === 1) {
 				await savePaste(task, obj);
 				await updateTask(task.id, 2, "任务完成");
-			} else if (task.type === 2) {
+			} else if (task.type === 3) {
 				await saveJudgements(task, obj);
 				await updateTask(task.id, 2, "任务完成");
 			}

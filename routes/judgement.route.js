@@ -2,13 +2,15 @@ import express from 'express';
 import { getRecentJudgements } from "../services/judgement.service.js";
 import { ValidationError, asyncHandler, asyncJsonHandler } from "../core/errors.js";
 import { fetchContent } from "../core/request.js";
+import { pushTaskToQueue } from '../workers/index.worker.js';
+import { makeResponse } from '../core/utils.js';
 
 const router = express.Router();
 
 router.get('/save', asyncJsonHandler(async (req, res) => {
 	const url = `https://www.luogu.com.cn/judgement`;
-	const id = await worker.pushTaskToQueue({ url, aid: 'JDGMNT00', type: 2 });
-	res.send(utils.makeResponse(true, { message: "请求已入队", result: id }));
+	const id = await pushTaskToQueue({ url, aid: 'JDGMNT00', type: 3 });
+	res.send(makeResponse(true, { message: "请求已入队", result: id }));
 }));
 
 // Debug endpoint to view raw HTML

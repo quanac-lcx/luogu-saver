@@ -1,4 +1,3 @@
-// 添加回车键支持
 document.addEventListener('DOMContentLoaded', () => {
 	const uidInput = document.getElementById('uid-input');
 	uidInput.addEventListener('keypress', (event) => {
@@ -20,7 +19,6 @@ function performCrawl() {
 		return;
 	}
 	
-	// 显示确认对话框
 	Swal.fire({
 		title: '确认抓取',
 		text: `确定要抓取用户 ${uid} 的犇犇吗？`,
@@ -36,7 +34,6 @@ function performCrawl() {
 }
 
 function executeCrawl(uid) {
-	// 显示加载中
 	Swal.fire({
 		title: '正在提交...',
 		allowOutsideClick: false,

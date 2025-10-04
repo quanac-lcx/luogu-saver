@@ -1,4 +1,17 @@
 document.addEventListener("DOMContentLoaded", () => {
+	function parseUrl(url) {
+		if (url.length < 14) throw new Error("非法链接，请检查输入。");
+		const tail = url.slice(-14);
+		const tailMatch = tail.match(/^(paste|ticle)\/([a-zA-Z0-9]{8})$/);
+		if (!tailMatch) throw new Error("非法链接，请检查输入。");
+		
+		const type = tailMatch[1] === "ticle" ? "article" : "paste";
+		const id = tailMatch[2];
+		if (type !== "article" && type !== "paste") throw new Error("非法链接，请检查输入。");
+		
+		return { type, id };
+	}
+
 	document.getElementById("search-btn")?.addEventListener("click", () => {
 		const q = document.getElementById("search-input").value.trim();
 		if (q) {
@@ -8,17 +21,34 @@ document.addEventListener("DOMContentLoaded", () => {
 	
 	document.getElementById("save-btn")?.addEventListener("click", async () => {
 		let url = document.getElementById("url").value.trim();
-		if (!url) return;
+		if (!url) {
+			Swal.fire('提示', '请输入链接', 'info');
+			return;
+		}
 		
 		try {
-			if (url.length < 14) throw new Error("非法链接，请检查输入。");
-			const tail = url.slice(-14);
-			const tailMatch = tail.match(/^(paste|ticle)\/([a-zA-Z0-9]{8})$/);
-			if (!tailMatch) throw new Error("非法链接，请检查输入。");
+			const { type, id } = parseUrl(url);
 			
-			const type = tailMatch[1] === "ticle" ? "article" : "paste";
-			const id = tailMatch[2];
-			if (type !== "article" && type !== "paste") throw new Error("非法链接，请检查输入。");
+			const confirmResult = await Swal.fire({
+				title: '确认保存',
+				text: `确定要保存这个${type === 'article' ? '文章' : '剪贴板'}吗？`,
+				icon: 'question',
+				showCancelButton: true,
+				confirmButtonText: '确定',
+				cancelButtonText: '取消'
+			});
+			
+			if (!confirmResult.isConfirmed) {
+				return;
+			}
+			
+			Swal.fire({
+				title: '正在保存...',
+				allowOutsideClick: false,
+				didOpen: () => {
+					Swal.showLoading();
+				}
+			});
 			
 			const response = await fetch(`/${type}/save/` + encodeURIComponent(id));
 			
@@ -58,7 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			console.error(err);
 			Swal.fire({
 				title: "保存失败",
-				text: err.message || "网络错误或请求过于频繁，请稍后再试",
+				text: err.message || "网络错误或请求失败，请稍后再试",
 				icon: "error",
 				confirmButtonText: "确定"
 			});
@@ -67,24 +97,20 @@ document.addEventListener("DOMContentLoaded", () => {
 	
 	document.getElementById("view-btn")?.addEventListener("click", () => {
 		let url = document.getElementById("url").value.trim();
-		if (!url) return;
+		if (!url) {
+			Swal.fire('提示', '请输入链接', 'info');
+			return;
+		}
 		
 		try {
-			if (url.length < 14) throw new Error("非法链接，请检查输入。");
-			const tail = url.slice(-14);
-			const tailMatch = tail.match(/^(paste|ticle)\/([a-zA-Z0-9]{8})$/);
-			if (!tailMatch) throw new Error("非法链接，请检查输入。");
-			
-			const type = tailMatch[1] === "ticle" ? "article" : "paste";
-			const id = tailMatch[2];
-			if (type !== "article" && type !== "paste") throw new Error("非法链接，请检查输入。");
+			const { type, id } = parseUrl(url);
 			
 			window.location.href = `/${type}/` + encodeURIComponent(id);
 		} catch (err) {
 			console.error(err);
 			Swal.fire({
 				title: "跳转失败",
-				text: err.message || "无法跳转到内容，请稍后再试。",
+				text: err.message || "无法跳转到内容，请稍后再试",
 				icon: "error",
 				confirmButtonText: "确定"
 			});

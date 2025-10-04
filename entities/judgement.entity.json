@@ -1,0 +1,18 @@
+{
+    "name": "Judgement",
+    "tableName": "judgement",
+    "columns": {
+        "id": { "type": "int", "primary": true, "generated": true },
+        "user_uid": { "type": "int", "unsigned": true, "nullable": false },
+        "reason": { "type": "text", "nullable": false },
+        "permission_granted": { "type": "int", "nullable": false, "default": 0 },
+        "permission_revoked": { "type": "int", "nullable": false, "default": 0 },
+        "time": { "type": "timestamp", "nullable": false },
+        "created_at": { "type": "timestamp", "default": "CURRENT_TIMESTAMP", "nullable": false }
+    },
+    "indices": [
+        { "name": "idx_judgement_user", "columns": ["user_uid"] },
+        { "name": "idx_judgement_time", "columns": ["time"] },
+        { "name": "idx_user_time", "columns": ["user_uid", "time"], "unique": true }
+    ]
+}

@@ -76,13 +76,25 @@ export async function pushTaskToQueue(task) {
  * - 状态为待处理(0)的任务重新加入队列
  * - 状态为处理中(1)的任务标记为失败（因为服务器重启）
  */
-export async function restoreQueue() {
+	export async function restoreQueue() {
 	const tasks = await getWaitingTasks();
 	for (const task of tasks) {
 		if (task.status === 0) {
+			let url;
+			if (task.type === 0) {
+				url = `https://www.luogu.com/article/${task.oid}`;
+			} else if (task.type === 1) {
+				url = `https://www.luogu.com/paste/${task.oid}`;
+			} else if (task.type === 3) {
+				url = `https://www.luogu.com.cn/judgement`;
+			} else {
+				logger.error(`未知的任务类型: ${task.type}, 任务 #${task.id}`);
+				continue;
+			}
+			
 			queue.pushTask({
 				id: task.id,
-				url: `https://www.luogu.com/${task.type === 0 ? 'article' : 'paste'}/${task.oid}`,
+				url,
 				headers: defaultHeaders,
 				aid: task.oid,
 				type: task.type

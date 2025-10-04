@@ -1,6 +1,7 @@
 import { updateTask } from "../services/task.service.js";
 import { saveArticle } from "../services/article.service.js";
 import { savePaste } from "../services/paste.service.js";
+import { saveJudgements } from "../services/judgement.service.js";
 import { fetchContent } from "../core/request.js";
 import { handleFetch } from "../handlers/index.handler.js";
 import { SystemError, NetworkError, DatabaseError, logError } from "../core/errors.js";
@@ -16,7 +17,7 @@ export async function executeTask(task) {
 				await fetchContent(
 					task.url,
 					task.headers,
-					{ c3vk: task.type === 1 ? "legacy": "new" }
+					{ c3vk: task.type === 1 ? "legacy": task.type === 2 ? "new" : "new" }
 				),
 				task.type
 			);
@@ -39,8 +40,11 @@ export async function executeTask(task) {
 				await saveArticle(task, obj, async (progress, message) => { 
 					await updateTask(task.id, progress, message); 
 				});
-			} else {
+			} else if (task.type === 1) {
 				await savePaste(task, obj);
+				await updateTask(task.id, 2, "任务完成");
+			} else if (task.type === 3) {
+				await saveJudgements(task, obj);
 				await updateTask(task.id, 2, "任务完成");
 			}
 		} catch (err) {

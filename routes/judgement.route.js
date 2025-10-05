@@ -69,7 +69,7 @@ router.get('/debug', asyncHandler(async (req, res) => {
 		}
 		.msg {
 			background: #0aa216ff;
-			color: #000000ff;
+			color: #000000;
 			padding: 10px;
 			border-radius: 5px;
 			margin-bottom: 15px;

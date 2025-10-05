@@ -50,7 +50,7 @@ export async function executeTask(task) {
 				await updateTask(task.id, 3, err.message);
 			});
 			
-			// 对于 type 2 任务，我们已经处理完成，直接返回
+			// 对于 type 2 任务，已设置回调和超时机制处理异步结果，任务状态将根据回调或超时结果更新，故此处直接返回
 			return;
 		}
 		

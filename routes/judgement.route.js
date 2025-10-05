@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.get('/save', asyncJsonHandler(async (req, res) => {
 	const url = `https://www.luogu.com.cn/judgement`;
-	const id = await pushTaskToQueue({ url, aid: 'JDGMNT00', type: 3 });
+		const id = await pushTaskToQueue({ url, aid: '-', type: 3 });
 	res.send(makeResponse(true, { message: "请求已入队", result: id }));
 }));
 

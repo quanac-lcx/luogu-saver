@@ -85,10 +85,4 @@ export function getPermissionNames(permission) {
 		(perm) => (perm.id & permission) === perm.id
 	).map((perm) => perm.name);
 }
-export function makeApiUrl(path) {
-	return config.service.api_url.replace(/\/+$/, '') + '/' + path.replace(/^\/+/, '');
-}
 
-export function makeApiUrl(path) {
-	return config.service.api_url.replace(/\/+$/, '') + '/' + path.replace(/^\/+/, '');
-}

@@ -127,9 +127,10 @@
 
     <script>
 		const TASK_TYPE_ROUTES = {
-			0: (oid) => `/article/${oid}`,
-			1: (oid) => `/paste/${oid}`,
-			2: (oid) => `/benben/history?uid=${oid}`,
+            0: (oid) => `/article/${oid}`,
+            1: (oid) => `/paste/${oid}`,
+            2: (oid) => `/benben/history?uid=${oid}`,
+            3: (oid) => `/judgement`,
 		};
 
 		function handleGotoClick(taskType, oid) {

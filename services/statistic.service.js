@@ -10,8 +10,11 @@
  * @author Copilot
  */
 
+
 import Article from "../models/article.js";
 import Paste from "../models/paste.js";
+import Judgement from "../models/judgement.js";
+import { getJudgementsCount } from "./judgement.service.js";
 import { withCache } from "../core/cache.js";
 import { formatDate } from "../core/utils.js";
 
@@ -88,7 +91,6 @@ export async function getStatistics() {
 		cacheKey: 'statistics:full',
 		ttl: 300,
 		fetchFn: async () => {
-			   const Judgement = (await import('../models/judgement.js')).default;
 			   const articlesCount = await Article.count();
 			   const pastesCount = await Paste.count();
 			   const judgementsCount = await Judgement.count();
@@ -145,7 +147,7 @@ export async function getCounts() {
 			   const [articlesCount, pastesCount, judgementsCount] = await Promise.all([
 				   Article.count(),
 				   Paste.count(),
-				   (await import('./judgement.service.js')).getJudgementsCount()
+				   getJudgementsCount()
 			   ]);
 			   return { articlesCount, pastesCount, judgementsCount };
 		   }

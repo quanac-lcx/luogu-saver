@@ -24,11 +24,10 @@ export default class Judgement extends BaseModel {
 	}
 
 	formatDate() {
-		// 调用父类的 formatDate 方法
 		super.formatDate();
-		// 格式化 time 字段并设置 formatted_date 供模板使用
-		if (this.time) {
-			this.formatted_date = utils.formatDate(this.time);
+		if (this.created_at) {
+			const dateObj = (this.created_at instanceof Date) ? this.created_at : new Date(this.created_at);
+			this.formatted_date = utils.formatDate(dateObj);
 		}
 		return this;
 	}

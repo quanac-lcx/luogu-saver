@@ -18,7 +18,7 @@
                 <a href="javascript:void(0)" id="save-btn" class="ui positive button">
                     <i class="ui icon sync alternate"></i> 更新陶片放逐记录
                 </a>
-                <a href="https://luogu.com.cn/judgement" target="_blank" class="ui gray button">
+                <a href="https://www.luogu.com.cn/judgement" target="_blank" class="ui gray button">
                     <i class="ui icon code"></i> 查看原网页
                 </a>
                 <!--
@@ -58,7 +58,7 @@
                                  alt="default avatar">
                             <span class="judgement-user user-Gray">用户 {{ judgement.user_uid }}</span>
                         {% endif %}
-                        <span class="judgement-time">{{ judgement.formatted_date }}</span>
+                        <span class="judgement-time">{{ judgement.created_at }}</span>
                     </div>
                     <div class="judgement-content">
                         {% if judgement.permission_granted > 0 or judgement.permission_revoked > 0 %}

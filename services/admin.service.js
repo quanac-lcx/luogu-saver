@@ -19,7 +19,7 @@ import * as queue from "../workers/queue.worker.js";
 import { paginateQuery, createSearchCondition } from "../core/pagination.js";
 import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
-import { NotFoundError, ValidationError } from "../core/errors.js";
+import { NotFoundError, ValidationError, logError } from "../core/errors.js";
 
 /**
  * 获取管理员仪表板统计信息
@@ -329,4 +329,51 @@ export async function updateAccountsConfig(accounts) {
     
     await writeFile(accountsPath, JSON.stringify(accounts, null, '\t'));
     return { message: "账户配置更新成功" };
+}
+
+/**
+ * 获取系统设置（包括公告）
+ * 
+ * @returns {Promise<Object>} 系统设置对象
+ */
+export async function getSettings() {
+    try {
+        const settingsPath = join(process.cwd(), 'settings.json');
+        const content = await readFile(settingsPath, 'utf8');
+        return JSON.parse(content);
+    } catch (error) {
+        // 如果文件不存在，返回默认设置
+        return {
+            announcement: {
+                content: "欢迎使用洛谷保存站！如遇问题请及时反馈。",
+                enabled: true
+            }
+        };
+    }
+}
+
+/**
+ * 更新公告内容
+ * 
+ * @param {string} content - 公告内容（支持 HTML）
+ * @param {boolean} enabled - 是否启用公告
+ * @returns {Promise<Object>} 包含成功消息的结果
+ */
+export async function updateAnnouncement(content, enabled = true) {
+    try {
+        const settings = await getSettings();
+        settings.announcement = {
+            content: content || "",
+            enabled: enabled
+        };
+        
+        const settingsPath = join(process.cwd(), 'settings.json');
+        await writeFile(settingsPath, JSON.stringify(settings, null, '\t'));
+        
+        return { message: "公告更新成功" };
+    } catch (error) {
+        // 使用 logError 记录错误
+        await logError(error);
+        throw error;
+    }
 }

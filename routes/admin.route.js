@@ -122,4 +122,18 @@ router.post('/api/mark-deleted/:type/:id', requireAdmin, asyncJsonHandler(async 
 	res.json(makeResponse(true, result));
 }));
 
+router.get('/announcement', requireAdmin, asyncHandler(async (req, res, next) => {
+	const settings = await adminService.getSettings();
+	res.render('admin/announcement.njk', {
+		title: "公告管理",
+		announcement: settings.announcement
+	});
+}));
+
+router.post('/api/announcement', requireAdmin, asyncJsonHandler(async (req, res, next) => {
+	const { content, enabled } = req.body;
+	const result = await adminService.updateAnnouncement(content, enabled);
+	res.json(makeResponse(true, result));
+}));
+
 export default router;

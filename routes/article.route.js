@@ -2,6 +2,7 @@ import express from 'express';
 import config from "../config.js";
 import { getArticleById, getRecentArticles } from "../services/article.service.js";
 import { ValidationError, asyncHandler, asyncJsonHandler } from "../core/errors.js";
+import { makeResponse } from "../core/utils.js";
 
 const router = express.Router();
 
@@ -16,7 +17,7 @@ router.get('/save/:id', asyncJsonHandler(async (req, res) => {
 	if (s.length !== 8) throw new ValidationError("文章 ID 无效");
 	const url = `https://www.luogu.com/article/${s}`;
 	const id = await worker.pushTaskToQueue({ url, aid: s, type: 0 });
-	res.send(utils.makeResponse(true, { message: "请求已入队", result: id }));
+	res.send(makeResponse(true, { message: "请求已入队", result: id }));
 }));
 
 router.get('/:id', asyncHandler(async (req, res, next) => {

@@ -4,6 +4,7 @@ import { makeResponse } from "../core/utils.js";
 import { asyncHandler, asyncJsonHandler } from "../core/errors.js";
 import * as adminService from "../services/admin.service.js";
 import * as adminWorker from "../workers/admin.worker.js";
+import { invalidateCache } from "../core/cache.js";
 
 const router = express.Router();
 
@@ -117,6 +118,7 @@ router.post('/api/mark-deleted/:type/:id', requireAdmin, asyncJsonHandler(async 
 	const { type, id } = req.params;
 	const { reason } = req.body;
 	const result = await adminService.markItemDeleted(type, id, reason);
+	await invalidateCache(`${type}:${id}`);
 	res.json(makeResponse(true, result));
 }));
 

@@ -21,6 +21,7 @@ import config from "../config.js";
 import { sleep } from "../core/utils.js";
 import { withCache, invalidateCacheByPattern } from "../core/cache.js";
 import { paginateQuery } from "../core/pagination.js";
+import * as utils from "../core/utils.js";
 
 const accountPool = JSON.parse(fs.readFileSync("./accounts.json", "utf8"));
 
@@ -59,7 +60,7 @@ async function saveProblems(problems) {
 async function fetchProblemPage(page, type, retry = 0) {
 	if (retry >= 3) return [];
 	
-	if (retry > 0) await utils.sleep(1000 * retry);
+	if (retry > 0) await sleep(1000 * retry);
 	try {
 		const url = `https://www.luogu.com.cn/problem/list?type=${type}&page=${page}`;
 		const html = (await fetchContent(url, defaultHeaders, { c3vk: "new" })).resp.data;
@@ -80,7 +81,7 @@ async function fetchProblemPage(page, type, retry = 0) {
 async function fetchProblemTotal(type, retry = 0) {
 	if (retry >= 3) return 0;
 	
-	if (retry > 0) await utils.sleep(1000 * retry);
+	if (retry > 0) await sleep(1000 * retry);
 	try {
 		const url = `https://www.luogu.com.cn/problem/list?type=${type}&page=1`;
 		const html = (await fetchContent(url, defaultHeaders, { c3vk: "new" })).resp.data;
@@ -148,7 +149,7 @@ export async function updateProblemSet(type) {
 		}
 		logger.debug(`${type} 题库已抓取 ${page}/${total}: 已抓取 ${problems.length} 道题目, ${allProblems.length} 道待更新`);
 		if (allProblems.length > 0) await saveProblems(allProblems);
-		await utils.sleep(500);
+		await sleep(500);
 	}
 }
 

@@ -13,6 +13,7 @@
 import Article from "../models/article.js";
 import Paste from "../models/paste.js";
 import { withCache } from "../core/cache.js";
+import { formatDate } from "../core/utils.js";
 
 /**
  * 为给定实体类型生成时间序列数据
@@ -48,7 +49,7 @@ async function getTimeSeriesData(entityClass) {
 	
 	const dailyMap = {};
 	dailyData.forEach((row) => {
-		const dateStr = utils.formatDate(row.date);
+		const dateStr = formatDate(row.date);
 		dailyMap[dateStr] = Number(row.count);
 	});
 	
@@ -59,7 +60,7 @@ async function getTimeSeriesData(entityClass) {
 	today.setHours(0, 0, 0, 0);
 	
 	while (currentDate <= today) {
-		const dateStr = utils.formatDate(currentDate);
+		const dateStr = formatDate(currentDate);
 		const dayCount = dailyMap[dateStr] || 0;
 		cumulativeCount += dayCount;
 		result.push({

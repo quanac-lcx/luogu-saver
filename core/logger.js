@@ -1,6 +1,6 @@
 import chalk from 'chalk';
-import { formatDate } from './utils.js';
 import config from "../config.js";
+import { formatDate } from "./utils.js";
 
 export function info(msg) {
 	console.log(`[INFO] [${formatDate(new Date())}] ${msg}`);

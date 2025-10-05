@@ -1,0 +1,61 @@
+{% extends "layout.njk" %}
+
+{% block extra_header %}
+<script src="/static/self/js/benben_mentions.js"></script>
+<link rel="stylesheet" href="/static/self/css/markdown.css" />
+<link rel="stylesheet" href="/static/katex/katex.min.css">
+<script defer src="/static/katex/katex.min.js"></script>
+<script defer src="/static/katex/contrib/auto-render.min.js"></script>
+<script type="module" src="/static/self/js/render.js"></script>
+<style>
+    .benben-item {
+        padding: 15px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .benben-item:last-child {
+        border-bottom: none;
+    }
+    .benben-content {
+        margin-top: 10px;
+        line-height: 1.6;
+    }
+    .benben-meta {
+        color: #6b7280;
+        font-size: 0.9em;
+    }
+    .benben-header img {
+        width: 48px;
+        height: 48px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="ui grid">
+        <div class="sixteen wide column">
+            <div class="card shadow">
+                <h1 class="ui center aligned header">
+                    <span><i class="ui at icon colored"></i>被 at 查询</span>
+                    <div class="sub header" style="margin-top: 10px;">查询指定用户被 at 的犇犇（24 小时内）</div>
+                </h1>
+            </div>
+        </div>
+    </div>
+    <div class="ui grid">
+        <div class="sixteen wide column">
+            <div class="card shadow outline">
+                <div class="ui icon fluid input">
+                    <input type="text" id="username-input" placeholder="输入用户名（不含 @）" onkeypress="handleKeyPress(event)">
+                    <i class="inverted circular search link icon" onclick="performSearch()"></i>
+                </div>
+            </div>
+            <div id="search-results" class="card shadow outline" style="display: none;">
+                <h3 class="ui dividing header">
+                    <i class="list icon"></i>
+                    查询结果
+                </h3>
+                <div id="results-content"></div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

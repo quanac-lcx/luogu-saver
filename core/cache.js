@@ -1,5 +1,5 @@
 /**
- * 带自动绕过支持的Redis缓存工具
+ * 带自动绕过支持的 Redis 缓存工具
  *
  * 此模块通过中间件上下文提供带自动绕过检测的综合缓存解决方案。
  * 它处理缓存操作，具有适当的错误处理和回退机制。
@@ -13,19 +13,19 @@
  * @author Copilot
  */
 
-import { shouldBypassCache } from "../middleware/cache_context.js";
+import { shouldBypassCache, shouldForceUpdateCache } from "../middleware/cache_context.js";
 
 /**
  * 带自动绕过支持的缓存执行包装器
  *
- * 此函数提供完整的缓存解决���案：
+ * 此函数提供完整的缓存解决方案：
  * - 通过中间件上下文自动检测缓存绕过请求
  * - 优雅地处理缓存读写错误
  * - 当缓存操作失败时提供新数据回退
  * - 支持不同数据类型的可配置TTL
  *
  * @param {Object} options - 配置对象
- * @param {string} options.cacheKey - 要使用的Redis缓存键
+ * @param {string} options.cacheKey - 要使用的 Redis 缓存键
  * @param {number} options.ttl - 存活时间（秒）(0 = 不缓存)
  * @param {Function} options.fetchFn - 缓存未命中或绕过时获取数据的函数
  * @returns {Promise<*>} - 缓存的或新的数据
@@ -33,7 +33,7 @@ import { shouldBypassCache } from "../middleware/cache_context.js";
  * @example
  * const result = await withCache({
  *   cacheKey: 'article:123',
- *   ttl: 1800, // 30分钟
+ *   ttl: 1800, // 30 分钟
  *   fetchFn: async () => await Article.findById('123')
  * });
  */
@@ -48,10 +48,15 @@ export async function withCache({ cacheKey, ttl, fetchFn }) {
 	
 	try {
 		const cachedResult = await redis.get(cacheKey);
-		if (cachedResult) {
+		if (cachedResult && !shouldForceUpdateCache()) {
 			return JSON.parse(cachedResult);
 		}
-		logger.debug(`缓存未命中: ${cacheKey}`);
+		if (shouldForceUpdateCache()) {
+			logger.debug(`强制更新缓存: ${cacheKey}`);
+		}
+		else {
+			logger.debug(`缓存未命中: ${cacheKey}`);
+		}
 	} catch (error) {
 		logger.warn(`缓存无法读取 ${cacheKey}: ${error.message}`);
 	}
@@ -83,20 +88,19 @@ export async function withCache({ cacheKey, ttl, fetchFn }) {
  * await invalidateCache(['article:123', 'recent_articles:10']);
  */
 export async function invalidateCache(keys) {
-	// Skip if Redis is not connected
 	if (!isRedisConnected()) {
-		logger.debug('Redis未连接，跳过缓存失效操作');
+		logger.debug('Redis 未连接，跳过缓存失效操作');
 		return;
 	}
 	
 	try {
 		if (typeof keys === 'string') {
-			await redis.del(keys);
-			logger.debug(`已使缓存失效: ${keys}`);
+			const resp = await redis.del(keys);
+			if (resp !== 0) logger.debug(`已使 ${resp} 条缓存失效: ${keys}`);
 		} else if (Array.isArray(keys)) {
 			if (keys.length > 0) {
-				await redis.redis.del(...keys);
-				logger.debug(`已使缓存失效: ${keys.join(', ')}`);
+				const resp = await redis.redis.del(...keys);
+				if (resp !== 0) logger.debug(`已使 ${resp} 条缓存失效: ${keys.join(', ')}`);
 			}
 		}
 	} catch (error) {
@@ -117,9 +121,8 @@ export async function invalidateCache(keys) {
  * await invalidateCacheByPattern('recent_articles:*'); // 删除所有最近文章缓存
  */
 export async function invalidateCacheByPattern(pattern) {
-	// 如果 Redis 未连接，则跳过。
 	if (!isRedisConnected()) {
-		logger.debug('Redis 未连接，跳过基于模式的缓存失效');
+		logger.debug('Redis 未连接，跳过缓存失效操作');
 		return;
 	}
 	

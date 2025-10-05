@@ -1,4 +1,5 @@
 import { createHash } from 'crypto';
+import config from "../config.js";
 
 export function formatDate(date, format = "YYYY-MM-DD HH:mm:ss") {
 	const padZero = (num) => (num < 10 ? "0" + num : num);
@@ -79,4 +80,11 @@ export function getPermissionNames(permission) {
 	return JUDGEMENT_PERMISSIONS.filter(
 		(perm) => (perm.id & permission) === perm.id
 	).map((perm) => perm.name);
+}
+export function makeApiUrl(path) {
+	return config.service.api_url.replace(/\/+$/, '') + '/' + path.replace(/^\/+/, '');
+}
+
+export function makeApiUrl(path) {
+	return config.service.api_url.replace(/\/+$/, '') + '/' + path.replace(/^\/+/, '');
 }

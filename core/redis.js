@@ -1,4 +1,5 @@
 import Redis from 'ioredis';
+import { changeErrorType, DatabaseError, logError } from "./errors.js";
 
 export default class RedisManager {
 	constructor(options = {}) {
@@ -27,29 +28,29 @@ export default class RedisManager {
 			password: this.options.password,
 			db: this.options.db,
 			retryStrategy: (times) => {
-				// Limit reconnection attempts
 				if (times >= this.maxReconnectAttempts) {
-					console.warn('Redis max reconnection attempts reached. Disabling Redis.');
+					logError(new DatabaseError("Redis 连接重试次数超限"), null)
 					return false;
 				}
-				// Exponential backoff: 1s, 2s, 4s, 8s, 16s
 				return Math.min(Math.pow(2, times) * 1000, 30000);
 			},
 			connectTimeout: 10000,
 		});
 		
 		this.redis.on('connect', () => {
-			console.log('Redis 成功连接！');
+			logger.info('Redis 连接成功');
 			this.connected = true;
 			this.reconnectAttempts = 0;
 		});
 		
-		this.redis.on('error', (err) => {
+		this.redis.on('error', async (err) => {
 			this.connected = false;
 			this.reconnectAttempts++;
-			console.error('Redis 连接发生错误:', err.message);
+			err = changeErrorType(err, DatabaseError);
+			err.message = 'Redis 连接发生错误: ' + err.message;
+			await logError(err, null)
 			if (err.code === 'ECONNREFUSED' && this.reconnectAttempts >= this.maxReconnectAttempts) {
-				console.warn('Redis连接失败。正在禁用Redis……');
+				logger.warn('已禁用 Redis，超过最大重试次数');
 				this.redis.disconnect();
 			}
 		});
@@ -73,7 +74,9 @@ export default class RedisManager {
 			}
 			return true;
 		} catch (err) {
-			console.error('Redis SET error:', err.message);
+			err = changeErrorType(err, DatabaseError);
+			err.message = 'Redis SET 操作失败: ' + err.message;
+			await logError(err, null);
 			return false;
 		}
 	}
@@ -84,7 +87,9 @@ export default class RedisManager {
 		try {
 			return await this.redis.get(key);
 		} catch (err) {
-			console.error('Redis GET error:', err.message);
+			err = changeErrorType(err, DatabaseError);
+			err.message = 'Redis GET 操作失败: ' + err.message;
+			await logError(err, null);
 			return null;
 		}
 	}
@@ -95,7 +100,9 @@ export default class RedisManager {
 		try {
 			return await this.redis.del(key);
 		} catch (err) {
-			console.error('Redis DEL error:', err.message);
+			err = changeErrorType(err, DatabaseError);
+			err.message = 'Redis DEL 操作失败: ' + err.message;
+			await logError(err, null);
 			return 0;
 		}
 	}
@@ -106,7 +113,9 @@ export default class RedisManager {
 		try {
 			return await this.redis.exists(key);
 		} catch (err) {
-			console.error('Redis EXISTS error:', err.message);
+			err = changeErrorType(err, DatabaseError);
+			err.message = 'Redis EXISTS 操作失败: ' + err.message;
+			await logError(err, null);
 			return false;
 		}
 	}
@@ -117,7 +126,9 @@ export default class RedisManager {
 		try {
 			return await this.redis.keys(pattern);
 		} catch (err) {
-			console.error('Redis KEYS error:', err.message);
+			err = changeErrorType(err, DatabaseError);
+			err.message = 'Redis KEYS 操作失败: ' + err.message;
+			await logError(err, null);
 			return [];
 		}
 	}

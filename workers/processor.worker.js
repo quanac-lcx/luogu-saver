@@ -17,7 +17,7 @@ export async function executeTask(task) {
 				await fetchContent(
 					task.url,
 					task.headers,
-					{ c3vk: task.type === 1 ? "legacy": task.type === 2 ? "new" : "new" }
+					{ c3vk: task.type === 1 ? "legacy" : "new" }
 				),
 				task.type
 			);

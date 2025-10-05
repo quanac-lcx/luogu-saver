@@ -49,35 +49,35 @@ export async function saveJudgements(task, obj) {
 	
 	for (const log of logs) {
 		// 验证单条记录的数据完整性
-		if (!log || !log.user || !log.user.uid || !log.created_at) {
+		if (!log || !log.user || !log.user.uid || !log.time) {
 			logger.warn('跳过无效的陶片放逐记录：缺少必要字段');
 			continue;
 		}
 		
 		try {
 			// 检查是否已存在
-				const existing = await Judgement.findOne({
-					where: {
-						user_uid: log.user.uid,
-						created_at: new Date(log.created_at * 1000)
-					}
-				});
+			const existing = await Judgement.findOne({
+				where: {
+					user_uid: log.user.uid,
+					time: new Date(log.time * 1000)
+				}
+			});
 			
 			if (existing) {
-				logger.debug(`跳过已存在的记录: 用户 ${log.user.uid}, 时间 ${new Date(log.created_at * 1000)}`);
+				logger.debug(`跳过已存在的记录: 用户 ${log.user.uid}, 时间 ${new Date(log.time * 1000)}`);
 				skippedCount++;
 				continue;
 			}
 			
-				const judgement = Judgement.create({
-					user_uid: log.user.uid,
-					reason: log.reason || null,
-					permission_granted: log.addedPermission || 0,
-					permission_revoked: log.revokedPermission || 0,
-					created_at: new Date(log.created_at * 1000)
-				});
+			const judgement = Judgement.create({
+				user_uid: log.user.uid,
+				reason: log.reason || null,
+				permission_granted: log.addedPermission || 0,
+				permission_revoked: log.revokedPermission || 0,
+				time: new Date(log.time * 1000)
+			});
 			await judgement.save();
-				logger.debug(`保存陶片放逐记录: 用户 ${log.user.uid}, 时间 ${new Date(log.created_at * 1000)}`);
+			logger.debug(`保存陶片放逐记录: 用户 ${log.user.uid}, 时间 ${new Date(log.time * 1000)}`);
 			savedCount++;
 		} catch (saveError) {
 			logger.error(`保存单条陶片放逐记录失败 (用户 ${log.user.uid}): ${saveError.message}`);
@@ -112,7 +112,7 @@ export async function getRecentJudgements(page = 1, perPage = 10) {
 		fetchFn: async () => {
 			const skip = (page - 1) * perPage;
 			let judgements = await Judgement.find({
-				order: { created_at: 'DESC' },
+				order: { time: 'DESC' },
 				skip: skip,
 				take: perPage + 1
 			});

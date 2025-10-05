@@ -58,7 +58,7 @@
                                  alt="default avatar">
                             <span class="judgement-user user-Gray">用户 {{ judgement.user_uid }}</span>
                         {% endif %}
-                        <span class="judgement-time">{{ judgement.created_at }}</span>
+                        <span class="judgement-time">{{ judgement.formatted_date }}</span>
                     </div>
                     <div class="judgement-content">
                         {% if judgement.permission_granted > 0 or judgement.permission_revoked > 0 %}

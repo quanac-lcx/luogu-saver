@@ -1,6 +1,5 @@
 import { BaseModel } from "./common.js";
 import User from "./user.js";
-import * as utils from "../core/utils.js";
 
 export default class Judgement extends BaseModel {
 
@@ -11,6 +10,7 @@ export default class Judgement extends BaseModel {
 	reason = null;
 	permission_granted = null;
 	permission_revoked = null;
+	time = null;
 	created_at = null;
 
 	constructor(data) {

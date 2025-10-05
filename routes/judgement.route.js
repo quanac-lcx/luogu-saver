@@ -4,19 +4,19 @@ import { ValidationError, asyncHandler, asyncJsonHandler } from "../core/errors.
 import { fetchContent } from "../core/request.js";
 import { pushTaskToQueue } from '../workers/index.worker.js';
 import { makeResponse } from '../core/utils.js';
-
+import config from '../config.js';
 const router = express.Router();
 
 router.get('/save', asyncJsonHandler(async (req, res) => {
-	const url = `https://www.luogu.com.cn/judgement`;
-		const id = await pushTaskToQueue({ url, aid: '-', type: 3 });
+	const url = config.LUOGU_JUDGEMENT_URL || 'https://www.luogu.com.cn/judgement';
+	const id = await pushTaskToQueue({ url, aid: null, type: 3 });
 	res.send(makeResponse(true, { message: "请求已入队", result: id }));
 }));
 
 // Debug endpoint to view raw HTML
 router.get('/debug', asyncHandler(async (req, res) => {
 	try {
-		const url = `https://www.luogu.com.cn/judgement`;
+		const url = config.LUOGU_JUDGEMENT_URL || 'https://www.luogu.com.cn/judgement';
 		const { resp } = await fetchContent(url, {}, { c3vk: "new" });
 		
 		const htmlData = resp?.data || '';

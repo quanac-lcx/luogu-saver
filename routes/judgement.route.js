@@ -20,7 +20,7 @@ router.get('/debug-html', asyncHandler(async (req, res) => {
 		const { resp } = await fetchContent(url, {}, { c3vk: "new" });
 		
 		const htmlData = resp?.data || '';
-		const dataLength = htmlData ? (typeof htmlData === 'string' ? htmlData.length : JSON.stringify(htmlData).length) : 0;
+		const length = htmlData ? (typeof htmlData === 'string' ? htmlData.length : JSON.stringify(htmlData).length) : 0;
 		
 		// Return the raw HTML with syntax highlighting
 		res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -67,18 +67,32 @@ router.get('/debug-html', asyncHandler(async (req, res) => {
 			border-radius: 5px;
 			margin-bottom: 15px;
 		}
+		.msg {
+			background: #0aa216ff;
+			color: #000000ff;
+			padding: 10px;
+			border-radius: 5px;
+			margin-bottom: 15px;
+		}
 	</style>
 </head>
 <body>
 	<div class="container">
-		<h1>陶片放逐页面源代码调试</h1>
+		<h1>洛谷保存站-陶片放逐调试</h1>
 		<div class="info">
-			<strong>URL:</strong> ${url}<br>
-			<strong>状态码:</strong> ${resp.status || 'N/A'}<br>
-			<strong>内容类型:</strong> ${typeof htmlData}<br>
-			<strong>内容长度:</strong> ${dataLength} 字符
+			<strong>URL:</strong> ${url};<br>
+			<strong>状态码:</strong> ${resp.status || 'N/A'}；<br>
+			<strong>内容类型:</strong> ${typeof htmlData}；<br>
+			<strong>内容长度:</strong> ${length} 字符。
 		</div>
-		<h2>HTML 源代码：</h2>
+		<div class="msg">
+			保存站会在用户点击保存按钮时，抓取洛谷陶片放逐页面的 HTML 代码，解析页面中的 JSON 数据，提取 logs 记录，最后保存到数据库并调取数据库内容渲染。<br />
+			如果有爬取失败现象，请检查下方代码能否正常显示 ↓
+		</div>
+		</div>
+		<h2>响应头：</h2>
+		<pre>${JSON.stringify(resp.headers, null, 2)}</pre>
+		<h2>源代码：</h2>
 		<pre>${typeof htmlData === 'string' ? htmlData.replace(/</g, '&lt;').replace(/>/g, '&gt;') : JSON.stringify(htmlData, null, 2)}</pre>
 	</div>
 </body>

@@ -11,6 +11,7 @@
 
 import Judgement from "../models/judgement.js";
 import { withCache, invalidateCache, invalidateCacheByPattern } from "../core/cache.js";
+import { logger } from '../core/logger.js';
 
 /**
  * 保存陶片放逐记录

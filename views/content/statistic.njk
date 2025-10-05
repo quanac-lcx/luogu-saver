@@ -19,27 +19,34 @@
 
 {% block content %}
     <div class="ui center aligned grid">
-        <div class="five wide column">
-            <div class="card outline shadow padding-10" style="text-align: center;">
-                <div style="margin-top: 12px;"><i class="ui icon newspaper colored"></i>专栏文章</div>
-                <div id="article-total" class="number">0</div>
-                <div class="change" id="today-articles"><i class="fas fa-arrow-up"></i> 今日新增 0 篇</div>
-            </div>
-        </div>
-        <div class="five wide column">
-            <div class="card outline shadow padding-10" style="text-align: center;">
-                <div style="margin-top: 12px;"><i class="ui icon paste colored"></i>剪贴板内容</div>
-                <div id="paste-total" class="number">0</div>
-                <div class="change" id="today-pastes"><i class="fas fa-arrow-up"></i> 今日新增 0 个</div>
-            </div>
-        </div>
-        <div class="five wide column">
-            <div class="card outline shadow padding-10" style="text-align: center;">
-                <div style="margin-top: 12px;"><i class="ui icon database colored"></i>数据总量</div>
-                <div id="total" class="number">0</div>
-                <div class="change" id="today-total"><i class="fas fa-arrow-up"></i> 今日新增 0 条</div>
-            </div>
-        </div>
+		<div class="four wide column">
+			<div class="card outline shadow padding-10" style="text-align: center;">
+				<div style="margin-top: 12px;"><i class="ui icon newspaper colored"></i>专栏文章</div>
+				<div id="article-total" class="number">0</div>
+				<div class="change" id="today-articles"><i class="fas fa-arrow-up"></i> 今日新增 0 篇</div>
+			</div>
+		</div>
+		<div class="four wide column">
+			<div class="card outline shadow padding-10" style="text-align: center;">
+				<div style="margin-top: 12px;"><i class="ui icon paste colored"></i>剪贴板内容</div>
+				<div id="paste-total" class="number">0</div>
+				<div class="change" id="today-pastes"><i class="fas fa-arrow-up"></i> 今日新增 0 个</div>
+			</div>
+		</div>
+		<div class="four wide column">
+			<div class="card outline shadow padding-10" style="text-align: center;">
+				<div style="margin-top: 12px;"><i class="ui ban icon colored"></i>陶片放逐</div>
+				<div id="judgement-total" class="number">0</div>
+				<div class="change" id="today-judgements"><i class="fas fa-arrow-up"></i> 今日新增 0 条</div>
+			</div>
+		</div>
+		<div class="four wide column">
+			<div class="card outline shadow padding-10" style="text-align: center;">
+				<div style="margin-top: 12px;"><i class="ui icon database colored"></i>数据总量</div>
+				<div id="total" class="number">0</div>
+				<div class="change" id="today-total"><i class="fas fa-arrow-up"></i> 今日新增 0 条</div>
+			</div>
+		</div>
     </div>
 
     <div class="ui grid" style="margin-top:20px;">
@@ -69,14 +76,16 @@
                 text: msg
             });
 		}
-		function updateCards(data) {
-			$("#article-total").text(`${data.articles_total}`);
-			$("#paste-total").text(`${data.pastes_total}`);
-			$("#total").text(`${data.articles_total + data.pastes_total}`);
-			$("#today-articles").html(`<i class="fas fa-arrow-up"></i> 今日新增 ${data.today_articles} 篇`);
-			$("#today-pastes").html(`<i class="fas fa-arrow-up"></i> 今日新增 ${data.today_pastes} 个`);
-			$("#today-total").html(`<i class="fas fa-arrow-up"></i> 今日新增 ${data.today_articles + data.today_pastes} 条`);
-		}
+		  function updateCards(data) {
+			  $("#article-total").text(`${data.articles_total}`);
+			  $("#paste-total").text(`${data.pastes_total}`);
+			  $("#judgement-total").text(`${data.judgements_total}`);
+			  $("#total").text(`${data.articles_total + data.pastes_total + data.judgements_total}`);
+			  $("#today-articles").html(`<i class="fas fa-arrow-up"></i> 今日新增 ${data.today_articles} 篇`);
+			  $("#today-pastes").html(`<i class="fas fa-arrow-up"></i> 今日新增 ${data.today_pastes} 个`);
+			  $("#today-judgements").html(`<i class="fas fa-arrow-up"></i> 今日新增 ${data.today_judgements} 条`);
+			  $("#today-total").html(`<i class="fas fa-arrow-up"></i> 今日新增 ${data.today_articles + data.today_pastes + data.today_judgements} 条`);
+		  }
 		function createLineChart(ctx, datasets, title) {
 			return new Chart(ctx, {
 				type: 'line',

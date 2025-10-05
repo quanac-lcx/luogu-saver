@@ -5,8 +5,8 @@ import { asyncHandler } from "../core/errors.js";
 const router = express.Router();
 
 router.get('/', asyncHandler(async (req, res) => {
-	const { articlesCount, pastesCount } = await getCounts();
-	res.render('index.njk', { title: "首页", paste_count: pastesCount, article_count: articlesCount });
+		const { articlesCount, pastesCount, judgementsCount } = await getCounts();
+		res.render('index.njk', { title: "首页", paste_count: pastesCount, article_count: articlesCount, judgement_count: judgementsCount });
 }));
 
 router.get('/search', (req, res) => {

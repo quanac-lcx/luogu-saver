@@ -14,7 +14,7 @@ router.get('/save', asyncJsonHandler(async (req, res) => {
 }));
 
 // Debug endpoint to view raw HTML
-router.get('/debug-html', asyncHandler(async (req, res) => {
+router.get('/debug', asyncHandler(async (req, res) => {
 	try {
 		const url = `https://www.luogu.com.cn/judgement`;
 		const { resp } = await fetchContent(url, {}, { c3vk: "new" });
@@ -29,7 +29,7 @@ router.get('/debug-html', asyncHandler(async (req, res) => {
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>陶片放逐页面源代码调试</title>
+	<title>陶片放逐调试</title>
 	<style>
 		body {
 			font-family: monospace;

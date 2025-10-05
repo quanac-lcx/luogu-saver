@@ -47,8 +47,16 @@ const port = config.port;
 const nunjucksEnv = nunjucks.configure("views", { autoescape: true, express: app, watch: true });
 
 // Add custom Nunjucks filters
+
 nunjucksEnv.addFilter('getPermissionNames', (permission) => {
 	return utils.getPermissionNames(permission);
+});
+
+nunjucksEnv.addFilter('formatDate', (date) => {
+	if (!date) return '';
+	// 支持字符串、Date对象
+	const dateObj = (date instanceof Date) ? date : new Date(date);
+	return utils.formatDate(dateObj);
 });
 
 app.use(cookieParser());

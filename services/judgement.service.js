@@ -125,7 +125,6 @@ export async function getRecentJudgements(page = 1, perPage = 10) {
 			
 			judgements = await Promise.all(judgements.map(async (judgement) => {
 				await judgement.loadRelationships();
-				judgement.formatDate();
 				return judgement;
 			}));
 			

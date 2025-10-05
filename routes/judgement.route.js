@@ -9,7 +9,8 @@ const router = express.Router();
 
 router.get('/save', asyncJsonHandler(async (req, res) => {
 	const url = config.LUOGU_JUDGEMENT_URL || 'https://www.luogu.com.cn/judgement';
-	const id = await pushTaskToQueue({ url, aid: null, type: 3 });
+	// const timestamp = new Date().getTime().toString();
+	const id = await pushTaskToQueue({ url, aid: 9178, type: 3 }); // 使用时间戳作为 aid
 	res.send(makeResponse(true, { message: "请求已入队", result: id }));
 }));
 

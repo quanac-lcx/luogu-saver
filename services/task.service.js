@@ -10,6 +10,12 @@
  * 注意：由于任务具有高度动态的性质，任务不会被缓存。
  * 任务状态变化非常频繁，缓存会提供过期数据。
  * 
+ * 任务类型说明：
+ * 0 = articles (专栏文章)
+ * 1 = paste (剪贴板)
+ * 2 = (Benben)
+ * 3 = judgement (陶片放逐)
+ * 
  * @author Copilot
  */
 
@@ -22,8 +28,8 @@ import Task from "../models/task.js";
  * 任务创建时设置 7 天过期时间。
  * 
  * @param {Object} task - 任务配置对象
- * @param {string} task.aid - 关联的文章/粘贴板 ID
- * @param {number} task.type - 任务类型（0=文章, 1=粘贴板）
+ * @param {string} task.aid - 关联的文章/粘贴板/陶片放逐 ID
+ * @param {number} task.type - 任务类型（0=文章, 1=粘贴板, 2=陶片放逐）
  * @returns {Promise<string>} 生成的任务 ID
  */
 export async function createTask(task) {

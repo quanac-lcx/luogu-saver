@@ -1,9 +1,11 @@
 import commonHandler from "./common.handler.js";
+import judgementHandler from "./judgement.handler.js";
 import {makeResponse} from "../core/utils.js";
 
 const handlers = {
 	0: commonHandler,
-	1: commonHandler
+	1: commonHandler,
+	3: judgementHandler
 };
 
 export async function handleFetch({ resp }, type) {

@@ -13,7 +13,7 @@
 {% endblock %}
 
 {% block content %}
-    <input type="hidden" id="url" value="{{ 'paste' if task.type else 'article' }}/{{ task.oid }}">
+    <input type="hidden" id="url" value="{% if task.type == 3 %}judgement{% elif task.type == 1 %}paste/{{ task.oid }}{% else %}article/{{ task.oid }}{% endif %}">
     <div class="ui grid">
         <div class="sixteen wide column">
             <div class="card shadow">
@@ -82,7 +82,7 @@
                                 <i class="info circle icon"></i>
                                 任务类型
                             </div>
-                            <div>{{ '剪贴板保存 (Type = 1)' if task.type else '专栏文章保存 (Type = 0)' }}</div>
+                            <div>{% if task.type == 3 %}陶片放逐保存 (Type = 3){% elif task.type == 1 %}剪贴板保存 (Type = 1){% else %}专栏文章保存 (Type = 0){% endif %}</div>
                         </div>
                     </div>
                     <div class="item">
@@ -100,7 +100,7 @@
                                 <i class="cog icon"></i>
                                 操作
                             </div>
-                            <button id="goto-btn" class="ui mini positive button" {{ '' if task.status == 'Completed' else 'disabled' }} onclick="window.location.href='/{{ 'paste' if task.type else 'article' }}/{{ task.oid }}'">
+                            <button id="goto-btn" class="ui mini positive button" {{ '' if task.status == 'Completed' else 'disabled' }} onclick="window.location.href='{% if task.type == 3 %}/judgement{% elif task.type == 1 %}/paste/{{ task.oid }}{% else %}/article/{{ task.oid }}{% endif %}'">
                                 <i class="ui icon paper plane"></i> 跳转
                             </button>
                             <button id="save-btn" class="ui mini teal button" style="display: {{ 'inline-block' if task.status == 'Failed' else 'none' }};">

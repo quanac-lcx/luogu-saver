@@ -112,7 +112,6 @@
                                 <i class="cog icon"></i>
                                 操作
                             </div>
-                            <button id="goto-btn" class="ui mini positive button" {{ '' if task.status == 'Completed' else 'disabled' }} onclick="window.location.href='{% if task.type == 3 %}/judgement{% elif task.type == 1 %}/paste/{{ task.oid }}{% else %}/article/{{ task.oid }}{% endif %}'">
                             <button id="goto-btn" class="ui mini positive button" {{ '' if task.status == 'Completed' else 'disabled' }} onclick="handleGotoClick({{ task.type }}, '{{ task.oid }}')">
                                 <i class="ui icon paper plane"></i> 跳转
                             </button>

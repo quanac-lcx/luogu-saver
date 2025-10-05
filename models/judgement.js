@@ -23,8 +23,8 @@ export default class Judgement extends BaseModel {
 	}
 
 	/**
-	 * Formats the time field for display.
-	 * If no date is provided, formats this.time.
+	 * 格式化时间字段以供显示
+	 * 如果未提供日期，则格式化this.time
 	 * @param {Date|string|null} date
 	 * @returns {string}
 	 */

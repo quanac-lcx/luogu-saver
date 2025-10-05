@@ -29,7 +29,7 @@ import Task from "../models/task.js";
  * 
  * @param {Object} task - 任务配置对象
  * @param {string} task.aid - 关联的文章/粘贴板/陶片放逐 ID
- * @param {number} task.type - 任务类型（0=文章, 1=粘贴板, 2=陶片放逐）
+ * @param {number} task.type - 任务类型（0=文章, 1=粘贴板, 3=陶片放逐）
  * @returns {Promise<string>} 生成的任务 ID
  */
 export async function createTask(task) {

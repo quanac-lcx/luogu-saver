@@ -78,7 +78,7 @@ export const JUDGEMENT_PERMISSIONS = [
 	{ id: 524288, name: "使用图床" },
 	{ id: 1073741824, name: "超级用户" },
 ];
-// quanac-lcx 注：JUDGEMENT_PERMISSIONS 部分参考了 lglg.top 的代码。
+// Note by quanac-lcx: The JUDGEMENT_PERMISSIONS section refers to code from lglg.top.
 
 export function getPermissionNames(permission) {
 	return JUDGEMENT_PERMISSIONS.filter(

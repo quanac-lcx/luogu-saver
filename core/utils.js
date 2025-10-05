@@ -57,6 +57,10 @@ export function sanitizeLatex(src) {
 	});
 }
 
+export function makeApiUrl(path) {
+	return config.service.api_url.replace(/\/+$/, '') + '/' + path.replace(/^\/+/, '');
+}
+
 export const JUDGEMENT_PERMISSIONS = [
 	{ id: 1, name: "登录鉴权" },
 	{ id: 2, name: "进入主站" },

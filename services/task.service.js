@@ -34,7 +34,8 @@ import { generateRandomString } from "../core/utils.js";
  * @returns {Promise<string>} 生成的任务 ID
  */
 export async function createTask(task) {
-	if (!task.aid) {
+	// 仅对非 type 3 任务要求 aid
+	if (task.type !== 3 && !task.aid) {
 		throw new Error('任务 aid 不能为空');
 	}
 	const id = generateRandomString();

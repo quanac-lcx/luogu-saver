@@ -63,7 +63,7 @@ export function startQueueProcessor() {
 export async function pushTaskToQueue(task) {
 	if (queue.getQueueLength() >= config.queue.maxLength)
 		throw new SystemError('队列已满，请稍后再试');
-	if (!task.aid && task.type !== 3) { // 对于类型3（陶片放逐），可能不需要aid
+	if (!task.aid && task.type !== 3) { // 类型3（陶片放逐）不需要aid
 		throw new SystemError('任务缺少必要的aid参数');
 	}
 	task.id = await createTask(task);

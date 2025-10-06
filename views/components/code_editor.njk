@@ -1,0 +1,137 @@
+{# 可复用的代码编辑器组件 #}
+{# 
+参数:
+- id: 编辑器唯一ID
+- name: 表单字段名称
+- value: 初始值（可选）
+- language: 代码语言（默认 'html'）
+- placeholder: 占位符文本（可选）
+- rows: 编辑器行数（默认 10）
+- label: 标签文本（可选）
+#}
+{% macro codeEditor(id, name, value = '', language = 'html', placeholder = '', rows = 10, label = '') %}
+<div class="field">
+    {% if label %}
+    <label>{{ label }}</label>
+    {% endif %}
+    <div class="code-editor-wrapper" data-editor-id="{{ id }}">
+        <textarea 
+            id="{{ id }}" 
+            name="{{ name }}" 
+            rows="{{ rows }}" 
+            placeholder="{{ placeholder }}"
+            class="code-editor-textarea"
+            style="font-family: 'Fira Code', monospace; display: none;">{{ value }}</textarea>
+        <div id="{{ id }}-editor" class="code-editor-container" style="border: 1px solid #ddd; border-radius: 4px; overflow: hidden;"></div>
+    </div>
+</div>
+
+<script type="module">
+import { createHighlighter } from 'https://fastly.jsdelivr.net/npm/shiki@latest/+esm';
+
+(async function() {
+    const textarea = document.getElementById('{{ id }}');
+    const editorContainer = document.getElementById('{{ id }}-editor');
+    const language = '{{ language }}';
+    
+    // 创建编辑器 DOM 结构
+    const editorWrapper = document.createElement('div');
+    editorWrapper.style.position = 'relative';
+    
+    const editorTextarea = document.createElement('textarea');
+    editorTextarea.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        padding: 12px;
+        font-family: 'Fira Code', monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        border: none;
+        outline: none;
+        resize: vertical;
+        color: transparent;
+        caret-color: black;
+        background: transparent;
+        z-index: 2;
+        white-space: pre;
+        overflow-wrap: normal;
+        overflow-x: auto;
+    `;
+    editorTextarea.value = textarea.value;
+    editorTextarea.rows = {{ rows }};
+    
+    const highlightDiv = document.createElement('div');
+    highlightDiv.style.cssText = `
+        position: relative;
+        width: 100%;
+        min-height: ${{{ rows }} * 1.5 * 14 + 24}px;
+        padding: 12px;
+        font-family: 'Fira Code', monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        pointer-events: none;
+        white-space: pre;
+        overflow-x: auto;
+        background: #ffffff;
+    `;
+    
+    editorWrapper.appendChild(highlightDiv);
+    editorWrapper.appendChild(editorTextarea);
+    editorContainer.appendChild(editorWrapper);
+    
+    // 创建高亮器
+    let highlighter;
+    try {
+        highlighter = await createHighlighter({
+            themes: ['github-light'],
+            langs: [language, 'html', 'css', 'javascript', 'text']
+        });
+    } catch (e) {
+        console.error('代码高亮器加载失败:', e);
+        editorTextarea.style.color = 'black';
+        return;
+    }
+    
+    // 更新高亮
+    function updateHighlight() {
+        const code = editorTextarea.value;
+        try {
+            const html = highlighter.codeToHtml(code || ' ', {
+                lang: language,
+                theme: 'github-light'
+            });
+            highlightDiv.innerHTML = html;
+            // 同步到原始 textarea
+            textarea.value = code;
+        } catch (e) {
+            highlightDiv.textContent = code;
+        }
+    }
+    
+    // 监听输入
+    editorTextarea.addEventListener('input', updateHighlight);
+    editorTextarea.addEventListener('scroll', () => {
+        highlightDiv.scrollLeft = editorTextarea.scrollLeft;
+    });
+    
+    // 初始高亮
+    updateHighlight();
+    
+    // 支持 Tab 键缩进
+    editorTextarea.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const start = editorTextarea.selectionStart;
+            const end = editorTextarea.selectionEnd;
+            const value = editorTextarea.value;
+            editorTextarea.value = value.substring(0, start) + '\t' + value.substring(end);
+            editorTextarea.selectionStart = editorTextarea.selectionEnd = start + 1;
+            updateHighlight();
+        }
+    });
+})();
+</script>
+{% endmacro %}

@@ -372,7 +372,6 @@ export async function updateAnnouncement(content, enabled = true) {
         
         return { message: "公告更新成功" };
     } catch (error) {
-        // 使用 logError 记录错误
         await logError(error);
         throw error;
     }

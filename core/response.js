@@ -1,8 +1,6 @@
 
 import * as cheerio from "cheerio";
 import { ExternalServiceError } from "./errors.js";
-import logger from "./logger.js";
-
 
 export function getResponseObject(response, type = 0) {
 	if (!type) {
@@ -32,11 +30,11 @@ export function getResponseObject(response, type = 0) {
 		const result = dataObj.data || {};
 		
 		if (result && result.logs && Array.isArray(result.logs)) {
-			logger.debug(`[DEBUG] 陶片放逐 API 返回 ${result.logs.length} 条记录`);
+			logger.debug(`陶片放逐 API 返回 ${result.logs.length} 条记录`);
 		} else {
 			const resultStr = JSON.stringify(result, null, 2) || '';
-			logger.debug('[DEBUG] 陶片放逐数据结构异常: ' + resultStr.substring(0, 1000));
-			logger.debug('[DEBUG] dataObj 完整结构: ' + JSON.stringify(dataObj, null, 2).substring(0, 1000));
+			logger.debug('陶片放逐数据结构异常: ' + resultStr.substring(0, 1000));
+			logger.debug('dataObj 完整结构: ' + JSON.stringify(dataObj, null, 2).substring(0, 1000));
 			// 确保返回一个包含空logs数组的对象
 			if (!result.logs) {
 				result.logs = [];

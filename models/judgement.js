@@ -21,15 +21,4 @@ export default class Judgement extends BaseModel {
 	async loadRelationships() {
 		this.user = await User.findById(this.user_uid);
 	}
-
-	/**
-	 * 格式化时间字段以供显示
-	 * 如果未提供日期，则格式化this.time
-	 * @param {Date|string|null} date
-	 * @returns {string}
-	 */
-	formatDate(date = null) {
-		const d = date ? new Date(date) : (this.time ? new Date(this.time) : null);
-		return d ? d.toLocaleString() : "";
-	}
 }

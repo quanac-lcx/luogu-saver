@@ -1,4 +1,5 @@
 {% extends "../layout.njk" %}
+{% from "../components/code_editor.njk" import codeEditor %}
 
 {% block content %}
 <div class="ui grid">
@@ -22,10 +23,15 @@
             </h3>
             
             <form class="ui form" id="announcement-form">
-                <div class="field">
-                    <label>公告内容（支持 HTML）</label>
-                    <textarea id="announcement-content" name="content" rows="8" placeholder="输入公告内容，支持 HTML 标签">{{ announcement.content if announcement else "" }}</textarea>
-                </div>
+                {{ codeEditor(
+                    id='announcement-content',
+                    name='content',
+                    value=announcement.content if announcement else '',
+                    language='html',
+                    placeholder='输入公告内容，支持 HTML 标签',
+                    rows=12,
+                    label='公告内容（支持 HTML）'
+                ) }}
                 
                 <div class="field">
                     <div class="ui checkbox">

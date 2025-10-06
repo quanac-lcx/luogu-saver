@@ -21,18 +21,17 @@
                 <i class="ui icon edit colored"></i>
                 编辑公告
             </h3>
-            
             <form class="ui form" id="announcement-form">
                 {{ codeEditor(
                     id='announcement-content',
                     name='content',
-                    value=announcement.content if announcement else '',
+                    value=(announcement.content if announcement else ''),
                     language='html',
                     placeholder='输入公告内容，支持 HTML 标签',
                     rows=12,
                     label='公告内容（支持 HTML）'
                 ) }}
-                
+
                 <div class="field">
                     <div class="ui checkbox">
                         <input type="checkbox" id="announcement-enabled" name="enabled" {% if announcement.enabled %}checked{% endif %}>
@@ -66,16 +65,14 @@
 </div>
 
 <script>
-// 实时预览
 document.getElementById('announcement-content').addEventListener('input', function() {
     document.getElementById('announcement-preview').innerHTML = this.value || '暂无公告内容';
 });
 
-// 表单提交
 document.getElementById('announcement-form').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    const content = document.getElementById('announcement-content').value;
+    const content = document.getElementById('announcement-content-input').value;
     const enabled = document.getElementById('announcement-enabled').checked;
     
     const submitBtn = this.querySelector('button[type="submit"]');

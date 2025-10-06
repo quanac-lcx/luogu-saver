@@ -1,88 +1,62 @@
-{# 可复用的代码编辑器组件 #}
-{# 
-参数:
-- id: 编辑器唯一ID
-- name: 表单字段名称
-- value: 初始值（可选）
-- language: 代码语言（默认 'html'）
-- placeholder: 占位符文本（可选）
-- rows: 编辑器行数（默认 10）
-- label: 标签文本（可选）
-#}
 {% macro codeEditor(id, name, value = '', language = 'html', placeholder = '', rows = 10, label = '') %}
 <div class="field">
     {% if label %}
-    <label>{{ label }}</label>
+    <label for="{{ id }}-input">{{ label }}</label>
     {% endif %}
-    <div class="code-editor-wrapper" data-editor-id="{{ id }}">
-        <textarea 
-            id="{{ id }}" 
-            name="{{ name }}" 
-            rows="{{ rows }}" 
+    <textarea name="{{ name }}" id="{{ id }}-data" style="display: none;">{{ value }}</textarea>
+
+    <div id="{{ id }}" class="code-editor-container"
+         style="position: relative; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; font-family: 'Fira Code', monospace; font-size: 14px; line-height: 1.5;">
+
+        <div id="{{ id }}-highlight" class="code-editor-highlight"
+             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 12px; box-sizing: border-box; pointer-events: none; overflow: hidden; background: #ffffff; tab-size: 4;">
+        </div>
+
+        <textarea
+            id="{{ id }}-input"
+            rows="{{ rows }}"
             placeholder="{{ placeholder }}"
+            spellcheck="false"
+            autocorrect="off"
+            autocapitalize="off"
             class="code-editor-textarea"
-            style="font-family: 'Fira Code', monospace; display: none;">{{ value }}</textarea>
-        <div id="{{ id }}-editor" class="code-editor-container" style="border: 1px solid #ddd; border-radius: 4px; overflow: hidden;"></div>
+            style="position: relative; z-index: 2; display: block; width: 100%; min-height: {{ rows * 1.5 * 14 + 24 }}px; margin: 0; padding: 12px; box-sizing: border-box; font-family: inherit; font-size: inherit; line-height: inherit; border: none; outline: none; resize: vertical; color: transparent; caret-color: black; background: transparent; white-space: pre; overflow-wrap: normal; overflow: auto; tab-size: 4; scrollbar-width: none;">{{ value }}</textarea>
     </div>
 </div>
+
+<style>
+.code-editor-textarea::-webkit-scrollbar {
+    display: none;
+}
+</style>
 
 <script type="module">
 import { createHighlighter } from 'https://fastly.jsdelivr.net/npm/shiki@latest/+esm';
 
 (async function() {
-    const textarea = document.getElementById('{{ id }}');
-    const editorContainer = document.getElementById('{{ id }}-editor');
+    const id = '{{ id }}';
+    const dataTextarea = document.getElementById(id + '-data');
+    const inputTextArea = document.getElementById(id + '-input');
+    const highlightDiv = document.getElementById(id + '-highlight');
     const language = '{{ language }}';
-    
-    // 创建编辑器 DOM 结构
-    const editorWrapper = document.createElement('div');
-    editorWrapper.style.position = 'relative';
-    
-    const editorTextarea = document.createElement('textarea');
-    editorTextarea.style.cssText = `
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        padding: 12px;
-        font-family: 'Fira Code', monospace;
-        font-size: 14px;
-        line-height: 1.5;
-        border: none;
-        outline: none;
-        resize: vertical;
-        color: transparent;
-        caret-color: black;
-        background: transparent;
-        z-index: 2;
-        white-space: pre;
-        overflow-wrap: normal;
-        overflow-x: auto;
-    `;
-    editorTextarea.value = textarea.value;
-    editorTextarea.rows = {{ rows }};
-    
-    const highlightDiv = document.createElement('div');
-    highlightDiv.style.cssText = `
-        position: relative;
-        width: 100%;
-        min-height: ${{{ rows }} * 1.5 * 14 + 24}px;
-        padding: 12px;
-        font-family: 'Fira Code', monospace;
-        font-size: 14px;
-        line-height: 1.5;
-        pointer-events: none;
-        white-space: pre;
-        overflow-x: auto;
-        background: #ffffff;
-    `;
-    
-    editorWrapper.appendChild(highlightDiv);
-    editorWrapper.appendChild(editorTextarea);
-    editorContainer.appendChild(editorWrapper);
-    
-    // 创建高亮器
+
+    const styleId = 'shiki-reset-style';
+    if (!document.getElementById(styleId)) {
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.textContent = `
+            .code-editor-highlight pre,
+            .code-editor-highlight code {
+                white-space: pre !important; margin: 0 !important; padding: 0 !important;
+                border: none !important; background-color: transparent !important;
+                overflow: visible !important; font-family: inherit !important;
+                font-size: inherit !important; line-height: inherit !important;
+                tab-size: inherit !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
     let highlighter;
     try {
         highlighter = await createHighlighter({
@@ -91,47 +65,44 @@ import { createHighlighter } from 'https://fastly.jsdelivr.net/npm/shiki@latest/
         });
     } catch (e) {
         console.error('代码高亮器加载失败:', e);
-        editorTextarea.style.color = 'black';
+        inputTextArea.style.color = 'black';
         return;
     }
-    
-    // 更新高亮
+
     function updateHighlight() {
-        const code = editorTextarea.value;
+        const code = inputTextArea.value;
+        const codeForHighlight = code + '\n';
+
         try {
-            const html = highlighter.codeToHtml(code || ' ', {
-                lang: language,
-                theme: 'github-light'
-            });
+            const html = highlighter.codeToHtml(codeForHighlight, { lang: language, theme: 'github-light' });
             highlightDiv.innerHTML = html;
-            // 同步到原始 textarea
-            textarea.value = code;
+            dataTextarea.value = code;
         } catch (e) {
-            highlightDiv.textContent = code;
+            highlightDiv.textContent = codeForHighlight;
         }
+        syncScroll();
     }
-    
-    // 监听输入
-    editorTextarea.addEventListener('input', updateHighlight);
-    editorTextarea.addEventListener('scroll', () => {
-        highlightDiv.scrollLeft = editorTextarea.scrollLeft;
+
+    function syncScroll() {
+        highlightDiv.scrollTop = inputTextArea.scrollTop;
+        highlightDiv.scrollLeft = inputTextArea.scrollLeft;
+    }
+
+    inputTextArea.addEventListener('input', () => {
+        setTimeout(updateHighlight, 0);
     });
-    
-    // 初始高亮
-    updateHighlight();
-    
-    // 支持 Tab 键缩进
-    editorTextarea.addEventListener('keydown', (e) => {
+
+    inputTextArea.addEventListener('scroll', syncScroll);
+
+    inputTextArea.addEventListener('keydown', (e) => {
         if (e.key === 'Tab') {
             e.preventDefault();
-            const start = editorTextarea.selectionStart;
-            const end = editorTextarea.selectionEnd;
-            const value = editorTextarea.value;
-            editorTextarea.value = value.substring(0, start) + '\t' + value.substring(end);
-            editorTextarea.selectionStart = editorTextarea.selectionEnd = start + 1;
-            updateHighlight();
+            document.execCommand('insertText', false, '\t');
+            setTimeout(updateHighlight, 0);
         }
     });
+
+    updateHighlight();
 })();
 </script>
 {% endmacro %}

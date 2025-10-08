@@ -32,7 +32,7 @@ node app.js
 
 ## 许可协议
 
-本项目遵循 [GPL-3.0 许可协议](LICENSE)。
+本项目采用 [GPL-3.0 许可协议](LICENSE)。
 
 ## Star 趋势
 

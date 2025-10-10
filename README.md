@@ -7,8 +7,7 @@
     <img src="https://www.codefactor.io/repository/github/laikit-dev/luogu-saver/badge" />
     <img src="https://img.shields.io/github/license/laikit-dev/luogu-saver" />
   </p>
-  <img src=".github/image/README_light.png#gh-light-mode-only" />
-  <img src=".github/image/README_dark.png#gh-dark-mode-only" />
+  <img src=".github/image/preview.png" />
 </div>
 
 ## 简介

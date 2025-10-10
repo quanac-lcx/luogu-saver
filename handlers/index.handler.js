@@ -3,13 +3,15 @@ import broadcastBenbenHandler from "./broadcast.benben.handler.js";
 import taskProgressBenbenHandler from "./task_progress.benben.handler.js";
 import taskSuccessBenbenHandler from "./task_success.benben.handler.js";
 import taskErrorBenbenHandler from "./task_error.benben.handler.js";
+import judgementHandler from "./judgement.handler.js";
 import { makeResponse } from "../core/utils.js";
 import { changeErrorType, SystemError } from "../core/errors.js";
 
 const fetchHandlers = {
 	0: commonFetchHandler,
 	1: commonFetchHandler,
-	2: (resp, type) => resp.data
+	2: (resp, type) => resp.data,
+	3: judgementHandler
 };
 
 const benbenHandlers = {

@@ -1,0 +1,169 @@
+{% extends "layout.njk" %}
+
+{% block extra_header %}
+    <link rel="stylesheet" href="/static/self/css/judgement.css">
+{% endblock %}
+
+{% block content %}
+    <div class="ui grid">
+        <div class="sixteen wide column">
+            <div class="card shadow">
+                <h1 class="ui center aligned header">
+                    <span><i class="ui ban icon colored"></i> 陶片放逐</span>
+                    <div class="sub header" style="margin-top: 10px;">
+                        <p>此处公布近期涉及到用户权限变更（即封号、禁言、禁止私信）的管理日志，以提升管理流程透明度，以及引起部分用户警示。<br />
+                        请参阅 <a target="blank" href="https://help.luogu.com.cn/rules/community">洛谷社区规则</a>。</p>
+                    </div>
+                </h1>
+                <a href="javascript:void(0)" id="save-btn" class="ui positive button">
+                    <i class="ui icon sync alternate"></i> 更新陶片放逐记录
+                </a>
+                <a href="https://www.luogu.com.cn/judgement" target="_blank" class="ui gray button">
+                    <i class="ui icon code"></i> 查看原网页
+                </a>
+                <!--
+                <a href="/judgement/debug" target="_blank" class="ui brown button">
+                    <i class="ui icon code"></i> Debug
+                </a>
+                -->
+            </div>
+        </div>
+        <div class="per-page-selector">
+                    每页显示
+                    <select id="per-page-select" onchange="changePerPage(this.value)">
+                        <option value="10" {{ 'selected' if perPage == 10 else '' }}>10条</option>
+                        <option value="20" {{ 'selected' if perPage == 20 else '' }}>20条</option>
+                        <option value="30" {{ 'selected' if perPage == 30 else '' }}>30条</option>
+                        <option value="40" {{ 'selected' if perPage == 40 else '' }}>40条</option>
+                        <option value="50" {{ 'selected' if perPage == 50 else '' }}>50条</option>
+                    </select>
+                    记录
+        </div>
+        {% if judgements and judgements.length > 0 %}
+            {% for judgement in judgements %}
+            <div class="sixteen wide column">
+                <div class="judgement-item">
+                    <div class="judgement-header">
+                        {% if judgement.user %}
+                            <img class="judgement-avatar" 
+                                 src="https://cdn.luogu.com.cn/upload/usericon/{{ judgement.user.id }}.png"
+                                 alt="user avatar"
+                                 onerror="this.src='https://cdn.luogu.com.cn/upload/usericon/3.png'">
+                            <a href="/user/{{ judgement.user.id }}" class="judgement-user user-{{ judgement.user.color }}">
+                                {{ judgement.user.name }}
+                            </a>
+                        {% else %}
+                            <img class="judgement-avatar" 
+                                 src="https://cdn.luogu.com.cn/upload/usericon/3.png"
+                                 alt="default avatar">
+                            <span class="judgement-user user-Gray">用户 {{ judgement.user_uid }}</span>
+                        {% endif %}
+                        <span class="judgement-time">{{ judgement.created_at | formatDate }}</span>
+                    </div>
+                    <div class="judgement-content">
+                        {% if judgement.permission_granted > 0 or judgement.permission_revoked > 0 %}
+                            <div class="judgement-permissions">
+                                <ul>
+                                    {% if judgement.permission_granted > 0 %}
+                                        {% set granted_names = judgement.permission_granted | getPermissionNames %}
+                                        {% for name in granted_names %}
+                                            <li>授予 <span class="permission-badge permission-granted">{{ name }}</span> 权限</li>
+                                        {% endfor %}
+                                    {% endif %}
+                                    {% if judgement.permission_revoked > 0 %}
+                                        {% set revoked_names = judgement.permission_revoked | getPermissionNames %}
+                                        {% for name in revoked_names %}
+                                            <li>撤销 <span class="permission-badge permission-revoked">{{ name }}</span> 权限</li>
+                                        {% endfor %}
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                        <p class="judgement-reason">{{ judgement.reason }}。</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+            <div class="sixteen wide column">
+                <div class="pagination-container">
+                    {% if page > 1 %}
+                        <a href="/judgement?page={{ page - 1 }}&per_page={{ perPage }}" class="ui button">
+                            <i class="ui icon arrow left"></i> 上一页
+                        </a>
+                    {% endif %}
+                    <span class="ui button disabled">第 {{ page }} 页</span>
+                    {% if hasMore %}
+                        <a href="/judgement?page={{ page + 1 }}&per_page={{ perPage }}" class="ui button">
+                            下一页 <i class="ui icon arrow right"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="sixteen wide column">
+                <div class="card shadow outline">
+                    <div style="text-align: center; padding: 50px 0;">
+                        <i class="ui icon info circle" style="font-size: 3rem; color: gray;"></i>
+                        <div style="font-size: 1.5rem; color: gray; margin-top: 10px;">暂无陶片放逐记录</div>
+                        <div style="margin-top: 10px;">你是幸运儿！</div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <script>
+        document.getElementById("save-btn")?.addEventListener("click", async () => {
+            try {
+                const response = await fetch('/judgement/save');
+                
+                if (response.status === 429) {
+                    const retryAfter = response.headers.get("Retry-After");
+                    const waitSec = retryAfter ? parseInt(retryAfter, 10) : null;
+                    Swal.fire({
+                        title: "请求过于频繁",
+                        text: waitSec ? `请等待 ${waitSec} 秒后再试` : "请稍后再试",
+                        icon: "warning",
+                        confirmButtonText: "确定"
+                    });
+                    return;
+                }
+                
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || `HTTP ${response.status}`);
+                }
+                
+                const tid = data.result;
+                Swal.fire({
+                    title: "请求已入队",
+                    text: "您的请求已加入队列，任务 ID: " + tid,
+                    icon: "success",
+                    confirmButtonText: "查看进度",
+                    showCancelButton: true,
+                    cancelButtonText: "继续保存",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = "/task/" + encodeURIComponent(tid);
+                    }
+                });
+            } catch (err) {
+                console.error(err);
+                Swal.fire({
+                    title: "保存失败",
+                    text: err.message || "网络错误或请求过于频繁，请稍后再试",
+                    icon: "error",
+                    confirmButtonText: "确定"
+                });
+            }
+        });
+        
+        function changePerPage(newPerPage) {
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('per_page', newPerPage);
+            urlParams.set('page', '1');
+            window.location.href = window.location.pathname + '?' + urlParams.toString();
+        }
+    </script>
+{% endblock %}

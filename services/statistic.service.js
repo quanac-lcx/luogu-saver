@@ -10,8 +10,11 @@
  * @author Copilot
  */
 
+
 import Article from "../models/article.js";
 import Paste from "../models/paste.js";
+import Judgement from "../models/judgement.js";
+import { getJudgementsCount } from "./judgement.service.js";
 import { withCache } from "../core/cache.js";
 import { formatDate } from "../core/utils.js";
 
@@ -88,36 +91,42 @@ export async function getStatistics() {
 		cacheKey: 'statistics:full',
 		ttl: 300,
 		fetchFn: async () => {
-			const articlesCount = await Article.count();
-			const pastesCount = await Paste.count();
-			
-			const today = new Date();
-			today.setHours(0, 0, 0, 0);
-			
-			const [todayArticles, todayPastes] = await Promise.all([
-				Article.createQueryBuilder("a")
-					.where("a.created_at >= :today", { today })
-					.getCount(),
-				Paste.createQueryBuilder("p")
-					.where("p.created_at >= :today", { today })
-					.getCount()
-			]);
-			
-			const [articlesData, pastesData] = await Promise.all([
-				getTimeSeriesData(Article),
-				getTimeSeriesData(Paste)
-			]);
-			
-			return {
-				articles_total: articlesCount,
-				pastes_total: pastesCount,
-				today_articles: todayArticles,
-				today_pastes: todayPastes,
-				time_series: {
-					articles: articlesData,
-					pastes: pastesData,
-				},
-			};
+			   const articlesCount = await Article.count();
+			   const pastesCount = await Paste.count();
+			   const judgementsCount = await Judgement.count();
+
+			   const today = new Date();
+			   today.setHours(0, 0, 0, 0);
+
+			   const [todayArticles, todayPastes, todayJudgements] = await Promise.all([
+				   Article.createQueryBuilder("a")
+					   .where("a.created_at >= :today", { today })
+					   .getCount(),
+				   Paste.createQueryBuilder("p")
+					   .where("p.created_at >= :today", { today })
+					   .getCount(),
+				   Judgement.createQueryBuilder("j")
+					   .where("j.created_at >= :today", { today })
+					   .getCount()
+			   ]);
+
+			   const [articlesData, pastesData] = await Promise.all([
+				   getTimeSeriesData(Article),
+				   getTimeSeriesData(Paste)
+			   ]);
+
+			   return {
+				   articles_total: articlesCount,
+				   pastes_total: pastesCount,
+				   judgements_total: judgementsCount,
+				   today_articles: todayArticles,
+				   today_pastes: todayPastes,
+				   today_judgements: todayJudgements,
+				   time_series: {
+					   articles: articlesData,
+					   pastes: pastesData,
+				   },
+			   };
 		}
 	});
 }
@@ -134,12 +143,13 @@ export async function getCounts() {
 	return await withCache({
 		cacheKey: 'statistics:counts',
 		ttl: 120,
-		fetchFn: async () => {
-			const [articlesCount, pastesCount] = await Promise.all([
-				Article.count(),
-				Paste.count()
-			]);
-			return { articlesCount, pastesCount };
-		}
+		   fetchFn: async () => {
+			   const [articlesCount, pastesCount, judgementsCount] = await Promise.all([
+				   Article.count(),
+				   Paste.count(),
+				   getJudgementsCount()
+			   ]);
+			   return { articlesCount, pastesCount, judgementsCount };
+		   }
 	});
 }

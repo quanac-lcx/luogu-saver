@@ -13,7 +13,7 @@
 {% endblock %}
 
 {% block content %}
-    <input type="hidden" id="url" value="{{ 'paste' if task.type else 'article' }}/{{ task.oid }}">
+    <input type="hidden" id="url" value="{% if task.type == 3 %}judgement{% elif task.type == 1 %}paste/{{ task.oid }}{% else %}article/{{ task.oid }}{% endif %}">
     <div class="ui grid">
         <div class="sixteen wide column">
             <div class="card shadow">
@@ -89,6 +89,8 @@
                                 剪贴板保存 (Type = 1)
                                 {% elif task.type == 2 %}
                                 犇犇保存 (Type = 2)
+                                {% elif task.type == 3 %}
+                                陶片放逐保存 (Type = 3)
                                 {% else %}
                                 未知类型 (Type = {{ task.type }})
                                 {% endif %}
@@ -125,9 +127,10 @@
 
     <script>
 		const TASK_TYPE_ROUTES = {
-			0: (oid) => `/article/${oid}`,
-			1: (oid) => `/paste/${oid}`,
-			2: (oid) => `/benben/history?uid=${oid}`,
+            0: (oid) => `/article/${oid}`,
+            1: (oid) => `/paste/${oid}`,
+            2: (oid) => `/benben/history?uid=${oid}`,
+            3: (oid) => `/judgement`,
 		};
 
 		function handleGotoClick(taskType, oid) {

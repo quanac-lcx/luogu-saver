@@ -1,0 +1,89 @@
+{% extends "layout.njk" %}
+
+{% block extra_header %}
+    <script src="/static/self/js/paintboard_token.js"></script>
+    <style>
+        .info-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+        }
+        .info-section h4 {
+            margin-top: 0;
+            color: #1e40af;
+        }
+        .info-section ul {
+            margin-bottom: 0;
+        }
+        .success-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0fdf4;
+            border-left: 4px solid #22c55e;
+        }
+        .success-section h4 {
+            margin-top: 0;
+            color: #16a34a;
+        }
+        .token-display {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 1.1em;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+        .action-buttons {
+            margin-top: 10px;
+        }
+        .action-buttons button {
+            margin-right: 10px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="ui grid">
+        <div class="sixteen wide column">
+            <div class="card shadow">
+                <h1 class="ui center aligned header">
+                    <span><i class="ui key icon colored"></i>绘板 AccessKey 管理</span>
+                    <div class="sub header" style="margin-top: 10px;">获取或刷新绘板访问 AccessKey</div>
+                </h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="ui grid">
+        <div class="sixteen wide column">
+            <div class="card shadow outline">
+                <h3 class="ui header">
+                    <i class="user icon"></i>
+                    当前用户：{{ user.name }} (UID: {{ user.id }})
+                </h3>
+                <div class="ui divider"></div>
+
+                <div class="action-buttons">
+                    <button class="ui primary button" id="apply-btn">
+                        <i class="ui icon key"></i> 获取 AccessKey
+                    </button>
+                    <button class="ui orange button" id="refresh-btn">
+                        <i class="ui icon redo"></i> 刷新 AccessKey
+                    </button>
+                </div>
+
+                <div id="result-section" style="display: none;">
+                    <div class="success-section">
+                        <h4><i class="check circle icon"></i> AccessKey 信息</h4>
+                        <div class="token-display" id="token-display"></div>
+                        <button class="ui green button" id="copy-btn">
+                            <i class="copy icon"></i> 复制 AccessKey
+                        </button>
+                        <p style="margin-top: 15px;">请妥善保管您的 AccessKey。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

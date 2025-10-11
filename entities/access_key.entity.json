@@ -1,0 +1,12 @@
+{
+    "name": "AccessKey",
+    "tableName": "access_key",
+    "columns": {
+        "id": { "type": "varchar", "length": 8, "primary": true },
+        "uid": { "type": "int", "nullable": false },
+        "created_at": { "type": "timestamp", "default": "CURRENT_TIMESTAMP", "nullable": false }
+    },
+    "uniques": [
+        { "name": "uid", "columns": ["uid"] }
+    ]
+}

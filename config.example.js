@@ -39,6 +39,10 @@ export default {
 		db: 0
 	},
 	service: {
-		name: "luogu-saver"
+		name: "luogu-saver",
+		api_url: "https://api-benben.imken.dev",
+		crawler_url: "https://spider-benben.imken.dev",
+		ws_url: "wss://spider-benben.imken.dev",
+		callback_timeout: 30000
 	}
 }

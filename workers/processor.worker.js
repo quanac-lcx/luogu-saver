@@ -50,7 +50,6 @@ export async function executeTask(task) {
 				await updateTask(task.id, 3, err.message);
 			});
 			
-			// 对于 type 2 任务，已设置回调和超时机制处理异步结果，任务状态将根据回调或超时结果更新，故此处直接返回
 			return;
 		}
 		
@@ -82,14 +81,12 @@ export async function executeTask(task) {
 			throw new SystemError(`未知任务类型: ${task.type}`);
 		}
 	} catch (err) {
-		// 处理网络错误
 		if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' ||
 			err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' ||
 			err.message?.includes('timeout') || err.message?.includes('network')) {
 			err = new NetworkError(`爬取内容失败: ${err.message}`);
 		}
 		
-		// 处理数据库错误
 		if (err.name === 'QueryFailedError' || err.code?.startsWith('ER_') ||
 			err.message?.includes('database') || err.message?.includes('query')) {
 			err = new DatabaseError(`保存数据失败: ${err.message}`);

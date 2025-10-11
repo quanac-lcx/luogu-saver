@@ -34,50 +34,13 @@ function performCrawl() {
 }
 
 function executeCrawl(uid) {
-	Swal.fire({
-		title: '正在提交...',
-		allowOutsideClick: false,
-		didOpen: () => {
-			Swal.showLoading();
+	handleTaskRequest(`/benben/save/${uid}`, {
+		loadingTitle: '正在提交...',
+		successTitle: '请求已入队',
+		errorTitle: '失败',
+		onSuccess: () => {
+			// 清空输入框
+			document.getElementById('uid-input').value = '';
 		}
 	});
-	
-	fetch(`/benben/save/${uid}`)
-		.then(response => response.json())
-		.then(data => {
-			if (data.success) {
-				const tid = data.result;
-				Swal.fire({
-					title: '请求已入队',
-					text: '您的请求已加入队列，任务 ID: ' + tid,
-					icon: 'success',
-					confirmButtonText: '查看进度',
-					showCancelButton: true,
-					cancelButtonText: '继续抓取'
-				}).then((result) => {
-					if (result.isConfirmed) {
-						window.location.href = '/task/' + encodeURIComponent(tid);
-					} else {
-						// 清空输入框
-						document.getElementById('uid-input').value = '';
-					}
-				});
-			} else {
-				Swal.fire({
-					title: '失败',
-					text: data.message || '提交失败，请稍后重试',
-					icon: 'error',
-					confirmButtonText: '确定'
-				});
-			}
-		})
-		.catch(error => {
-			console.error('Crawl error:', error);
-			Swal.fire({
-				title: '错误',
-				text: '网络错误或请求失败，请稍后再试',
-				icon: 'error',
-				confirmButtonText: '确定'
-			});
-		});
 }

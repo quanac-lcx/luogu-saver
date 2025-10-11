@@ -133,6 +133,13 @@
             3: (oid) => `/judgement`,
 		};
 
+		const TASK_TYPE_RETRY_ENDPOINTS = {
+			0: (oid) => `/article/save/${oid}`,
+			1: (oid) => `/paste/save/${oid}`,
+			2: (oid) => `/benben/save/${oid}`,
+			3: (oid) => `/judgement/save`,
+		};
+
 		function handleGotoClick(taskType, oid) {
 			const routeGenerator = TASK_TYPE_ROUTES[taskType];
 			if (routeGenerator) {
@@ -141,10 +148,29 @@
 				console.error(`未知的任务类型: ${taskType}`);
 			}
 		}
+
 		document.addEventListener("DOMContentLoaded", () => {
 			const statusLabel = document.getElementById("task-status");
 			const infoEl = document.getElementById("task-info");
 			const expireEl = document.getElementById("task-expire");
+
+			// 重试按钮功能
+			document.getElementById("save-btn")?.addEventListener("click", async () => {
+				const taskType = {{ task.type }};
+				const oid = '{{ task.oid }}';
+				const endpointGenerator = TASK_TYPE_RETRY_ENDPOINTS[taskType];
+
+				if (!endpointGenerator) {
+					console.error(`未知的任务类型: ${taskType}`);
+					return;
+				}
+
+				await handleTaskRequest(endpointGenerator(oid), {
+					loadingTitle: '正在重试...',
+					successTitle: '重试请求已入队',
+					errorTitle: '重试失败'
+				});
+			});
 
 			function setStatus(status, position) {
 				statusLabel.className = "ui label";

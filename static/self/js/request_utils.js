@@ -117,3 +117,80 @@ document.addEventListener("DOMContentLoaded", () => {
 		}
 	});
 });
+
+async function handleTaskRequest(endpoint, options = {}) {
+	const {
+		loadingTitle = '正在提交...',
+		successTitle = '请求已入队',
+		errorTitle = '请求失败',
+		onSuccess = null
+	} = options;
+
+	try {
+		Swal.fire({
+			title: loadingTitle,
+			allowOutsideClick: false,
+			didOpen: () => {
+				Swal.showLoading();
+			}
+		});
+
+		const response = await fetch(endpoint);
+
+		if (response.status === 429) {
+			const retryAfter = response.headers.get("Retry-After");
+			const waitSec = retryAfter ? parseInt(retryAfter, 10) : null;
+			Swal.fire({
+				title: "请求过于频繁",
+				text: waitSec ? `请等待 ${waitSec} 秒后再试` : "请稍后再试",
+				icon: "warning",
+				confirmButtonText: "确定"
+			});
+			return null;
+		}
+
+		const data = await response.json();
+		if (!response.ok || !data.success) {
+			throw new Error(data.message || `HTTP ${response.status}`);
+		}
+
+		const tid = data.result;
+		const result = await Swal.fire({
+			title: successTitle,
+			text: "您的请求已加入队列，任务 ID: " + tid,
+			icon: "success",
+			confirmButtonText: "查看进度",
+			showCancelButton: true,
+			cancelButtonText: "继续操作",
+		});
+
+		if (result.isConfirmed) {
+			window.location.href = "/task/" + encodeURIComponent(tid);
+		}
+
+		if (onSuccess) {
+			onSuccess(tid, result);
+		}
+
+		return { tid, result };
+	} catch (err) {
+		console.error(err);
+		Swal.fire({
+			title: errorTitle,
+			text: err.message || "网络错误或请求失败，请稍后再试",
+			icon: "error",
+			confirmButtonText: "确定"
+		});
+		return null;
+	}
+}
+
+function showRateLimitError(retryAfter) {
+	const waitSec = retryAfter ? parseInt(retryAfter, 10) : null;
+	Swal.fire({
+		title: "请求过于频繁",
+		text: waitSec ? `请等待 ${waitSec} 秒后再试` : "请稍后再试",
+		icon: "warning",
+		confirmButtonText: "确定"
+	});
+}

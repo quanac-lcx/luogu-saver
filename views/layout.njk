@@ -55,11 +55,23 @@
                 <i class="ui icon cloud download"></i> <span>犇犇抓取</span>
             </a>
         </div>
+        <a class="item accordion-title">
+            <i class="ui icon paint brush"></i>
+            <span>冬日绘板</span>
+        </a>
+        <div class="accordion-content menu" style="display:none;">
+            <a class="item" href="/paintboard/view">
+                <i class="ui icon image outline"></i> <span>查看绘板</span>
+            </a>
+            <a class="item" href="/paintboard/token">
+                <i class="ui icon key"></i> <span>申请凭据</span>
+            </a>
+        </div>
         <a class="item" href="/article/recent">
             <i class="ui icon history"></i> <span>最近更新</span>
         </a>
         <a class="item" href="/judgement">
-            <i class="ui icon ban"></i> <span>陶片放逐</span>
+            <i class="ui icon list alternate"></i> <span>陶片放逐</span>
         </a>
         <a class="item" href="/statistic">
             <i class="ui icon chart bar"></i> <span>统计数据</span>
@@ -208,29 +220,29 @@
 				const $title = $(this);
 				const $content = $title.next(".accordion-content");
 
-				$(".accordion-content").not($content).slideUp(200);
+				$(".accordion-content").not($content).stop(true, true).slideUp(200);
 				$(".accordion-title").not($title).removeClass("active");
 
 				if ($title.hasClass("active")) {
 					$title.removeClass("active");
-					$content.slideUp(200);
+					$content.stop(true, true).slideUp(200);
 					lastActive = null;
 				} else {
 					$title.addClass("active");
-					$content.slideDown(200);
+					$content.stop(true, true).slideDown(200);
 					lastActive = $title;
 				}
 			});
 
 			$sidebar.on("mouseleave", function() {
-				$(".accordion-content").slideUp(200);
+				$(".accordion-content").stop(true, true).slideUp(200);
 				$(".accordion-title").removeClass("active");
 			});
 
 			$sidebar.on("mouseenter", function() {
 				if (lastActive) {
 					lastActive.addClass("active");
-					lastActive.next(".accordion-content").slideDown(200);
+					lastActive.next(".accordion-content").stop(true, true).slideDown(200);
 				}
 			});
 		});

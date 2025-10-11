@@ -258,11 +258,13 @@ function initialPaint() {
 			for (let y = 0; y < 600; y++) {
 				for (let x = 0; x< 1000; x++) {
 					const idx = (y * 1000 + x) * 3;
-					update(y,x,'#' +
-						byteArray[idx].toString(16).padStart(2,'0') +
-						byteArray[idx+1].toString(16).padStart(2,'0') +
-						byteArray[idx+2].toString(16).padStart(2,'0')
-					);
+					if (myarr[y][x] === '#dddddd') {
+						update(y, x, '#' +
+							byteArray[idx].toString(16).padStart(2, '0') +
+							byteArray[idx + 1].toString(16).padStart(2, '0') +
+							byteArray[idx + 2].toString(16).padStart(2, '0')
+						);
+					}
 				}
 			}
 		}

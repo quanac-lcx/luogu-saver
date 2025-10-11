@@ -47,6 +47,14 @@ function update(y, x, color, t = false) {
 	ctx.fillRect(x * scale, y * scale, scale, scale);
 }
 
+function highlightPixel(x, y) {
+	const canvas = document.getElementById("mycanvas");
+	const ctx = canvas.getContext("2d");
+	
+	ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
+	ctx.fillRect(x * scale, y * scale, scale, scale);
+}
+
 zoom = function (s) {
 	const container = document.getElementById('canvas-box');
 	const canvas = document.getElementById('mycanvas');
@@ -72,14 +80,43 @@ let ws = null;
 $(document).ready(function() {
 	const canvas = document.getElementById('mycanvas');
 	const container = document.getElementById('canvas-box');
+	let ctx = canvas.getContext("2d");
+	
+	let highlightedX = -1;
+	let highlightedY = -1;
+	
+	const zoom = function (s) {
+		scale = s;
+		const displayWidth = W * scale;
+		const displayHeight = H * scale;
+		canvas.width = displayWidth;
+		canvas.height = displayHeight;
+		canvas.style.width = displayWidth + 'px';
+		canvas.style.height = displayHeight + 'px';
+		
+		// --- FIX: Re-acquire the context after resizing the canvas ---
+		ctx = canvas.getContext("2d");
+		
+		if (s === 1) {
+			const containerWidth = container.clientWidth;
+			const containerHeight = container.clientHeight;
+			viewOffsetX = (containerWidth - displayWidth) / 2;
+			viewOffsetY = (containerHeight - displayHeight) / 2;
+		}
+		canvas.style.transform = `translate(${viewOffsetX}px, ${viewOffsetY}px)`;
+		render(myarr);
+	}
+	
 	zoom(1);
+	
 	$("[zoom]").click(function () {
-		zoom($(this).attr('zoom'));
+		zoom(parseInt($(this).attr('zoom')));
 	});
+	
 	$('#select-color').bind("change", (evt) => {
 		nowColor = evt.currentTarget.value;
 	});
-	render(myarr);
+	
 	canvas.addEventListener('mousedown', function(e) {
 		isDragging = true;
 		dragStartX = e.clientX;
@@ -87,19 +124,21 @@ $(document).ready(function() {
 		lastViewOffsetX = viewOffsetX;
 		lastViewOffsetY = viewOffsetY;
 	});
+	
 	document.addEventListener('mousemove', function(e) {
 		if (isDragging) {
 			const dx = e.clientX - dragStartX;
 			const dy = e.clientY - dragStartY;
-			
 			viewOffsetX = lastViewOffsetX + dx;
 			viewOffsetY = lastViewOffsetY + dy;
-			
 			canvas.style.transform = `translate(${viewOffsetX}px, ${viewOffsetY}px)`;
+			return;
 		}
+		
 		const rect = canvas.getBoundingClientRect();
 		const canvasX = e.clientX - rect.left;
 		const canvasY = e.clientY - rect.top;
+		
 		if (canvasX >= 0 && canvasX < rect.width && canvasY >= 0 && canvasY < rect.height) {
 			const x = Math.floor(canvasX / scale);
 			const y = Math.floor(canvasY / scale);
@@ -107,14 +146,33 @@ $(document).ready(function() {
 			if (x >= 0 && x < W && y >= 0 && y < H) {
 				document.getElementById('current-x').textContent = x;
 				document.getElementById('current-y').textContent = y;
-				nowX = x;
-				nowY = y;
+				
+				if (highlightedX !== x || highlightedY !== y) {
+					if (highlightedX !== -1 && highlightedY !== -1) {
+						ctx.fillStyle = myarr[highlightedY][highlightedX];
+						ctx.fillRect(highlightedX * scale, highlightedY * scale, scale, scale);
+					}
+					
+					highlightPixel(x, y);
+					
+					highlightedX = x;
+					highlightedY = y;
+				}
+			}
+		} else {
+			if (highlightedX !== -1 && highlightedY !== -1) {
+				ctx.fillStyle = myarr[highlightedY][highlightedX];
+				ctx.fillRect(highlightedX * scale, highlightedY * scale, scale, scale);
+				highlightedX = -1;
+				highlightedY = -1;
 			}
 		}
 	});
+	
 	document.addEventListener('mouseup', function() {
 		isDragging = false;
 	});
+	
 	container.addEventListener('wheel', function(e) {
 		e.preventDefault();
 		const mouseX = e.clientX - container.getBoundingClientRect().left;
@@ -130,20 +188,15 @@ $(document).ready(function() {
 			scale = Math.max(scale - 1, 1);
 		}
 		if (oldScale !== scale) {
+			zoom(scale);
 			const newCanvasX = worldX * scale;
 			const newCanvasY = worldY * scale;
 			viewOffsetX = mouseX - newCanvasX;
 			viewOffsetY = mouseY - newCanvasY;
-			const displayWidth = W * scale;
-			const displayHeight = H * scale;
-			canvas.width = displayWidth;
-			canvas.height = displayHeight;
-			canvas.style.width = displayWidth + 'px';
-			canvas.style.height = displayHeight + 'px';
 			canvas.style.transform = `translate(${viewOffsetX}px, ${viewOffsetY}px)`;
-			render(myarr);
 		}
 	});
+	
 	$('#reset-token').bind("click", function () {
 		$.ajax({
 			type: 'POST',
@@ -164,7 +217,9 @@ $(document).ready(function() {
 			contentType: "application/json"
 		});
 	});
+	
 	connectWs();
+	
 	$('#activity-time-start').html(getDateTime(activityStartTime, false));
 	$('#activity-time-end').html(getDateTime(activityEndTime, true));
 	let countBeforeStart = activityStartTime > (new Date().getTime() / 1000);

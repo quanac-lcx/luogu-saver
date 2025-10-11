@@ -150,7 +150,7 @@ $(document).ready(function() {
 			url: 'https://paintboard.luogu.me/api/auth/gettoken',
 			data: JSON.stringify({
 				uid: parseInt(document.getElementById('uid').value),
-				paste: document.getElementById('paste').value
+				access_key: document.getElementById('access_key').value
 			}),
 			complete: (resp) => {
 				resp = resp.responseJSON;
@@ -158,7 +158,7 @@ $(document).ready(function() {
 					console.log(resp);
 					alert(`${resp.data.errorType}${resp.data.message?': '+resp.data.message:''}`);
 				} else {
-					document.getElementById('token').value = resp.data.token;
+					document.getElementById('paint_key').value = resp.data.token;
 				}
 			},
 			contentType: "application/json"

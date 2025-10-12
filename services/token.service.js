@@ -38,11 +38,6 @@ export async function generateToken(pasteId, uid) {
 	
 	const value = resp.data;
 	
-	// 添加检查，确保value不为null或undefined
-	if (!value) {
-		throw new ExternalServiceError("获取剪贴板内容为空", "Luogu API");
-	}
-	
 	const content = value.content || "";
 	if (content !== "lgs_register_verification") {
 		throw new ValidationError("验证内容不匹配");

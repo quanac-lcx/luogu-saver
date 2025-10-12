@@ -36,12 +36,15 @@
 }
 
 .top.banner-item {
+    margin: 0 70px;
+}
+
+.banner-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 12px 20px;
     border-radius: 8px;
-    margin: 0 70px;
     color: white;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     animation: slideDown 0.3s ease-out;

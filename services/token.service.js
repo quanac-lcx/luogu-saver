@@ -62,10 +62,10 @@ export async function generateToken(pasteId, uid) {
 	await token.save();
 	
 	// 使用全局 redis 实例
-	if (global.redis && global.redis.isConnected()) {
+	if (global.redis && typeof global.redis.isConnected === 'function' && global.redis.isConnected()) {
 		await global.redis.set(`token:${tokenText}`, JSON.stringify(token), 600);
 	} else {
-		logger.warn('Redis 未连接，跳过缓存设置');
+		logger.warn('Redis 未连接或 isConnected 方法不存在，跳过缓存设置');
 	}
 	
 	return tokenText;

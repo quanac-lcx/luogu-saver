@@ -148,11 +148,12 @@ function removeBanner(index) {
 
 function updatePreview() {
     const previewDiv = document.getElementById('banners-preview');
-    const bannerItems = document.querySelectorAll('.banner-item');
+    const bannerItems = document.querySelectorAll('.banner-item:not(.top)');
     
     previewDiv.innerHTML = '';
     
     bannerItems.forEach((item) => {
+        console.log(item);
         const content = item.querySelector('.banner-content').value;
         const color = item.querySelector('.banner-color').value;
         const enabled = item.querySelector('.banner-enabled').checked;

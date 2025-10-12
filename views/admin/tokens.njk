@@ -26,11 +26,18 @@
             <h4 class="ui header">#{{ token.id }}</h4>
             <div class="meta gray">创建时间: {{ token.created_at }}</div>
             <div class="meta gray">Luogu User ID:{{ token.uid }} (role = {{ token.role }})</div>
-            <div style="margin-top: 15px;">
+            <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
                 <button class="ui red button" onclick="deleteToken('{{ token.id }}')">
                     <i class="ui icon trash"></i>
                     删除
                 </button>
+                <div class="ui dropdown">
+                    <i class="ui icon cog"></i>
+                    <div class="menu">
+                        <div class="item" onclick="updateTokenRole('{{ token.id }}', 0)">设为普通用户</div>
+                        <div class="item" onclick="updateTokenRole('{{ token.id }}', 1)">设为管理员</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -80,5 +87,33 @@ function deleteToken(id) {
         }
     });
 }
+
+function updateTokenRole(id, role) {
+    $.ajax({
+        url: `/admin/api/tokens/${id}/role`,
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ role })
+    })
+        .done(function(res) {
+            if (res.success) {
+                Swal.fire('更新成功', res.message, 'success').then(() => {
+                    window.location.reload();
+                });
+            } else {
+                Swal.fire('更新失败', res.message, 'error');
+            }
+        })
+        .fail(function() {
+            Swal.fire('错误', '网络或服务器异常', 'error');
+        });
+}
+</script>
+
+<script>
+$(document).ready(function() {
+    // 初始化 Semantic UI 的 Dropdown
+    $('.ui.dropdown').dropdown();
+});
 </script>
 {% endblock %}

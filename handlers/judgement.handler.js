@@ -1,6 +1,5 @@
 import { getResponseObject } from "../core/response.js";
 import { upsertUser } from "../services/user.service.js";
-import logger from '../core/logger.js';
 
 export default async (resp, type) => {
 	try {

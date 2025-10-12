@@ -33,7 +33,7 @@ export function createMarkdownRenderer() {
 			}
 		},
 	});
-	["info", "warning", "success"].forEach((name) => {
+	["info", "warning", "success", "error"].forEach((name) => {
 		md.use(markdownItContainer, name, {
 			render: (tokens, idx) => {
 				const info = tokens[idx].info || "";

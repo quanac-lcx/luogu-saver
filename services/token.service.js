@@ -38,12 +38,17 @@ export async function generateToken(pasteId, uid) {
 	
 	const value = resp.data;
 	
+	// 添加检查，确保value不为null或undefined
+	if (!value) {
+		throw new ExternalServiceError("获取剪贴板内容为空", "Luogu API");
+	}
+	
 	const content = value.content || "";
 	if (content !== "lgs_register_verification") {
 		throw new ValidationError("验证内容不匹配");
 	}
 	
-	if (parseInt(uid) !== value.userData.uid) {
+	if (parseInt(uid) !== value.userData?.uid) {
 		throw new ValidationError("用户 ID 不匹配");
 	}
 	
@@ -60,7 +65,14 @@ export async function generateToken(pasteId, uid) {
 		role: 0
 	});
 	await token.save();
-	await redis.set(`token:${tokenText}`, JSON.stringify(token), 600);
+	
+	// 使用全局 redis 实例
+	if (global.redis && global.redis.isConnected()) {
+		await global.redis.set(`token:${tokenText}`, JSON.stringify(token), 600);
+	} else {
+		logger.warn('Redis 未连接，跳过缓存设置');
+	}
+	
 	return tokenText;
 }
 
@@ -82,4 +94,25 @@ export async function validateToken(tokenText) {
 			return token || null;
 		}
 	});
+}
+
+/**
+ * 更新用户角色
+ * 
+ * @param {string} tokenId - Token 的 ID
+ * @param {number} newRole - 新的角色值（0 为普通用户，1 为管理员）
+ * @returns {Promise<void>} 无返回值
+ */
+export async function updateTokenRole(tokenId, newRole) {
+    if (![0, 1].includes(newRole)) {
+        throw new Error('无效的角色值');
+    }
+
+    const token = await Token.findOne({ where: { id: tokenId } });
+    if (!token) {
+        throw new Error('未找到指定的 Token');
+    }
+
+    token.role = newRole;
+    await token.save();
 }

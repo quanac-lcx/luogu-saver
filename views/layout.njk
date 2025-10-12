@@ -23,7 +23,7 @@
     {% if banners and banners.length > 0 %}
     <div class="banner-container" id="banner-container">
         {% for banner in banners %}
-        <div class="banner-item" style="background-color: {{ banner.color or '#667eea' }};" data-banner-id="{{ loop.index0 }}">
+        <div class="top banner-item" style="background-color: {{ banner.color or '#667eea' }};" data-banner-id="{{ loop.index0 }}">
             <div class="banner-content">{{ banner.content | safe }}</div>
             <button style="color: black;" class="banner-close" onclick="closeBanner({{ loop.index0 }})" aria-label="关闭">×</button>
         </div>

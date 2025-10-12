@@ -35,7 +35,7 @@
     padding: 8px;
 }
 
-.banner-item {
+.top.banner-item {
     display: flex;
     align-items: center;
     justify-content: space-between;

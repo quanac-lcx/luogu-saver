@@ -149,4 +149,18 @@ router.post('/api/announcement', requireAdmin, asyncJsonHandler(async (req, res,
 	res.json(makeResponse(true, result));
 }));
 
+router.get('/banners', requireAdmin, asyncHandler(async (req, res, next) => {
+	const banners = await adminService.getBanners();
+	res.render('admin/banners.njk', {
+		title: "Banner 管理",
+		banners: banners
+	});
+}));
+
+router.post('/api/banners', requireAdmin, asyncJsonHandler(async (req, res, next) => {
+	const { banners } = req.body;
+	const result = await adminService.updateBanners(banners);
+	res.json(makeResponse(true, result));
+}));
+
 export default router;

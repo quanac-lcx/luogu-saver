@@ -347,7 +347,8 @@ export async function getSettings() {
             announcement: {
                 content: "欢迎使用洛谷保存站！如遇问题请及时反馈。",
                 enabled: true
-            }
+            },
+            banners: []
         };
     }
 }
@@ -371,6 +372,51 @@ export async function updateAnnouncement(content, enabled = true) {
         await writeFile(settingsPath, JSON.stringify(settings, null, '\t'));
         
         return { message: "公告更新成功" };
+    } catch (error) {
+        await logError(error);
+        throw error;
+    }
+}
+
+/**
+ * 获取所有 banners
+ * 
+ * @returns {Promise<Array>} banners 数组
+ */
+export async function getBanners() {
+    const settings = await getSettings();
+    return settings.banners || [];
+}
+
+/**
+ * 更新 banners
+ * 
+ * @param {Array} banners - banners 数组
+ * @returns {Promise<Object>} 包含成功消息的结果
+ */
+export async function updateBanners(banners) {
+    try {
+        if (!Array.isArray(banners)) {
+            throw new ValidationError("banners 必须是数组");
+        }
+
+        // 验证每个 banner 的结构
+        for (const banner of banners) {
+            if (!banner.content || typeof banner.content !== 'string') {
+                throw new ValidationError("每个 banner 必须包含 content 字段");
+            }
+            if (typeof banner.enabled !== 'boolean') {
+                throw new ValidationError("每个 banner 必须包含 enabled 字段");
+            }
+        }
+
+        const settings = await getSettings();
+        settings.banners = banners;
+        
+        const settingsPath = join(process.cwd(), 'settings.json');
+        await writeFile(settingsPath, JSON.stringify(settings, null, '\t'));
+        
+        return { message: "Banners 更新成功" };
     } catch (error) {
         await logError(error);
         throw error;

@@ -40,18 +40,16 @@
                             <button type="button" class="ui red icon button" onclick="removeBanner({{ loop.index0 }})" style="position: absolute; top: 10px; right: 10px;">
                                 <i class="trash icon"></i>
                             </button>
-                            
-                            <div class="field">
+                            <div class="eight wide field">
                                 <label>Banner 内容（支持 HTML）</label>
                                 <textarea name="content-{{ loop.index0 }}" rows="3" placeholder="输入 Banner 内容，支持 HTML 标签" class="banner-content">{{ banner.content }}</textarea>
                             </div>
-
                             <div class="fields">
-                                <div class="eight wide field">
+                                <div class="five wide field">
                                     <label>背景颜色</label>
                                     <input type="text" name="color-{{ loop.index0 }}" value="{{ banner.color or '#667eea' }}" placeholder="#667eea" class="banner-color">
                                 </div>
-                                <div class="eight wide field">
+                                <div class="three wide field">
                                     <div class="ui checkbox" style="margin-top: 32px;">
                                         <input type="checkbox" name="enabled-{{ loop.index0 }}" {% if banner.enabled %}checked{% endif %} class="banner-enabled">
                                         <label>启用此 Banner</label>
@@ -91,8 +89,7 @@ let bannerCount = {{ banners.length if banners else 0 }};
 
 function addBanner() {
     const container = document.getElementById('banners-container');
-    
-    // 移除"暂无 Banner"的提示
+
     const emptyMessage = container.querySelector('p');
     if (emptyMessage) {
         emptyMessage.remove();
@@ -107,8 +104,8 @@ function addBanner() {
         <button type="button" class="ui red icon button" onclick="removeBanner(${bannerCount})" style="position: absolute; top: 10px; right: 10px;">
             <i class="trash icon"></i>
         </button>
-        
-        <div class="field">
+
+        <div class="eight wide field">
             <label>Banner 内容（支持 HTML）</label>
             <textarea name="content-${bannerCount}" rows="3" placeholder="输入 Banner 内容，支持 HTML 标签" class="banner-content"></textarea>
         </div>
@@ -171,7 +168,7 @@ function updatePreview() {
                 position: relative;
                 padding-right: 50px;
             `;
-            bannerDiv.innerHTML = content + '<button style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: white; cursor: pointer; font-size: 18px;">×</button>';
+            bannerDiv.innerHTML = content + '<button style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: black; cursor: pointer; font-size: 18px;">×</button>';
             previewDiv.appendChild(bannerDiv);
         }
     });
@@ -240,7 +237,6 @@ document.getElementById('banners-form').addEventListener('submit', function(e) {
     });
 });
 
-// 初始化 checkbox
 $(function() {
     $('.ui.checkbox').checkbox();
     updatePreview();

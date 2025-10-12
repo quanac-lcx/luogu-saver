@@ -14,90 +14,18 @@
     <link rel="stylesheet" href="/static/self/css/footer-link.css">
     <link rel="stylesheet" href="/static/self/css/mobile.css">
     <style>
-        /* Banner 样式 */
-        .banner-container {
-            position: fixed;
-            top: 0;
-            left: 100px;
-            right: 0;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            padding: 8px;
-        }
-        
-        .banner-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 20px;
-            border-radius: 8px;
-            color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            animation: slideDown 0.3s ease-out;
-        }
-        
-        @keyframes slideDown {
-            from {
-                transform: translateY(-100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-        
-        .banner-content {
-            flex: 1;
-            margin-right: 15px;
-        }
-        
-        .banner-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-            padding: 0;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-            transition: background-color 0.2s;
-        }
-        
-        .banner-close:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-        }
-        
-        /* 移动端 Banner 样式调整 */
-        @media only screen and (max-width: 767px) {
-            .banner-container {
-                left: 0;
-            }
-        }
-        
-        /* 为 body 添加顶部 padding 以防止内容被 banner 遮挡 */
-        body.has-banners {
-            padding-top: var(--banner-height, 0);
-        }
     </style>
     <script src="/static/semantic/semantic.min.js"></script>
     <script defer src="https://analytics.luogu.me/script.js" data-website-id="88959561-950b-4ae9-b4a4-8b74c65bb104"></script>
     {% block extra_header %}{% endblock %}
 </head>
 <body style="width: calc(100% - 90px); height: calc(100% - 20px); margin-left: 100px; background-color: #f8fafc; position: relative;">
-    <!-- Banners 区域 -->
     {% if banners and banners.length > 0 %}
     <div class="banner-container" id="banner-container">
         {% for banner in banners %}
         <div class="banner-item" style="background-color: {{ banner.color or '#667eea' }};" data-banner-id="{{ loop.index0 }}">
             <div class="banner-content">{{ banner.content | safe }}</div>
-            <button class="banner-close" onclick="closeBanner({{ loop.index0 }})" aria-label="关闭">×</button>
+            <button style="color: black;" class="banner-close" onclick="closeBanner({{ loop.index0 }})" aria-label="关闭">×</button>
         </div>
         {% endfor %}
     </div>
@@ -141,7 +69,7 @@
             </a>
         </div>
         <a class="item accordion-title">
-            <i class="ui icon paint brush"></i>
+            <i class="ui icon paint brush rainbow-icon"></i>
             <span>冬日绘板</span>
         </a>
         <div class="accordion-content menu" style="display:none;">
@@ -246,7 +174,6 @@
     </div>
 
     <script>
-        // Banner 功能
         function closeBanner(bannerId) {
             const banner = document.querySelector(`[data-banner-id="${bannerId}"]`);
             if (banner) {
@@ -254,7 +181,6 @@
                 setTimeout(() => {
                     banner.remove();
                     updateBannerHeight();
-                    // 保存关闭状态到 localStorage
                     const closedBanners = JSON.parse(localStorage.getItem('closedBanners') || '[]');
                     if (!closedBanners.includes(bannerId)) {
                         closedBanners.push(bannerId);
@@ -265,6 +191,7 @@
         }
         
         function updateBannerHeight() {
+        /*
             const bannerContainer = document.getElementById('banner-container');
             if (bannerContainer) {
                 const height = bannerContainer.offsetHeight;
@@ -275,9 +202,9 @@
                     document.body.classList.remove('has-banners');
                 }
             }
+         */
         }
-        
-        // 页面加载时检查已关闭的 banners
+
         document.addEventListener('DOMContentLoaded', function() {
             const closedBanners = JSON.parse(localStorage.getItem('closedBanners') || '[]');
             closedBanners.forEach(bannerId => {
@@ -287,8 +214,7 @@
                 }
             });
             updateBannerHeight();
-            
-            // 添加 slideUp 动画
+
             const style = document.createElement('style');
             style.textContent = `
                 @keyframes slideUp {

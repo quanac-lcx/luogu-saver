@@ -5,6 +5,7 @@ import { asyncHandler, asyncJsonHandler } from "../core/errors.js";
 import * as adminService from "../services/admin.service.js";
 import * as adminWorker from "../workers/admin.worker.js";
 import { invalidateCache } from "../core/cache.js";
+import { updateTokenRole } from "../services/token.service.js";
 
 const router = express.Router();
 
@@ -91,6 +92,18 @@ router.delete('/api/delete/:type/:id', requireAdmin, asyncJsonHandler(async (req
 router.delete('/api/tokens/:id', requireAdmin, asyncJsonHandler(async (req, res, next) => {
 	const result = await adminService.deleteToken(req.params.id);
 	res.json(makeResponse(true, result));
+}));
+
+router.post('/api/tokens/:id/role', requireAdmin, asyncJsonHandler(async (req, res, next) => {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    try {
+        await updateTokenRole(id, role);
+        res.json(makeResponse(true, { message: '角色更新成功' }));
+    } catch (error) {
+        res.json(makeResponse(false, { message: error.message }));
+    }
 }));
 
 router.get('/api/queue/status', requireAdmin, asyncJsonHandler(async (req, res, next) => {

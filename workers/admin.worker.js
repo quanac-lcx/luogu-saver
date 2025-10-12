@@ -15,7 +15,6 @@ import { updateAllProblemSets } from "../services/problem.service.js";
 import { exec } from "child_process";
 import { promisify } from "util";
 import config from "../config.js";
-import logger from "../core/logger.js";
 
 const execAsync = promisify(exec);
 

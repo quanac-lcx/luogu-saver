@@ -71,8 +71,42 @@
 					    Swal.fire({
                             icon: 'success',
                             title: '申请成功',
-                            html: `<p>你的 Token 是：</p><pre class="firacode" style="word-break: break-all; background: #f4f4f4; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">${data.token}</pre><p>请妥善保存！</p>`,
-                            confirmButtonText: '好的喵！'
+                            html: `
+                                <p>你的 Token 是：</p>
+                                <div style="position: relative;">
+                                    <pre id="token-text" class="firacode" style="word-break: break-all; background: #f4f4f4; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 5px;">${data.token}</pre>
+                                    <button id="copy-token" class="ui mini icon button" style="position: absolute; top: 5px; right: 5px;">
+                                        <i class="copy icon"></i>
+                                    </button>
+                                </div>
+                                <p>请妥善保存！</p>`,
+                            confirmButtonText: '好的喵！',
+                            didRender: () => {
+                                document.getElementById('copy-token').addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                                        navigator.clipboard.writeText(data.token).then(() => {
+                                            const originalHtml = this.innerHTML;
+                                            this.innerHTML = '<i class="check icon"></i>';
+                                            setTimeout(() => {
+                                                this.innerHTML = originalHtml;
+                                            }, 1500);
+                                        }).catch((err) => {
+                                            Swal.fire({
+                                                icon: 'error',
+                                                title: '无法复制',
+                                                text: '无法访问剪贴板，请手动复制 Token。',
+                                            });
+                                        });
+                                    } else {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: '不支持复制',
+                                            text: '当前环境不支持剪贴板操作，请手动复制 Token。',
+                                        });
+                                    }
+                                });
+                            }
                         });
 					} else {
 						Swal.fire({

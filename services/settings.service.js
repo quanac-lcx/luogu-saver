@@ -23,7 +23,8 @@ export async function getSettings() {
             announcement: {
                 content: "欢迎使用洛谷保存站！如遇问题请及时反馈。",
                 enabled: true
-            }
+            },
+            banners: []
         };
     }
 }
@@ -39,4 +40,14 @@ export async function getAnnouncement() {
         content: "欢迎使用洛谷保存站！如遇问题请及时反馈。",
         enabled: true
     };
+}
+
+/**
+ * 获取 banners 列表
+ * 
+ * @returns {Promise<Array>} banners 数组
+ */
+export async function getBanners() {
+    const settings = await getSettings();
+    return settings.banners || [];
 }

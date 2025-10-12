@@ -38,6 +38,7 @@ import errorDisplay from "./middleware/error_display.js";
 import getIP from "./middleware/get_ip.js";
 import cacheContextMiddleware from "./middleware/cache_context.js";
 import mobileDetect from "./middleware/mobile_detect.js";
+import bannersMiddleware from "./middleware/banners.js";
 
 import * as worker from "./workers/index.worker.js";
 import { warmUpBenbenStatistics } from "./jobs/warm_up.js";
@@ -68,6 +69,7 @@ app.use(getIP);
 app.use(logging);
 app.use(cacheContextMiddleware);
 app.use(mobileDetect);
+app.use(bannersMiddleware);
 app.use(auth);
 
 app.use('/', indexRouter);

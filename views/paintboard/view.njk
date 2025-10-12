@@ -14,6 +14,7 @@
         }
         #mycanvas {
             position: absolute;
+            cursor: default;
             transform-origin: 0 0;
         }
         #mycanvas:active {
@@ -39,7 +40,8 @@
     <div class="sixteen wide column">
         <div class="card shadow outline">
             <div id="canvas-box">
-                <canvas width="5000" height="3000" id="mycanvas"></canvas>
+                <canvas id="mycanvas"></canvas>
+                <canvas id="buffer-canvas" width="1000" height="600" style="display: none;"></canvas>
             </div>
         </div>
 

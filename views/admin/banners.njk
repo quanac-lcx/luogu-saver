@@ -148,29 +148,34 @@ function removeBanner(index) {
 
 function updatePreview() {
     const previewDiv = document.getElementById('banners-preview');
-    const bannerItems = document.querySelectorAll('.banner-item:not(.top)');
+    const bannerItems = document.querySelectorAll('.banner-item');
     
     previewDiv.innerHTML = '';
     
     bannerItems.forEach((item) => {
-        console.log(item);
-        const content = item.querySelector('.banner-content').value;
-        const color = item.querySelector('.banner-color').value;
-        const enabled = item.querySelector('.banner-enabled').checked;
+        const contentField = item.querySelector('.banner-content');
+        const colorField = item.querySelector('.banner-color');
+        const enabledField = item.querySelector('.banner-enabled');
         
-        if (enabled && content) {
-            const bannerDiv = document.createElement('div');
-            bannerDiv.style.cssText = `
-                background-color: ${color};
-                color: white;
-                padding: 12px 20px;
-                border-radius: 8px;
-                margin-bottom: 10px;
-                position: relative;
-                padding-right: 50px;
-            `;
-            bannerDiv.innerHTML = content + '<button style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: black; cursor: pointer; font-size: 18px;">×</button>';
-            previewDiv.appendChild(bannerDiv);
+        if (contentField && colorField && enabledField) {
+            const content = contentField.value;
+            const color = colorField.value;
+            const enabled = enabledField.checked;
+            
+            if (enabled && content) {
+                const bannerDiv = document.createElement('div');
+                bannerDiv.style.cssText = `
+                    background-color: ${color};
+                    color: white;
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    margin-bottom: 10px;
+                    position: relative;
+                    padding-right: 50px;
+                `;
+                bannerDiv.innerHTML = content + '<button style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: black; cursor: pointer; font-size: 18px;">×</button>';
+                previewDiv.appendChild(bannerDiv);
+            }
         }
     });
     
@@ -199,42 +204,72 @@ document.getElementById('banners-form').addEventListener('submit', function(e) {
     const bannerItems = document.querySelectorAll('.banner-item');
     const banners = [];
     
-    bannerItems.forEach((item) => {
-        const content = item.querySelector('.banner-content').value;
-        const color = item.querySelector('.banner-color').value;
-        const enabled = item.querySelector('.banner-enabled').checked;
+    console.log('找到', bannerItems.length, '个 banner 项');
+    
+    bannerItems.forEach((item, index) => {
+        const contentField = item.querySelector('.banner-content');
+        const colorField = item.querySelector('.banner-color');
+        const enabledField = item.querySelector('.banner-enabled');
         
-        banners.push({
-            content: content,
-            color: color || '#667eea',
-            enabled: enabled
+        console.log(`Banner ${index}:`, {
+            contentField: !!contentField,
+            colorField: !!colorField,
+            enabledField: !!enabledField
         });
+        
+        if (contentField && colorField && enabledField) {
+            const content = contentField.value.trim();
+            const color = colorField.value || '#667eea';
+            const enabled = enabledField.checked;
+            
+            console.log(`Banner ${index} 数据:`, { content, color, enabled });
+            
+            // 总是添加 banner，无论内容是否为空
+            banners.push({
+                content: content,
+                color: color,
+                enabled: enabled
+            });
+        }
     });
+    
+    console.log('将要提交的 banners:', banners);
     
     const submitBtn = this.querySelector('button[type="submit"]');
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = '<i class="ui icon spinner loading"></i> 保存中...';
     submitBtn.disabled = true;
     
-    $.ajax({
-        url: '/admin/api/banners',
+    // 使用 fetch API 替代 jQuery
+    fetch('/admin/api/banners', {
         method: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({ banners }),
-        success: function(res) {
-            if (res.success) {
-                Swal.fire('成功', 'Banners 更新成功', 'success');
-            } else {
-                Swal.fire('失败', res.message || '更新失败', 'error');
-            }
+        headers: {
+            'Content-Type': 'application/json',
         },
-        error: function() {
-            Swal.fire('错误', '网络或服务器异常', 'error');
-        },
-        complete: function() {
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
+        body: JSON.stringify({ banners })
+    })
+    .then(response => {
+        console.log('响应状态:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
         }
+        return response.json();
+    })
+    .then(res => {
+        console.log('服务器响应:', res);
+        if (res.success) {
+            Swal.fire('成功', 'Banners 更新成功', 'success');
+        } else {
+            Swal.fire('失败', res.message || '更新失败', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire('错误', `网络或服务器异常: ${error.message}`, 'error');
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
     });
 });
 

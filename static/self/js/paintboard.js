@@ -155,7 +155,7 @@ function connectWs() {
 	// 每次尝试连接时都显示遮罩
 	showLoadingOverlay('正在连接服务器...');
 	
-	ws = new WebSocket('wss://paintboard.luogu.me/api/paintboard/ws');
+	ws = new WebSocket('wss://paintboard.luogu.me/api/paintboard/ws?readonly=1');
 	ws.binaryType = "arraybuffer";
 	
 	ws.onopen = function() {

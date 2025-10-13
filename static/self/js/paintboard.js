@@ -347,6 +347,27 @@ $(document).ready(function() {
 		}
 	});
 	
+	$('#reset-token').bind("click", function () {
+		$.ajax({
+			type: 'POST',
+			url: 'https://paintboard.luogu.me/api/auth/gettoken',
+			data: JSON.stringify({
+				uid: parseInt(document.getElementById('uid').value),
+				access_key: document.getElementById('access_key').value
+			}),
+			complete: (resp) => {
+				resp = resp.responseJSON;
+				if (resp.statusCode !== 200) {
+					console.log(resp);
+					alert(`${resp.data.errorType}${resp.data.message?': '+resp.data.message:''}`);
+				} else {
+					document.getElementById('paint_key').value = resp.data.token;
+				}
+			},
+			contentType: "application/json"
+		});
+	});
+	
 	document.addEventListener('mouseup', function() {
 		isDragging = false;
 		container.style.cursor = 'grab';

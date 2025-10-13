@@ -125,18 +125,3 @@ export async function getRecentJudgements(page = 1, perPage = 10) {
 		}
 	});
 }
-
-/**
- * 获取陶片放逐总数
- * 
- * @returns {Promise<number>} 陶片放逐记录总数
- */
-export async function getJudgementsCount() {
-	return await withCache({
-		cacheKey: 'judgements_count',
-		ttl: 600,
-		fetchFn: async () => {
-			return await Judgement.count();
-		}
-	});
-}

@@ -21,7 +21,7 @@
 </head>
 <body style="width: calc(100% - 90px); height: calc(100% - 20px); margin-left: 100px; background-color: #f8fafc; position: relative;">
     {% if banners and banners.length > 0 %}
-    <div class="banner-container" id="banner-container">
+    <div class="banner-container" id="banner-container" style="display: none;">
         {% for banner in banners %}
         <div class="top banner-item" style="background-color: {{ banner.color or '#667eea' }};" data-banner-id="{{ loop.index0 }}">
             <div class="banner-content">{{ banner.content | safe }}</div>
@@ -213,7 +213,6 @@
                     banner.remove();
                 }
             });
-            updateBannerHeight();
 
             const style = document.createElement('style');
             style.textContent = `
@@ -229,6 +228,11 @@
                 }
             `;
             document.head.appendChild(style);
+            const bannerContainer = document.getElementById('banner-container');
+            if (bannerContainer && bannerContainer.children.length > 0) {
+                bannerContainer.style.display = 'block';
+                updateBannerHeight();
+            }
         });
         
 		function toggleMobileSidebar() {

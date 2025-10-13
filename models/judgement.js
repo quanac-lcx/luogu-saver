@@ -1,5 +1,6 @@
 import { BaseModel } from "./common.js";
 import User from "./user.js";
+import { DatabaseError } from "../core/errors.js";
 
 export default class Judgement extends BaseModel {
 
@@ -16,6 +17,17 @@ export default class Judgement extends BaseModel {
 	constructor(data) {
 		super();
 		Object.assign(this, data);
+	}
+	
+	static async count(options = {}) {
+		try {
+			return this.repository.count(options);
+		} catch (err) {
+			if (err.name === 'QueryFailedError' || err.code?.startsWith('ER_')) {
+				throw new DatabaseError(`Database count failed: ${err.message}`);
+			}
+			throw err;
+		}
 	}
 
 	async loadRelationships() {

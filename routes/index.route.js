@@ -6,13 +6,12 @@ import { asyncHandler } from "../core/errors.js";
 const router = express.Router();
 
 router.get('/', asyncHandler(async (req, res) => {
-	const { articlesCount, pastesCount, judgementsCount } = await getCounts();
+	const { articlesCount, pastesCount } = await getCounts();
 	const announcement = await getAnnouncement();
 	res.render('index.njk', {
 		title: "首页",
 		paste_count: pastesCount,
 		article_count: articlesCount,
-		judgement_count: judgementsCount,
 		announcement: announcement
 	});
 }));

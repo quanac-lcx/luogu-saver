@@ -14,7 +14,6 @@
 import Article from "../models/article.js";
 import Paste from "../models/paste.js";
 import Judgement from "../models/judgement.js";
-import { getJudgementsCount } from "./judgement.service.js";
 import { withCache } from "../core/cache.js";
 import { formatDate } from "../core/utils.js";
 
@@ -147,7 +146,7 @@ export async function getCounts() {
 			   const [articlesCount, pastesCount, judgementsCount] = await Promise.all([
 				   Article.count(),
 				   Paste.count(),
-				   getJudgementsCount()
+				   Judgement.count()
 			   ]);
 			   return { articlesCount, pastesCount, judgementsCount };
 		   }

@@ -147,35 +147,34 @@ function removeBanner(index) {
 }
 
 function updatePreview() {
-    const previewDiv = document.getElementById('banners-preview');
-    const bannerItems = document.querySelectorAll('.banner-item:not(.top)');
+    var preview = document.getElementById('banners-preview');
+    var items = document.querySelectorAll('.banner-item');
     
-    previewDiv.innerHTML = '';
+    preview.innerHTML = '';
     
-    bannerItems.forEach((item) => {
-        console.log(item);
-        const content = item.querySelector('.banner-content').value;
-        const color = item.querySelector('.banner-color').value;
-        const enabled = item.querySelector('.banner-enabled').checked;
+    for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+        var content = item.querySelector('.banner-content');
+        var color = item.querySelector('.banner-color');
+        var enabled = item.querySelector('.banner-enabled');
         
-        if (enabled && content) {
-            const bannerDiv = document.createElement('div');
-            bannerDiv.style.cssText = `
-                background-color: ${color};
-                color: white;
-                padding: 12px 20px;
-                border-radius: 8px;
-                margin-bottom: 10px;
-                position: relative;
-                padding-right: 50px;
-            `;
-            bannerDiv.innerHTML = content + '<button style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: black; cursor: pointer; font-size: 18px;">×</button>';
-            previewDiv.appendChild(bannerDiv);
+        if (content && color && enabled && enabled.checked && content.value.trim()) {
+            var div = document.createElement('div');
+            div.style.backgroundColor = color.value;
+            div.style.color = 'white';
+            div.style.padding = '12px 20px';
+            div.style.borderRadius = '8px';
+            div.style.marginBottom = '10px';
+            div.style.position = 'relative';
+            div.style.paddingRight = '50px';
+            
+            div.innerHTML = content.value + '<button style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: black; cursor: pointer; font-size: 18px;">×</button>';
+            preview.appendChild(div);
         }
-    });
+    }
     
-    if (previewDiv.children.length === 0) {
-        previewDiv.innerHTML = '<p style="text-align: center; color: gray;">暂无启用的 Banner</p>';
+    if (preview.children.length == 0) {
+        preview.innerHTML = '<p style="text-align: center; color: gray;">暂无启用的 Banner</p>';
     }
 }
 
@@ -196,45 +195,50 @@ document.addEventListener('change', function(e) {
 document.getElementById('banners-form').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    const bannerItems = document.querySelectorAll('.banner-item');
-    const banners = [];
+    var items = document.querySelectorAll('.banner-item');
+    var data = [];
     
-    bannerItems.forEach((item) => {
-        const content = item.querySelector('.banner-content').value;
-        const color = item.querySelector('.banner-color').value;
-        const enabled = item.querySelector('.banner-enabled').checked;
+    for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+        var contentInput = item.querySelector('.banner-content');
+        var colorInput = item.querySelector('.banner-color');  
+        var enabledInput = item.querySelector('.banner-enabled');
         
-        banners.push({
-            content: content,
-            color: color || '#667eea',
-            enabled: enabled
-        });
-    });
-    
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="ui icon spinner loading"></i> 保存中...';
-    submitBtn.disabled = true;
-    
-    $.ajax({
-        url: '/admin/api/banners',
-        method: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({ banners }),
-        success: function(res) {
-            if (res.success) {
-                Swal.fire('成功', 'Banners 更新成功', 'success');
-            } else {
-                Swal.fire('失败', res.message || '更新失败', 'error');
-            }
-        },
-        error: function() {
-            Swal.fire('错误', '网络或服务器异常', 'error');
-        },
-        complete: function() {
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
+        if (contentInput && colorInput && enabledInput) {
+            data.push({
+                content: contentInput.value.trim(),
+                color: colorInput.value || '#667eea',
+                enabled: enabledInput.checked
+            });
         }
+    }
+    
+    var btn = this.querySelector('button[type="submit"]');
+    var oldText = btn.innerHTML;
+    btn.innerHTML = '<i class="ui icon spinner loading"></i> 保存中...';
+    btn.disabled = true;
+    
+    fetch('/admin/api/banners', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ banners: data })
+    })
+    .then(function(response) {
+        return response.json();
+    })
+    .then(function(result) {
+        if (result.success) {
+            Swal.fire('成功', 'Banners 更新成功', 'success');
+        } else {
+            Swal.fire('失败', result.message || '更新失败', 'error');
+        }
+    })
+    .catch(function(err) {
+        Swal.fire('错误', '保存失败，请重试', 'error');
+    })
+    .finally(function() {
+        btn.innerHTML = oldText;
+        btn.disabled = false;
     });
 });
 

@@ -8,3 +8,4 @@ init_db.js
 config.js
 settings.json
 pnpm-lock.yaml
+dump.rdb

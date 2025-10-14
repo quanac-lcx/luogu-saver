@@ -5,11 +5,15 @@
  * - 用户数据的创建和更新操作
  * - 用户信息的插入或更新（Upsert）操作
  * - 用户属性管理（名称、颜色等）
+ * - 用户个人资料保存
  * 
  * @author Copilot
  */
 
 import User from "../models/user.js";
+import { withCache, invalidateCache } from "../core/cache.js";
+import { ValidationError, NotFoundError } from "../core/errors.js";
+import { sanitizeLatex } from "../core/utils.js";
 
 /**
  * 插入或更新用户数据
@@ -31,4 +35,65 @@ export async function upsertUser(userData) {
 	user.name = name;
 	user.color = color;
 	await user.save();
+}
+
+/**
+ * 保存用户个人资料
+ * 
+ * 保存或更新用户的个人资料介绍。
+ * 
+ * @param {Object} task - 包含用户元数据的任务对象
+ * @param {string|number} task.aid - 用户ID
+ * @param {Object} obj - 用户数据对象
+ * @param {string} obj.introduction - 用户介绍
+ * @param {Object} obj.userData - 包含uid、name、color的用户数据
+ */
+export async function saveUserProfile(task, obj) {
+	const uid = parseInt(task.aid);
+	const user = (await User.findById(uid)) || User.create({ id: uid });
+	
+	user.name = obj.userData.name;
+	user.color = obj.userData.color;
+	user.introduction = obj.introduction;
+	await user.save();
+	
+	await Promise.all([
+		invalidateCache(`user:${uid}`),
+		invalidateCache(['statistics:full', 'statistics:counts'])
+	]);
+}
+
+/**
+ * 通过ID获取用户资料（支持缓存）
+ * 
+ * 通过ID检索特定用户的资料，包括渲染的介绍内容。
+ * 结果缓存30分钟。
+ * 
+ * @param {string|number} id - 用户ID
+ * @returns {Promise<Object|null>} 包含user和renderedContent的对象，如果未找到则返回null
+ * @throws {Error} 如果ID无效
+ */
+export async function getUserProfileById(id) {
+	const uid = parseInt(id);
+	if (!uid || isNaN(uid)) throw new ValidationError("用户 ID 无效");
+	
+	return await withCache({
+		cacheKey: `user:${uid}`,
+		ttl: 1800,
+		fetchFn: async () => {
+			const user = await User.findById(uid);
+			if (!user) return null;
+			
+			await user.loadRelationships();
+			user.formatDate();
+			
+			let renderedContent = null;
+			if (user.introduction) {
+				const sanitizedContent = sanitizeLatex(user.introduction);
+				renderedContent = renderer.renderMarkdown(sanitizedContent);
+			}
+			
+			return { user, renderedContent };
+		}
+	});
 }

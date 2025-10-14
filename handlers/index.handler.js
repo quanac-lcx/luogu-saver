@@ -11,7 +11,8 @@ const fetchHandlers = {
 	0: commonFetchHandler,
 	1: commonFetchHandler,
 	2: (resp, type) => resp.data,
-	3: judgementHandler
+	3: judgementHandler,
+	4: commonFetchHandler
 };
 
 const benbenHandlers = {

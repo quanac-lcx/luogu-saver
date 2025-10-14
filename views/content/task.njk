@@ -91,6 +91,8 @@
                                 犇犇保存 (Type = 2)
                                 {% elif task.type == 3 %}
                                 陶片放逐保存 (Type = 3)
+                                {% elif task.type == 4 %}
+                                用户主页保存 (Type = 4)
                                 {% else %}
                                 未知类型 (Type = {{ task.type }})
                                 {% endif %}
@@ -131,6 +133,7 @@
             1: (oid) => `/paste/${oid}`,
             2: (oid) => `/benben/history?uid=${oid}`,
             3: (oid) => `/judgement`,
+			4: (oid) => `/user/${oid}`,
 		};
 
 		const TASK_TYPE_RETRY_ENDPOINTS = {
@@ -138,6 +141,7 @@
 			1: (oid) => `/paste/save/${oid}`,
 			2: (oid) => `/benben/save/${oid}`,
 			3: (oid) => `/judgement/save`,
+			4: (oid) => `/user/save/${oid}`,
 		};
 
 		function handleGotoClick(taskType, oid) {

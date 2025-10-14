@@ -27,85 +27,90 @@
 {% endblock %}
 
 {% block content %}
-<div class="ui grid">
-    <div class="sixteen wide column">
-        <div class="card shadow">
-            <h1 id="title" class="ui center aligned header">
-                <i class="ui paint brush icon colored"></i>
-                LGS 2026 冬日绘板
-            </h1>
-        </div>
-    </div>
-
-    <div class="sixteen wide column">
-        <div class="card shadow outline">
-            <div id="canvas-box">
-                <canvas id="mycanvas"></canvas>
-                <canvas id="buffer-canvas" width="1000" height="600" style="display: none;"></canvas>
+    <div class="ui grid">
+        <div class="sixteen wide column">
+            <div class="card shadow">
+                <h1 id="title" class="ui center aligned header">
+                    <i class="ui paint brush icon colored"></i>
+                    LGS 2026 冬日绘板
+                </h1>
             </div>
         </div>
 
-        <div class="card shadow outline">
-            <div class="ui grid stackable">
-                <div class="five wide column">
-                    <h3 class="ui header">工具</h3>
-                    <div class="ui buttons" id="zoom-tool">
-                        <button class="ui button" zoom="1">全部显示</button>
-                        <button class="ui button" zoom="5">放大 5x</button>
-                        <button class="ui button" zoom="10">放大 10x</button>
-                    </div>
-                    <p style="margin-top: 1em;">
-                        当前坐标: (<span id="current-x">0</span>, <span id="current-y">0</span>)
-                    </p>
+        <div class="sixteen wide column">
+            <div class="card shadow outline">
+                <div id="canvas-box">
+                    <canvas id="mycanvas"></canvas>
+                    <canvas id="buffer-canvas" width="1000" height="600" style="display: none;"></canvas>
                 </div>
-                <div class="eleven wide column tool-section">
-                    <h3 class="ui header">凭据</h3>
-                    <div class="ui form">
-                        <div class="fields">
-                            <div class="field">
-                                <div class="ui input">
-                                    <input type="number" placeholder="UID" id="uid">
+            </div>
+
+            <div class="card shadow outline">
+                <div class="ui grid stackable">
+                    <div class="five wide column">
+                        <h3 class="ui header">工具</h3>
+                        <div class="ui buttons" id="zoom-tool">
+                            <button class="ui button" zoom="1">全部显示</button>
+                            <button class="ui button" zoom="5">放大 5x</button>
+                            <button class="ui button" zoom="10">放大 10x</button>
+                        </div>
+                        <p style="margin-top: 1em;">
+                            当前坐标: (<span id="current-x">0</span>, <span id="current-y">0</span>)
+                        </p>
+                    </div>
+                    <div class="eleven wide column tool-section">
+                        <h3 class="ui header">凭据</h3>
+                        <div class="ui form">
+                            <div class="fields">
+                                <div class="field">
+                                    <div class="ui input">
+                                        <input type="number" placeholder="UID" id="uid">
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="field">
-                                <div class="ui input">
-                                    <input type="text" placeholder="AccessKey" id="access_key">
+                                <div class="field">
+                                    <div class="ui input">
+                                        <input type="text" placeholder="AccessKey" id="access_key">
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="field">
-                                <div class="ui input">
-                                    <input type="text" placeholder="PaintKey" id="paint_key">
+                                <div class="field">
+                                    <div class="ui input">
+                                        <input type="text" placeholder="PaintKey" id="paint_key">
+                                    </div>
                                 </div>
+                                <button class="ui red button" id="reset-token">更新</button>
                             </div>
-                            <button class="ui red button" id="reset-token">更新</button>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="card shadow outline">
-            <h3 class="ui header">活动说明</h3>
-            <p>
-                <strong>活动时间:</strong> <span id="activity-time-start"></span> ~ <span id="activity-time-end"></span> <span id="activity-reminder"></span><br>
-                <strong>活动规则:</strong> 未被禁言、已认证手机、注册时间在 2026/01/01 前的洛谷用户可参与。每个用户 30 秒可涂鸦一个点，可随意覆盖任何区域。<br>
-                <strong>参与方式:</strong> 在 UID 输入框中输入您的洛谷 UID，登录保存站后在<a href="/paintboard/token">这里</a>申请 AccessKey 并填入对应框内随后点击更新获取 PaintKey。随后参照<a href="/article/57b4jd3c">文档</a>进行绘画。<br />
-                <strong>特殊说明:</strong> 有别于往年冬日绘板，LGS Paintboard 2026 <strong>不允许通过网页绘画</strong>，这旨在提升前端用户体验和防止误触，请查阅<a href="/article/57b4jd3c">文档</a>获取绘画方式。<br />
-            </p>
-            <div class="ui icon warning message">
-                <i class="icon exclamation triangle"></i>
-                <div class="content">
-                    <div class="header">
-                        温馨提示
-                    </div>
-                    禁止绘制违反法律、社会公德的图形，否则将被清除且上报网警。<br />
-                    请大家组团时不要分享自己的 Token 而是使用分享 AccessKey 这种更安全的方式。<br />
-                    分享 Token 等同于分享保存站账号，他人可以使用您的 Token 在保存站以您的名义进行任何操作。
-                </div>
+            <div class="card shadow outline">
+                <h3 class="ui header">活动说明</h3>
                 <p>
+                    <strong>活动时间:</strong> <span id="activity-time-start"></span> ~ <span id="activity-time-end"></span> <span id="activity-reminder"></span><br>
+                    <strong>活动规则:</strong> 未被禁言、已认证手机、注册时间在 2026/01/01 前的洛谷用户可参与。每个用户 30 秒可涂鸦一个点，可随意覆盖任何区域。<br>
+                    <strong>参与方式:</strong> 在 UID 输入框中输入您的洛谷 UID，登录保存站后在<a href="/paintboard/token">这里</a>申请 AccessKey 并填入对应框内随后点击更新获取 PaintKey。随后参照<a href="/article/57b4jd3c">文档</a>进行绘画。<br />
+                    <strong>特殊说明:</strong> 有别于往年冬日绘板，LGS Paintboard 2026 <strong>不允许通过网页绘画</strong>，这旨在提升前端用户体验和防止误触，请查阅<a href="/article/57b4jd3c">文档</a>获取绘画方式。<br />
                 </p>
+                <h3 class="ui header">渲染器选择</h3>
+                <p>
+                    <strong>渲染模式:</strong> Canvas | <a href="/paintboard/view/webgl">WebGL</a><br />
+                    <strong>模式描述:</strong> Canvas 模式使用 CPU 进行渲染，性能要求低但可能会出现卡顿现象；WebGL 模式使用 GPU 进行渲染，性能更好但对性能要求高。<br />
+                </p>
+                <div class="ui icon warning message">
+                    <i class="icon exclamation triangle"></i>
+                    <div class="content">
+                        <div class="header">
+                            温馨提示
+                        </div>
+                        禁止绘制违反法律、社会公德的图形，否则将被清除且上报网警。<br />
+                        请大家组团时不要分享自己的 Token 而是使用分享 AccessKey 这种更安全的方式。<br />
+                        分享 Token 等同于分享保存站账号，他人可以使用您的 Token 在保存站以您的名义进行任何操作。
+                    </div>
+                    <p>
+                    </p>
+                </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock %}

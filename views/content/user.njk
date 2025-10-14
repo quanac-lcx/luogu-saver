@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block content %}
-    <input type="hidden" id="url" value="user/{{ view_user.id }}">
+    <input type="hidden" id="url" value="/user/{{ view_user.id }}">
     <input type="hidden" id="markdown-content" value="{{ view_user.introduction if view_user.introduction else '' }}">
     <div class="ui grid">
         <div class="sixteen wide column">

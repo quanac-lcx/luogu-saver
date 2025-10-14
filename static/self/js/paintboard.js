@@ -1,4 +1,3 @@
-// --- 全局变量 ---
 const H = 600;
 const W = 1000;
 let scale = 1;
@@ -7,7 +6,6 @@ const activityEndTime = 1771480800;
 
 let nowColor = "#000000";
 
-// 视图状态变量
 let viewOffsetX = 0;
 let viewOffsetY = 0;
 let isDragging = false;
@@ -16,7 +14,6 @@ let dragStartY = 0;
 let lastViewOffsetX = 0;
 let lastViewOffsetY = 0;
 
-// 数据模型
 let myarr = [];
 for (let i = 0; i < H; i++) {
 	myarr[i] = [];
@@ -25,22 +22,11 @@ for (let i = 0; i < H; i++) {
 	}
 }
 
-// --- Canvas 引用 ---
 let canvas, ctx, container, bufferCanvas, bufferCtx;
-
-// --- 新增：重连逻辑变量 ---
 let reconnectTimer = null;
 
-
-// --- 新增：加载遮罩函数 ---
-
-/**
- * 显示加载遮罩层
- * @param {string} message - 要显示的提示信息
- */
 function showLoadingOverlay(message = '正在加载...') {
 	let overlay = document.getElementById('loading-overlay');
-	// 如果遮罩不存在，则动态创建
 	if (!overlay) {
 		container = document.getElementById('canvas-box'); // 确保容器存在
 		overlay = document.createElement('div');
@@ -62,7 +48,6 @@ function showLoadingOverlay(message = '正在加载...') {
 			textAlign: 'center'
 		});
 		
-		// 创建 CSS 动画的 spinner
 		const spinner = document.createElement('div');
 		Object.assign(spinner.style, {
 			border: '8px solid #f3f3f3',
@@ -74,7 +59,6 @@ function showLoadingOverlay(message = '正在加载...') {
 			marginBottom: '20px'
 		});
 		
-		// 动态创建 keyframes 动画
 		const styleSheet = document.createElement("style");
 		styleSheet.innerText = `@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`;
 		document.head.appendChild(styleSheet);
@@ -87,23 +71,16 @@ function showLoadingOverlay(message = '正在加载...') {
 		container.appendChild(overlay);
 	}
 	
-	// 更新提示信息并显示
 	document.getElementById('loading-message').textContent = message;
 	overlay.style.display = 'flex';
 }
 
-/**
- * 隐藏加载遮罩层
- */
 function hideLoadingOverlay() {
 	const overlay = document.getElementById('loading-overlay');
 	if (overlay) {
 		overlay.style.display = 'none';
 	}
 }
-
-
-// --- 渲染与更新函数 (无改动) ---
 
 function render() {
 	ctx.imageSmoothingEnabled = false;
@@ -142,17 +119,10 @@ function zoom(s) {
 	render();
 }
 
-// --- WebSocket 和数据加载 (核心改动) ---
 let ws = null;
 
-/**
- * 【修改】连接 WebSocket，并处理重连逻辑
- */
 function connectWs() {
-	// 防止因重复调用产生多个重连循环
 	if (reconnectTimer) clearTimeout(reconnectTimer);
-	
-	// 每次尝试连接时都显示遮罩
 	showLoadingOverlay('正在连接服务器...');
 	
 	ws = new WebSocket('wss://paintboard.luogu.me/api/paintboard/ws?readonly=1');
@@ -160,21 +130,18 @@ function connectWs() {
 	
 	ws.onopen = function() {
 		console.log("WebSocket connection established.");
-		// 连接成功后，更新提示文本，并准备获取绘板
 		showLoadingOverlay('连接成功，正在获取绘板...');
-		initialPaint(); // initialPaint 会在加载完毕后隐藏遮罩
+		initialPaint();
 	};
 	
 	ws.onclose = function(event) {
 		console.error(`WebSocket closed. Code: ${event.code}. Reason: ${event.reason}`);
-		// 显示遮罩并计划在3秒后重连
-		showLoadingOverlay('连接已断开，将在3秒后尝试重连...');
-		reconnectTimer = setTimeout(connectWs, 3000);
+		showLoadingOverlay('连接已断开，将在 1 秒后尝试重连...');
+		reconnectTimer = setTimeout(connectWs, 1000);
 	};
 	
 	ws.onerror = function(event) {
 		console.error("WebSocket Error:", event);
-		// onerror 之后通常会触发 onclose，所以重连逻辑放在 onclose 中统一处理
 	};
 	
 	ws.onmessage = function(event) {
@@ -206,9 +173,6 @@ function connectWs() {
 	};
 }
 
-/**
- * 【修改】初始绘制函数，现在负责在绘制完成后隐藏遮罩
- */
 function initialPaint() {
 	let oReq = new XMLHttpRequest();
 	oReq.open("GET", "https://paintboard.luogu.me/api/paintboard/getboard");
@@ -230,9 +194,7 @@ function initialPaint() {
 					bufferCtx.fillRect(x, y, 1, 1);
 				}
 			}
-			// 离屏缓冲区准备好后，渲染到可见画布
 			render();
-			// 【关键】数据加载和渲染完成后，隐藏遮罩
 			hideLoadingOverlay();
 		}
 	};
@@ -240,13 +202,11 @@ function initialPaint() {
 	oReq.onerror = function() {
 		console.error("Failed to fetch the paintboard data via HTTP.");
 		showLoadingOverlay('获取绘板数据失败，请检查网络。');
-		// 也可以在这里尝试重连
 	};
 	
 	oReq.send();
 }
 
-// --- 时间格式化工具函数 (无改动) ---
 function getDateTime(timestamp, isRangeEnd) {
 	let d = new Date(timestamp * 1000);
 	let is2400 = false;
@@ -272,7 +232,6 @@ function getFormattedTime(timestamp) {
 	return str;
 }
 
-// --- 主程序入口 (无改动) ---
 $(document).ready(function() {
 	canvas = document.getElementById('mycanvas');
 	ctx = canvas.getContext('2d');
@@ -399,10 +358,8 @@ $(document).ready(function() {
 		}
 	});
 	
-	// 连接 WebSocket
 	connectWs();
 	
-	// 设置活动时间显示和倒计时
 	$('#activity-time-start').html(getDateTime(activityStartTime, false));
 	$('#activity-time-end').html(getDateTime(activityEndTime, true));
 	let $$ = $('#activity-reminder');

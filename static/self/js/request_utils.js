@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
 	function parseUrl(url) {
 		// Check for user profile: user/123456
-		const userMatch = url.match(/^user\/(\d+)$/);
+		const userMatch = url.match(/\/user\/(\d+)$/);
 		if (userMatch) {
 			return { type: 'user', id: userMatch[1] };
 		}

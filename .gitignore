@@ -7,4 +7,5 @@ package.json
 init_db.js
 config.js
 settings.json
-pnpm-lock.yamldump.rdb
+pnpm-lock.yaml
+dump.rdb

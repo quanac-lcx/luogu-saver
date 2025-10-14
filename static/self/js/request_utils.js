@@ -1,5 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
 	function parseUrl(url) {
+		// Check for user profile: user/123456
+		const userMatch = url.match(/^user\/(\d+)$/);
+		if (userMatch) {
+			return { type: 'user', id: userMatch[1] };
+		}
+		
+		// Check for article/paste: article/xxxxxxxx or paste/xxxxxxxx
 		if (url.length < 14) throw new Error("非法链接，请检查输入。");
 		const tail = url.slice(-14);
 		const tailMatch = tail.match(/^(paste|ticle)\/([a-zA-Z0-9]{8})$/);
@@ -31,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			
 			const confirmResult = await Swal.fire({
 				title: '确认保存',
-				text: `确定要保存这个${type === 'article' ? '文章' : '剪贴板'}吗？`,
+				text: `确定要保存这个${type === 'article' ? '文章' : type === 'paste' ? '剪贴板' : '用户资料'}吗？`,
 				icon: 'question',
 				showCancelButton: true,
 				confirmButtonText: '确定',

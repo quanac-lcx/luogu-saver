@@ -2,6 +2,7 @@ import { updateTask } from "../services/task.service.js";
 import { saveArticle } from "../services/article.service.js";
 import { savePaste } from "../services/paste.service.js";
 import { saveJudgements } from "../services/judgement.service.js";
+import { saveUserProfile } from "../services/user.service.js";
 import { fetchContent } from "../core/request.js";
 import { handleFetch } from "../handlers/index.handler.js";
 import { logError, getError, SystemError, ValidationError, NetworkError, DatabaseError } from "../core/errors.js";
@@ -12,7 +13,8 @@ import { benbenCallbacks } from "../core/storage.js";
 const c3vkMode = {
 	0: 'new',
 	1: 'legacy',
-	2: 'none'
+	2: 'none',
+	4: 'new'
 }
 
 export async function executeTask(task) {
@@ -76,6 +78,9 @@ export async function executeTask(task) {
 			await updateTask(task.id, 2, "任务完成");
 		} else if (task.type === 3) {
 			await saveJudgements(task, obj);
+			await updateTask(task.id, 2, "任务完成");
+		} else if (task.type === 4) {
+			await saveUserProfile(task, obj);
 			await updateTask(task.id, 2, "任务完成");
 		} else {
 			throw new SystemError(`未知任务类型: ${task.type}`);

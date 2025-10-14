@@ -42,6 +42,14 @@ export function getResponseObject(response, type = 0) {
 		}
 		return result;
 	}
+	else if (type === 4) {
+		// For user profile, parse HTML like articles
+		const $ = cheerio.load(response.data);
+		const contextElement = $('#lentille-context');
+		if (!contextElement.length) throw new ExternalServiceError("用户页面结构出错", "Luogu API");
+		const dataObj = JSON.parse(contextElement.text().trim());
+		return dataObj.data?.user;
+	}
 }
 
 export function getResponseUser(response) {

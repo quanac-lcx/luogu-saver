@@ -42,7 +42,7 @@ router.get('/:uid', asyncHandler(async (req, res, next) => {
 	if (!result) {
 		res.render('content/user.njk', {
 			title: "保存用户资料",
-			user: { id: id, name: `用户 ${id}`, color: "Gray", updated_at: "尚未保存" },
+			view_user: { id: id, name: `用户 ${id}`, color: "Gray", updated_at: "尚未保存" },
 			renderedContent: null,
 			empty: true
 		});
@@ -52,7 +52,7 @@ router.get('/:uid', asyncHandler(async (req, res, next) => {
 	const { user, renderedContent } = result;
 	res.render('content/user.njk', {
 		title: `用户 ${user.name}`,
-		user,
+		view_user: user,
 		renderedContent,
 		empty: false
 	});

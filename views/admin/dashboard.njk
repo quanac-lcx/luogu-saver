@@ -123,38 +123,6 @@
     <div class="column">
         <div class="card shadow">
             <h3 class="ui header">
-                <i class="ui icon play colored"></i>
-                系统任务
-            </h3>
-            <div class="ui buttons">
-                <button class="ui button" onclick="triggerJob('cleanup')">
-                    <i class="ui icon bolt"></i>
-                    启动清理任务
-                </button>
-                <button class="ui button" onclick="triggerJob('update-problems')">
-                    <i class="ui icon refresh"></i>
-                    更新题目数据
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div class="column">
-        <div class="card shadow">
-            <h3 class="ui header">
-                <i class="ui icon server colored"></i>
-                系统控制
-            </h3>
-            <button class="ui red button" onclick="restartSystem()">
-                <i class="ui icon redo"></i>
-                重启服务
-            </button>
-        </div>
-    </div>
-
-    <div class="column">
-        <div class="card shadow">
-            <h3 class="ui header">
                 <i class="ui icon bullhorn colored"></i>
                 公告管理
             </h3>
@@ -189,6 +157,41 @@
     </div>
 </div>
 
+<div class="ui divider"></div>
+<div class="ui two column stackable grid"> 
+    <div class="column">
+        <div class="card shadow">
+            <h3 class="ui header">
+                <i class="ui icon play colored"></i>
+                系统任务
+            </h3>
+            <div class="ui buttons">
+                <button class="ui button" onclick="triggerJob('cleanup')">
+                    <i class="ui icon bolt"></i>
+                    启动清理任务
+                </button>
+                <button class="ui button" onclick="triggerJob('update-problems')">
+                    <i class="ui icon refresh"></i>
+                    更新题目数据
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="column">
+        <div class="card shadow">
+            <h3 class="ui header">
+                <i class="ui icon server colored"></i>
+                系统控制
+            </h3>
+            <button class="ui red button" onclick="restartSystem()">
+                <i class="ui icon redo"></i>
+                重启服务
+            </button>
+        </div>
+    </div>
+
+</div>
 <script>
 function triggerJob(jobType) {
     const button = event.target;

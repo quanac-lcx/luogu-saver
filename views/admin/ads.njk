@@ -366,9 +366,10 @@ $(function() {
     ensureInputsAreEditable();
     
     // 监听动态添加的元素
-    document.addEventListener('DOMNodeInserted', function() {
-        setTimeout(ensureInputsAreEditable, 100);
-    });
+    const adsContainer = document.getElementById('ads-container');
+    if (adsContainer) {
+        new MutationObserver(() => setTimeout(ensureInputsAreEditable, 100)).observe(adsContainer, { childList: true, subtree: true });
+    }
 });
 
 // 确保输入框可编辑的函数  

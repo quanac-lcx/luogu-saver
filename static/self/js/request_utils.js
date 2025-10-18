@@ -26,12 +26,17 @@ document.addEventListener("DOMContentLoaded", () => {
 		}
 	});
 	
-	document.getElementById("save-btn")?.addEventListener("click", async () => {
-		let url = document.getElementById("url").value.trim();
-		if (!url) {
-			Swal.fire('提示', '请输入链接', 'info');
-			return;
-		}
+	// 只在相关元素存在时添加事件监听器
+	const saveBtn = document.getElementById("save-btn");
+	const urlElement = document.getElementById("url");
+	
+	if (saveBtn && urlElement) {
+		saveBtn.addEventListener("click", async () => {
+			let url = urlElement.value.trim();
+			if (!url) {
+				Swal.fire('提示', '请输入链接', 'info');
+				return;
+			}
 		
 		try {
 			const { type, id } = parseUrl(url);
@@ -100,29 +105,34 @@ document.addEventListener("DOMContentLoaded", () => {
 				confirmButtonText: "确定"
 			});
 		}
-	});
+		});
+	}
 	
-	document.getElementById("view-btn")?.addEventListener("click", () => {
-		let url = document.getElementById("url").value.trim();
-		if (!url) {
-			Swal.fire('提示', '请输入链接', 'info');
-			return;
-		}
-		
-		try {
-			const { type, id } = parseUrl(url);
+	// 只在相关元素存在时添加查看按钮的事件监听器
+	const viewBtn = document.getElementById("view-btn");
+	if (viewBtn && urlElement) {
+		viewBtn.addEventListener("click", () => {
+			let url = urlElement.value.trim();
+			if (!url) {
+				Swal.fire('提示', '请输入链接', 'info');
+				return;
+			}
 			
-			window.location.href = `/${type}/` + encodeURIComponent(id);
-		} catch (err) {
-			console.error(err);
-			Swal.fire({
-				title: "跳转失败",
-				text: err.message || "无法跳转到内容，请稍后再试",
-				icon: "error",
-				confirmButtonText: "确定"
-			});
-		}
-	});
+			try {
+				const { type, id } = parseUrl(url);
+				
+				window.location.href = `/${type}/` + encodeURIComponent(id);
+			} catch (err) {
+				console.error(err);
+				Swal.fire({
+					title: "跳转失败",
+					text: err.message || "无法跳转到内容，请稍后再试",
+					icon: "error",
+					confirmButtonText: "确定"
+				});
+			}
+		});
+	}
 });
 
 async function handleTaskRequest(endpoint, options = {}) {

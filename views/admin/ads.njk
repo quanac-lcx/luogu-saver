@@ -1,0 +1,404 @@
+{% extends "../layout.njk" %}
+
+{% block extra_header %}
+<style>
+    /* 确保所有输入框都可以正常编辑，并移除阴影效果 */
+    .ad-item input[type="text"] {
+        pointer-events: auto !important;
+        cursor: text !important;
+        background-color: white !important;
+        border: 1px solid rgba(34,36,38,.15) !important;
+        -webkit-user-select: text !important;
+        -moz-user-select: text !important;
+        -ms-user-select: text !important;
+        user-select: text !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+    
+    .ad-item input[type="text"]:focus {
+        border-color: #85b7d9 !important;
+        background-color: white !important;
+        outline: none !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+    
+    .ad-item input[type="text"]:disabled,
+    .ad-item input[type="text"][readonly] {
+        pointer-events: none !important;
+        background-color: #f9fafb !important;
+        color: rgba(0,0,0,.6) !important;
+        cursor: not-allowed !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ui grid">
+    <div class="sixteen wide column">
+        <h1 class="ui header">
+            <i class="ui icon image"></i>
+            <div class="content">
+                广告管理
+                <div class="sub header">管理首页的广告轮播</div>
+            </div>
+        </h1>
+    </div>
+</div>
+
+<div class="ui grid">
+    <div class="sixteen wide column">
+        <div class="card shadow">
+            <h3 class="ui header">
+                <i class="ui icon edit colored"></i>
+                编辑广告
+            </h3>
+            <div style="margin-bottom: 20px;">
+                <button class="ui primary button" onclick="addAd()">
+                    <i class="ui icon plus"></i>
+                    添加广告
+                </button>
+                <a href="/admin" class="ui button">
+                    <i class="ui icon arrow left"></i>
+                    返回
+                </a>
+            </div>
+            
+            <form class="ui form" id="ads-form">
+                <div id="ads-container">
+                    {% if ads and ads.length > 0 %}
+                        {% for ad in ads %}
+                        <div class="ad-item" data-index="{{ loop.index0 }}" style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-bottom: 20px; position: relative;">
+                            <button type="button" class="ui red icon button" onclick="removeAd({{ loop.index0 }})" style="position: absolute; top: 10px; right: 10px;">
+                                <i class="trash icon"></i>
+                            </button>
+                            <div class="fields">
+                                <div class="eight wide field">
+                                    <label>图片 URL</label>
+                                    <input type="text" name="imageUrl-{{ loop.index0 }}" value="{{ ad.imageUrl }}" placeholder="https://example.com/image.png" class="ad-imageUrl">
+                                </div>
+                                <div class="eight wide field">
+                                    <label>链接 URL</label>
+                                    <input type="text" name="linkUrl-{{ loop.index0 }}" value="{{ ad.linkUrl }}" placeholder="https://example.com" class="ad-linkUrl">
+                                </div>
+                            </div>
+                            <div class="fields">
+                                <div class="ten wide field">
+                                    <label>描述</label>
+                                    <input type="text" name="description-{{ loop.index0 }}" value="{{ ad.description }}" placeholder="广告描述" class="ad-description">
+                                </div>
+                                <div class="six wide field">
+                                    <div class="ui checkbox" style="margin-top: 32px;">
+                                        <input type="checkbox" name="enabled-{{ loop.index0 }}" {% if ad.enabled !== false %}checked{% endif %} class="ad-enabled">
+                                        <label>启用此广告</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="text-align: center; color: gray; padding: 20px;">暂无广告，点击上方"添加广告"按钮创建</p>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" class="ui primary button" style="margin-top: 20px;">
+                    <i class="ui icon save"></i>
+                    保存所有更改
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="sixteen wide column">
+        <div class="card shadow">
+            <h3 class="ui header">
+                <i class="ui icon eye colored"></i>
+                预览
+            </h3>
+            <div id="ads-preview" style="padding: 15px;">
+                <!-- 预览区域 -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let adCount = {{ ads.length if ads else 0 }};
+
+function addAd() {
+    const container = document.getElementById('ads-container');
+
+    const emptyMessage = container.querySelector('p');
+    if (emptyMessage) {
+        emptyMessage.remove();
+    }
+    
+    const adItem = document.createElement('div');
+    adItem.className = 'ad-item';
+    adItem.setAttribute('data-index', adCount);
+    adItem.style.cssText = 'border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-bottom: 20px; position: relative;';
+    
+    adItem.innerHTML = `
+        <button type="button" class="ui red icon button" onclick="removeAd(${adCount})" style="position: absolute; top: 10px; right: 10px;">
+            <i class="trash icon"></i>
+        </button>
+
+        <div class="fields">
+            <div class="eight wide field">
+                <label>图片 URL</label>
+                <input type="text" name="imageUrl-${adCount}" placeholder="https://example.com/image.png" class="ad-imageUrl">
+            </div>
+            <div class="eight wide field">
+                <label>链接 URL</label>
+                <input type="text" name="linkUrl-${adCount}" placeholder="https://example.com" class="ad-linkUrl">
+            </div>
+        </div>
+
+        <div class="fields">
+            <div class="ten wide field">
+                <label>描述</label>
+                <input type="text" name="description-${adCount}" placeholder="广告描述" class="ad-description">
+            </div>
+            <div class="six wide field">
+                <div class="ui checkbox" style="margin-top: 32px;">
+                    <input type="checkbox" name="enabled-${adCount}" checked class="ad-enabled">
+                    <label>启用此广告</label>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(adItem);
+    adCount++;
+    
+    // 初始化 checkbox
+    $('.ui.checkbox', adItem).checkbox();
+    
+    // 确保新添加的输入框可以编辑
+    setTimeout(() => {
+        const newInputs = adItem.querySelectorAll('input[type="text"]');
+        newInputs.forEach(input => {
+            input.removeAttribute('readonly');
+            input.removeAttribute('disabled');
+            input.style.pointerEvents = 'auto';
+            input.style.userSelect = 'text';
+            input.style.cursor = 'text';
+            input.style.backgroundColor = 'white';
+            
+            // 添加事件监听器
+            input.addEventListener('click', function() {
+                this.focus();
+            });
+        });
+    }, 100);
+    
+    updatePreview();
+}
+
+function removeAd(index) {
+    const adItem = document.querySelector(`.ad-item[data-index="${index}"]`);
+    if (adItem) {
+        adItem.remove();
+        updatePreview();
+        
+        // 如果没有广告了，显示提示信息
+        const container = document.getElementById('ads-container');
+        if (container.children.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: gray; padding: 20px;">暂无广告，点击上方"添加广告"按钮创建</p>';
+        }
+    }
+}
+
+function updatePreview() {
+    const previewDiv = document.getElementById('ads-preview');
+    const adItems = document.querySelectorAll('.ad-item');
+    
+    previewDiv.innerHTML = '';
+    
+    if (adItems.length === 0) {
+        previewDiv.innerHTML = '<p style="text-align: center; color: gray;">暂无广告</p>';
+        return;
+    }
+    
+    // 创建预览容器
+    const previewContainer = document.createElement('div');
+    previewContainer.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;';
+    
+    adItems.forEach((item) => {
+        const imageUrlField = item.querySelector('.ad-imageUrl');
+        const linkUrlField = item.querySelector('.ad-linkUrl');
+        const descriptionField = item.querySelector('.ad-description');
+        const enabledField = item.querySelector('.ad-enabled');
+        
+        if (imageUrlField && linkUrlField && descriptionField && enabledField) {
+            const imageUrl = imageUrlField.value;
+            const linkUrl = linkUrlField.value;
+            const description = descriptionField.value;
+            const enabled = enabledField.checked;
+            
+            // 只显示启用的广告
+            if (enabled && imageUrl) {
+                const adCard = document.createElement('div');
+                adCard.style.cssText = `
+                    border: 1px solid #e0e0e0;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    ${!enabled ? 'opacity: 0.5;' : ''}
+                `;
+                
+                adCard.innerHTML = `
+                    <div style="position: relative; padding-top: 56.25%; background: #f5f5f5;">
+                        <img src="${imageUrl}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #999;\\'>图片加载失败</div>'">
+                    </div>
+                    <div style="padding: 10px;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">${description || '无描述'}</div>
+                        <div style="font-size: 11px; color: #999; word-break: break-all;">${linkUrl || '无链接'}</div>
+                    </div>
+                `;
+                
+                previewContainer.appendChild(adCard);
+            }
+        }
+    });
+    
+    if (previewContainer.children.length === 0) {
+        previewDiv.innerHTML = '<p style="text-align: center; color: gray;">没有启用的广告</p>';
+    } else {
+        previewDiv.appendChild(previewContainer);
+    }
+}
+
+// 监听输入变化以更新预览
+document.addEventListener('input', function(e) {
+    if (e.target.classList.contains('ad-imageUrl') || 
+        e.target.classList.contains('ad-linkUrl') || 
+        e.target.classList.contains('ad-description')) {
+        updatePreview();
+    }
+});
+
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('ad-enabled')) {
+        updatePreview();
+    }
+});
+
+document.getElementById('ads-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const adItems = document.querySelectorAll('.ad-item');
+    const ads = [];
+    
+    adItems.forEach((item, index) => {
+        const imageUrlField = item.querySelector('.ad-imageUrl');
+        const linkUrlField = item.querySelector('.ad-linkUrl');
+        const descriptionField = item.querySelector('.ad-description');
+        const enabledField = item.querySelector('.ad-enabled');
+        
+        if (imageUrlField && linkUrlField && descriptionField) {
+            const imageUrl = imageUrlField.value.trim();
+            const linkUrl = linkUrlField.value.trim();
+            const description = descriptionField.value.trim();
+            const enabled = enabledField ? enabledField.checked : true;
+            
+            // 只有当必填字段都有值时才添加
+            if (imageUrl && linkUrl && description) {
+                const ad = {
+                    imageUrl: imageUrl,
+                    linkUrl: linkUrl,
+                    description: description
+                };
+                
+                // 只有当 enabled 为 false 时才添加该字段
+                if (enabled === false) {
+                    ad.enabled = false;
+                }
+                
+                ads.push(ad);
+            }
+        }
+    });
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="ui icon spinner loading"></i> 保存中...';
+    submitBtn.disabled = true;
+    
+    // 使用 fetch API
+    fetch('/admin/api/ads', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ads })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(res => {
+        if (res.success) {
+            Swal.fire('成功', '广告更新成功', 'success');
+        } else {
+            Swal.fire('失败', res.message || '更新失败', 'error');
+        }
+    })
+    .catch(error => {
+        Swal.fire('错误', `网络或服务器异常: ${error.message}`, 'error');
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+});
+
+$(function() {
+    $('.ui.checkbox').checkbox();
+    updatePreview();
+    
+    // 确保所有输入框都可以编辑
+    ensureInputsAreEditable();
+    
+    // 监听动态添加的元素
+    const adsContainer = document.getElementById('ads-container');
+    if (adsContainer) {
+        new MutationObserver(() => setTimeout(ensureInputsAreEditable, 100)).observe(adsContainer, { childList: true, subtree: true });
+    }
+});
+
+// 确保输入框可编辑的函数  
+function ensureInputsAreEditable() {
+    const inputs = document.querySelectorAll('.ad-item input[type="text"]');
+    
+    inputs.forEach(input => {
+        // 移除可能阻止编辑的属性
+        input.removeAttribute('readonly');
+        input.removeAttribute('disabled');
+        
+        // 确保CSS属性允许编辑
+        input.style.pointerEvents = 'auto';
+        input.style.userSelect = 'text';
+        input.style.cursor = 'text';
+        input.style.backgroundColor = 'white';
+        
+        input.addEventListener('click', function() {
+            this.focus();
+        });
+        
+        // Removed empty 'focus' and 'blur' event listeners
+        
+        
+        
+        
+        
+        
+    });
+}
+</script>
+{% endblock %}

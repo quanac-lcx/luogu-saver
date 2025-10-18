@@ -51,3 +51,19 @@ export async function getBanners() {
     const settings = await getSettings();
     return settings.banners || [];
 }
+
+/**
+ * 获取广告列表
+ * 
+ * @returns {Promise<Array>} 广告数组
+ */
+export async function getAds() {
+    try {
+        const adsPath = join(process.cwd(), 'static', 'anti_block.json');
+        const content = await readFile(adsPath, 'utf8');
+        return JSON.parse(content);
+    } catch (error) {
+        // 如果文件不存在，返回空数组
+        return [];
+    }
+}

@@ -422,3 +422,58 @@ export async function updateBanners(banners) {
         throw error;
     }
 }
+
+/**
+ * 获取所有广告
+ * 
+ * @returns {Promise<Array>} 广告数组
+ */
+export async function getAds() {
+    try {
+        const adsPath = join(process.cwd(), 'static', 'anti_block.json');
+        const content = await readFile(adsPath, 'utf8');
+        return JSON.parse(content);
+    } catch (error) {
+        // 如果文件不存在，返回空数组
+        return [];
+    }
+}
+
+/**
+ * 更新广告列表
+ * 
+ * @param {Array} ads - 广告数组
+ * @returns {Promise<Object>} 包含成功消息的结果
+ */
+export async function updateAds(ads) {
+    try {
+        if (!Array.isArray(ads)) {
+            throw new ValidationError("广告列表必须是数组");
+        }
+
+        // 验证每个广告的结构
+        for (const ad of ads) {
+            if (!ad.imageUrl || typeof ad.imageUrl !== 'string') {
+                throw new ValidationError("每个广告必须包含 imageUrl 字段");
+            }
+            if (!ad.linkUrl || typeof ad.linkUrl !== 'string') {
+                throw new ValidationError("每个广告必须包含 linkUrl 字段");
+            }
+            if (!ad.description || typeof ad.description !== 'string') {
+                throw new ValidationError("每个广告必须包含 description 字段");
+            }
+            // enabled 字段是可选的，如果存在则必须是布尔值
+            if (ad.enabled !== undefined && typeof ad.enabled !== 'boolean') {
+                throw new ValidationError("广告的 enabled 字段必须是布尔值");
+            }
+        }
+
+        const adsPath = join(process.cwd(), 'static', 'anti_block.json');
+        await writeFile(adsPath, JSON.stringify(ads, null, 2));
+        
+        return { message: "广告更新成功" };
+    } catch (error) {
+        await logError(error);
+        throw error;
+    }
+}

@@ -94,14 +94,19 @@ document.addEventListener('DOMContentLoaded', () => {
 		})
 		.then(data => {
 			if (data && data.length > 0) {
-				adsData = data;
-				shuffle(adsData);
-				loadAds();
-				if (adsData.length > 1) {
-					startAutoPlay();
+				// 只加载启用的广告（enabled 为 undefined 或 true）
+				adsData = data.filter(ad => ad.enabled !== false);
+				if (adsData.length > 0) {
+					shuffle(adsData);
+					loadAds();
+					if (adsData.length > 1) {
+						startAutoPlay();
+					} else {
+						prevBtn.style.display = 'none';
+						nextBtn.style.display = 'none';
+					}
 				} else {
-					prevBtn.style.display = 'none';
-					nextBtn.style.display = 'none';
+					displayError('无广告内容');
 				}
 			} else {
 				displayError('无广告内容');

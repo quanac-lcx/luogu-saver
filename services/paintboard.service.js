@@ -6,7 +6,7 @@ export async function applyToken(uid) {
 	const key = generateRandomString(8);
 	let accessKey = await AccessKey.findOne({ where: { uid } });
 	if (!accessKey) {
-		const accessKey = AccessKey.create({
+		accessKey = AccessKey.create({
 			uid,
 			id: key
 		});

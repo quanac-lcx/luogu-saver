@@ -6,8 +6,10 @@ import { requireLogin } from "../middleware/permission.js";
 
 const router = express.Router();
 
-router.get('/view', (req, res, next) => res.render('paintboard/view.njk', { title: '冬日绘板' }));
-router.get('/view/webgl', (req, res, next) => res.render('paintboard/view_webgl.njk', { title: '冬日绘板' }));
+router.get('/', (req, res, next) => res.render('paintboard/view.njk', { title: '冬日绘板' }));
+router.get('/webgl', (req, res, next) => res.render('paintboard/view_webgl.njk', { title: '冬日绘板' }));
+router.get('/view', (req, res, next) => res.redirect('/paintboard'));
+router.get('/view/webgl', (req, res, next) => res.redirect('/paintboard/webgl'));
 
 router.get('/token', requireLogin, (req, res, next) => {
 	res.render('paintboard/token.njk', { title: '申请凭据', user: req.user });

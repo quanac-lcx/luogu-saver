@@ -190,11 +190,9 @@ function addAd() {
             
             // 添加事件监听器
             input.addEventListener('click', function() {
-                console.log('新输入框被点击:', this.name || this.className);
                 this.focus();
             });
         });
-        console.log('新广告项的输入框已设置为可编辑');
     }, 100);
     
     updatePreview();
@@ -295,28 +293,17 @@ document.getElementById('ads-form').addEventListener('submit', function(e) {
     const adItems = document.querySelectorAll('.ad-item');
     const ads = [];
     
-    console.log('找到', adItems.length, '个广告项');
-    
     adItems.forEach((item, index) => {
         const imageUrlField = item.querySelector('.ad-imageUrl');
         const linkUrlField = item.querySelector('.ad-linkUrl');
         const descriptionField = item.querySelector('.ad-description');
         const enabledField = item.querySelector('.ad-enabled');
         
-        console.log(`广告 ${index}:`, {
-            imageUrlField: !!imageUrlField,
-            linkUrlField: !!linkUrlField,
-            descriptionField: !!descriptionField,
-            enabledField: !!enabledField
-        });
-        
         if (imageUrlField && linkUrlField && descriptionField) {
             const imageUrl = imageUrlField.value.trim();
             const linkUrl = linkUrlField.value.trim();
             const description = descriptionField.value.trim();
             const enabled = enabledField ? enabledField.checked : true;
-            
-            console.log(`广告 ${index} 数据:`, { imageUrl, linkUrl, description, enabled });
             
             // 只有当必填字段都有值时才添加
             if (imageUrl && linkUrl && description) {
@@ -336,8 +323,6 @@ document.getElementById('ads-form').addEventListener('submit', function(e) {
         }
     });
     
-    console.log('将要提交的广告:', ads);
-    
     const submitBtn = this.querySelector('button[type="submit"]');
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = '<i class="ui icon spinner loading"></i> 保存中...';
@@ -352,14 +337,12 @@ document.getElementById('ads-form').addEventListener('submit', function(e) {
         body: JSON.stringify({ ads })
     })
     .then(response => {
-        console.log('响应状态:', response.status);
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
         return response.json();
     })
     .then(res => {
-        console.log('服务器响应:', res);
         if (res.success) {
             Swal.fire('成功', '广告更新成功', 'success');
         } else {
@@ -367,7 +350,6 @@ document.getElementById('ads-form').addEventListener('submit', function(e) {
         }
     })
     .catch(error => {
-        console.error('Error:', error);
         Swal.fire('错误', `网络或服务器异常: ${error.message}`, 'error');
     })
     .finally(() => {
@@ -405,20 +387,17 @@ function ensureInputsAreEditable() {
         input.style.backgroundColor = 'white';
         
         input.addEventListener('click', function() {
-            console.log('输入框被点击:', this.name || this.className);
             this.focus();
         });
         
         input.addEventListener('focus', function() {
-            console.log('输入框获得焦点:', this.name || this.className);
+            // 焦点事件处理
         });
         
         input.addEventListener('blur', function() {
-            console.log('输入框失去焦点:', this.name || this.className, '值:', this.value);
+            // 失焦事件处理
         });
     });
-    
-    logger.info('已处理', inputs.length, '个输入框');
 }
 </script>
 {% endblock %}

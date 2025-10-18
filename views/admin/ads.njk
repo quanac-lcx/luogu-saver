@@ -1,5 +1,65 @@
 {% extends "../layout.njk" %}
 
+{% block extra_header %}
+<style>
+    /* 确保所有输入框都可以正常编辑 */
+    .ad-item input[type="text"] {
+        pointer-events: auto !important;
+        cursor: text !important;
+        background-color: white !important;
+        border: 1px solid rgba(34,36,38,.15) !important;
+        -webkit-user-select: text !important;
+        -moz-user-select: text !important;
+        -ms-user-select: text !important;
+        user-select: text !important;
+    }
+    
+    .ad-item input[type="text"]:focus {
+        border-color: #85b7d9 !important;
+        background-color: white !important;
+        outline: none !important;
+        box-shadow: 0 0 0 2px rgba(133, 183, 217, 0.2) !important;
+    }
+    
+    .ad-item input[type="text"]:disabled,
+    .ad-item input[type="text"][readonly] {
+        pointer-events: none !important;
+        background-color: #f9fafb !important;
+        color: rgba(0,0,0,.6) !important;
+        cursor: not-allowed !important;
+    }
+    
+    /* 调试用样式 - 可以临时添加来查看问题 */
+    .ad-item input.debug-editable {
+        border: 2px solid green !important;
+    }
+    
+    /* 特别针对描述输入框 */
+    .ad-description {
+        pointer-events: auto !important;
+        cursor: text !important;
+        background-color: white !important;
+        border: 1px solid rgba(34,36,38,.15) !important;
+        -webkit-user-select: text !important;
+        -moz-user-select: text !important;
+        -ms-user-select: text !important;
+        user-select: text !important;
+        outline: none !important;
+    }
+    
+    .ad-description:focus {
+        border-color: #85b7d9 !important;
+        background-color: white !important;
+        box-shadow: 0 0 0 2px rgba(133, 183, 217, 0.2) !important;
+    }
+    
+    /* 移除所有可能阻止编辑的样式 */
+    .ad-description:not(:focus) {
+        pointer-events: auto !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="ui grid">
     <div class="sixteen wide column">
@@ -140,6 +200,27 @@ function addAd() {
     
     // 初始化 checkbox
     $('.ui.checkbox', adItem).checkbox();
+    
+    // 确保新添加的输入框可以编辑
+    setTimeout(() => {
+        const newInputs = adItem.querySelectorAll('input[type="text"]');
+        newInputs.forEach(input => {
+            input.removeAttribute('readonly');
+            input.removeAttribute('disabled');
+            input.style.pointerEvents = 'auto';
+            input.style.userSelect = 'text';
+            input.style.cursor = 'text';
+            input.style.backgroundColor = 'white';
+            
+            // 添加事件监听器
+            input.addEventListener('click', function() {
+                console.log('新输入框被点击:', this.name || this.className);
+                this.focus();
+            });
+        });
+        console.log('新广告项的输入框已设置为可编辑');
+    }, 100);
+    
     updatePreview();
 }
 
@@ -322,6 +403,53 @@ document.getElementById('ads-form').addEventListener('submit', function(e) {
 $(function() {
     $('.ui.checkbox').checkbox();
     updatePreview();
+    
+    // 确保所有输入框都可以编辑
+    ensureInputsAreEditable();
+    
+    // 监听动态添加的元素
+    document.addEventListener('DOMNodeInserted', function() {
+        setTimeout(ensureInputsAreEditable, 100);
+    });
 });
+
+// 确保输入框可编辑的函数  
+function ensureInputsAreEditable() {
+    const inputs = document.querySelectorAll('.ad-item input[type="text"]');
+    
+    inputs.forEach(input => {
+        // 移除可能阻止编辑的属性
+        input.removeAttribute('readonly');
+        input.removeAttribute('disabled');
+        
+        // 确保CSS属性允许编辑
+        input.style.pointerEvents = 'auto';
+        input.style.userSelect = 'text';
+        input.style.cursor = 'text';
+        input.style.backgroundColor = 'white';
+        
+        // 添加调试类名（可选）
+        if (input.classList.contains('ad-description')) {
+            input.classList.add('debug-editable');
+            console.log('已处理描述输入框:', input);
+        }
+        
+        // 添加焦点测试
+        input.addEventListener('click', function() {
+            console.log('输入框被点击:', this.name || this.className);
+            this.focus();
+        });
+        
+        input.addEventListener('focus', function() {
+            console.log('输入框获得焦点:', this.name || this.className);
+        });
+        
+        input.addEventListener('blur', function() {
+            console.log('输入框失去焦点:', this.name || this.className, '值:', this.value);
+        });
+    });
+    
+    console.log('已处理', inputs.length, '个输入框');
+}
 </script>
 {% endblock %}

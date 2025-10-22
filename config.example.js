@@ -44,5 +44,10 @@ export default {
 		crawler_url: "https://spider-benben.imken.dev",
 		ws_url: "wss://spider-benben.imken.dev",
 		callback_timeout: 30000
+	},
+	rss: {
+		article: {
+			recentHours: 24
+		}
 	}
 }

@@ -16,12 +16,25 @@ router.get('/recent', asyncHandler(async (req, res, next) => {
 router.get('/rss', asyncHandler(async (req, res, next) => {
 	try {
 		const hours = config.rss?.article?.recentHours || 24;
-		const articles = await getRecentArticlesByHours(hours);
+		const authorUid = req.query.uid ? parseInt(req.query.uid) : null;
+		const articles = await getRecentArticlesByHours(hours, authorUid);
+		
+		let feedTitle = '洛谷文章更新';
+		let feedDescription = `最近 ${hours} 小时更新的文章`;
+		
+		if (authorUid !== null && articles.length > 0 && articles[0].author) {
+			const authorName = articles[0].author.name;
+			feedTitle = `${authorName} 的文章更新`;
+			feedDescription = `${authorName} 最近 ${hours} 小时更新的文章`;
+		} else if (authorUid !== null) {
+			feedTitle = `用户 ${authorUid} 的文章更新`;
+			feedDescription = `用户 ${authorUid} 最近 ${hours} 小时更新的文章`;
+		}
 		
 		const feed = new RSS({
-			title: '洛谷文章更新',
-			description: `最近 ${hours} 小时更新的文章`,
-			feed_url: `${req.protocol}://${req.get('host')}/article/rss`,
+			title: feedTitle,
+			description: feedDescription,
+			feed_url: `${req.protocol}://${req.get('host')}/article/rss${authorUid !== null ? `?uid=${authorUid}` : ''}`,
 			site_url: `${req.protocol}://${req.get('host')}`,
 			language: 'zh-CN'
 		});

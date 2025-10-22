@@ -162,16 +162,22 @@ export async function getArticleById(id) {
 	});
 }
 
-export async function getRecentArticlesByHours(hours) {
+export async function getRecentArticlesByHours(hours, authorUid = null) {
 	const cutoffTime = new Date(Date.now() - hours * 60 * 60 * 1000);
 	
 	return await withCache({
-		cacheKey: `recent_articles_hours:${hours}`,
+		cacheKey: `recent_articles_hours:${hours}:${authorUid || 'all'}`,
 		ttl: 600,
 		fetchFn: async () => {
-			const articles = await Article.createQueryBuilder('article')
+			let queryBuilder = Article.createQueryBuilder('article')
 				.where('article.deleted = :deleted', { deleted: false })
-				.andWhere('article.updated_at >= :cutoffTime', { cutoffTime })
+				.andWhere('article.updated_at >= :cutoffTime', { cutoffTime });
+			
+			if (authorUid !== null) {
+				queryBuilder = queryBuilder.andWhere('article.author_uid = :authorUid', { authorUid });
+			}
+			
+			const articles = await queryBuilder
 				.orderBy('article.updated_at', 'DESC')
 				.getMany();
 			

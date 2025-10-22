@@ -161,3 +161,27 @@ export async function getArticleById(id) {
 		}
 	});
 }
+
+export async function getRecentArticlesByHours(hours) {
+	const cutoffTime = new Date(Date.now() - hours * 60 * 60 * 1000);
+	
+	return await withCache({
+		cacheKey: `recent_articles_hours:${hours}`,
+		ttl: 600,
+		fetchFn: async () => {
+			const articles = await Article.createQueryBuilder('article')
+				.where('article.deleted = :deleted', { deleted: false })
+				.andWhere('article.updated_at >= :cutoffTime', { cutoffTime })
+				.orderBy('article.updated_at', 'DESC')
+				.getMany();
+			
+			const result = await Promise.all(articles.map(async (article) => {
+				const obj = Object.setPrototypeOf(article, Article.prototype);
+				await obj.loadRelationships();
+				return obj;
+			}));
+			
+			return result;
+		}
+	});
+}

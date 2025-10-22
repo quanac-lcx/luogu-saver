@@ -30,6 +30,8 @@ import { loadEntities } from "./entities/index.js";
 
 import cleanup from './jobs/cleanup.js';
 import updateProblems from './jobs/update_problems.js';
+import { warmUpBenbenStatistics } from "./jobs/warm_up.js";
+import crawlJudgement from './jobs/crawl_judgement.js';
 
 import auth from "./middleware/auth.js";
 import logging from "./middleware/logging.js";
@@ -41,7 +43,6 @@ import mobileDetect from "./middleware/mobile_detect.js";
 import bannersMiddleware from "./middleware/banners.js";
 
 import * as worker from "./workers/index.worker.js";
-import { warmUpBenbenStatistics } from "./jobs/warm_up.js";
 import { startWebSocketWorker } from "./workers/websocket.worker.js";
 
 const app = express();
@@ -119,6 +120,7 @@ else {
 		.then(() => {
 			scheduleJob('0/10 * * * *', cleanup);
 			scheduleJob('0 0 * * *', updateProblems);
+			scheduleJob('0 12 * * *', crawlJudgement)
 			scheduleJob('0/5 * * * *', warmUpBenbenStatistics);
 		})
 		.then(() => worker.restoreQueue())

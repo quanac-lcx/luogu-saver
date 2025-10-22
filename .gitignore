@@ -10,3 +10,4 @@ settings.json
 pnpm-lock.yaml
 dump.rdb
 static/anti_block.json.backup
+test.js

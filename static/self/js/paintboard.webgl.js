@@ -432,7 +432,30 @@ $(document).ready(function() {
 		}
 	});
 	
-	$('#reset-token').bind("click", function () { /* ... 省略未改变的 AJAX ... */ });
+	$('#reset-token').bind("click", function () {
+		$.ajax({
+			type: 'POST',
+			url: 'https://paintboard.luogu.me/api/auth/gettoken',
+			data: JSON.stringify({
+				uid: parseInt(document.getElementById('uid').value),
+				access_key: document.getElementById('access_key').value
+			}),
+			complete: (resp) => {
+				resp = resp.responseJSON;
+				if (resp.statusCode !== 200) {
+					console.log(resp);
+					Swal.fire({
+						title: `获取 PaintKey 失败`,
+						text: `${resp.data.errorType || resp.data.error}${resp.data.message ? ': ' + resp.data.message : ''}`,
+						icon: 'error'
+					});
+				} else {
+					document.getElementById('paint_key').value = resp.data.token;
+				}
+			},
+			contentType: "application/json"
+		});
+	});
 	
 	document.addEventListener('mouseup', function() {
 		isDragging = false;
@@ -475,7 +498,17 @@ $(document).ready(function() {
 	$('#activity-time-start').html(getDateTime(activityStartTime, false));
 	$('#activity-time-end').html(getDateTime(activityEndTime, true));
 	let $$ = $('#activity-reminder');
-	let clock = setInterval(function() { /* ... 省略未改变的计时器 ... */ }, 1000);
+	let clock = setInterval(function() {
+		let time = Math.floor(new Date().getTime() / 1000);
+		if (time <= activityStartTime) {
+			$$.html(' (倒计时: ' + getFormattedTime(activityStartTime - time) + ')');
+		} else if (time <= activityEndTime) {
+			$$.html(' (剩余: ' + getFormattedTime(activityEndTime - time) + ')');
+		} else {
+			$$.html(' (活动已结束)');
+			clearInterval(clock);
+		}
+	}, 1000);
 	
 	// --- 优化点 4: 启动渲染循环 ---
 	animationLoop();

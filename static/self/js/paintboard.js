@@ -318,7 +318,11 @@ $(document).ready(function() {
 				resp = resp.responseJSON;
 				if (resp.statusCode !== 200) {
 					console.log(resp);
-					alert(`${resp.data.errorType}${resp.data.message?': '+resp.data.message:''}`);
+					Swal.fire({
+						title: `获取 PaintKey 失败`,
+						text: `${resp.data.errorType || resp.data.error}${resp.data.message ? ': ' + resp.data.message : ''}`,
+						icon: 'error'
+					});
 				} else {
 					document.getElementById('paint_key').value = resp.data.token;
 				}

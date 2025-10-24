@@ -7,7 +7,8 @@
   {
     "imageUrl": "/static/self/img/ad_1.jpg",
     "linkUrl": "https://www.sxdyzx.com.cn",
-    "description": "山东省单县第一中学"
+    "description": "山东省单县第一中学",
+    "enabled": false
   },
   {
     "imageUrl": "https://s2.loli.net/2025/07/18/23xGzJh86vAToNU.png",
@@ -35,8 +36,13 @@
     "description": "Sleeping Cup"
   },
   {
-    "imageUrl": "123123",
-    "linkUrl": "123123123123213",
-    "description": "1123213333333123213"
+    "imageUrl": "https://lgs-res.kkksc03.com/paintboard/lgs2026-main.png",
+    "linkUrl": "/paintboard",
+    "description": "洛谷保存站冬日绘版"
+  },
+  {
+    "imageUrl": "https://lgs-res.kkksc03.com/paintboard/lgs2026-main.png",
+    "linkUrl": "/paintboard",
+    "description": "洛谷保存站冬日绘版"
   }
 ]

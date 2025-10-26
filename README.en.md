@@ -33,6 +33,10 @@ node app.js
 
 This project licensed under [GPL-3.0 license](LICENSE).
 
+## Deployment & Building
+
+See: [Building from Source](https://help.luogu.me/docs/build/build).
+
 ## Star History
 
 <a href="https://www.star-history.com/#laikit-dev/luogu-saver&Date">

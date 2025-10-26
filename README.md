@@ -20,22 +20,13 @@
 - 前端采用 Nunjucks + SemanticUI
 - 后端使用 Express + MySQL
 
-## 快速开始
+## 部署 & 构建
 
-```bash
-git clone https://github.com/laikit-dev/luogu-saver.git
-cd luogu-saver
-npm install
-node app.js
-```
+请参阅：[从源代码构建 | 洛谷保存站帮助中心](https://help.luogu.me/docs/build/build)。
 
 ## 许可协议
 
 本项目采用 [GPL-3.0 许可协议](LICENSE)。
-
-## 部署 & 构建
-
-请参阅：[从源代码构建 | 洛谷保存站帮助中心](https://help.luogu.me/docs/build/build)。
 
 ## Star 趋势
 

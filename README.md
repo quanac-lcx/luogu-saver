@@ -33,6 +33,10 @@ node app.js
 
 本项目采用 [GPL-3.0 许可协议](LICENSE)。
 
+## 部署 & 构建
+
+请参阅：[从源代码构建 | 洛谷保存站帮助中心](https://help.luogu.me/docs/build/build)。
+
 ## Star 趋势
 
 <a href="https://www.star-history.com/#laikit-dev/luogu-saver&Date">

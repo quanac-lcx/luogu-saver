@@ -20,14 +20,9 @@ Open source code for Luogu Saver's frontend.
 - Frontend: Nunjucks + SemanticUI
 - Backend: Express + MySQL
 
-## Getting Started
+## Deployment & Building
 
-```bash
-git clone https://github.com/laikit-dev/luogu-saver.git
-cd luogu-saver
-npm install
-node app.js
-```
+See: [Building from Source](https://help.luogu.me/docs/build/build).
 
 ## License
 

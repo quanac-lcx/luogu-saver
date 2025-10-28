@@ -44,7 +44,7 @@ export async function createDeletionRequest(type, itemId, requesterUid, reason) 
 		throw new NotFoundError(`${type === 'article' ? '文章' : '剪贴板'}不存在`);
 	}
 	
-	// 验证已被删除
+	// 验证是否已被删除
 	if (item.deleted) {
 		throw new ValidationError("该内容已被删除，无需重复申请");
 	}

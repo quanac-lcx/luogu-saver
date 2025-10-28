@@ -54,21 +54,6 @@ export default class DeletionRequest extends BaseModel {
 		}
 	}
 	
-	/**
-	 * 检查是否存在待处理的相同申请
-	 * @param {string} type - 内容类型
-	 * @param {string} itemId - 内容ID
-	 * @returns {Promise<DeletionRequest|null>}
-	 */
-	static async findPendingRequest(type, itemId) {
-		return await this.findOne({
-			where: {
-				type,
-				item_id: itemId,
-				status: 'pending'
-			}
-		});
-	}
 	
 	/**
 	 * 检查用户是否有待处理的申请

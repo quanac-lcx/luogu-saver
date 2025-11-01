@@ -130,6 +130,3 @@ else {
 			})
 		});
 }
-
-// TODO: 广告移到配置（原 anti_block.json）
-// TODO: 配置文件优化（合并 config.js 到 contentConfig.json）

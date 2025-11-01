@@ -428,13 +428,8 @@ export async function updateBanners(banners) {
  * @returns {Promise<Array>} 广告数组
  */
 export async function getAds() {
-    try {
-        const adsPath = join(process.cwd(), 'static', 'anti_block.json');
-        const content = await readFile(adsPath, 'utf8');
-        return JSON.parse(content);
-    } catch (error) {
-        return [];
-    }
+    const settings = await getSettings();
+    return settings.ads || [];
 }
 
 /**
@@ -450,24 +445,18 @@ export async function updateAds(ads) {
         }
 
         for (const ad of ads) {
-            if (!ad.imageUrl || typeof ad.imageUrl !== 'string') {
-                throw new ValidationError("每个广告必须包含 imageUrl 字段");
-            }
-            if (!ad.linkUrl || typeof ad.linkUrl !== 'string') {
-                throw new ValidationError("每个广告必须包含 linkUrl 字段");
-            }
-            if (!ad.description || typeof ad.description !== 'string') {
-                throw new ValidationError("每个广告必须包含 description 字段");
-            }
-            if (ad.enabled !== undefined && typeof ad.enabled !== 'boolean') {
-                throw new ValidationError("广告的 enabled 字段必须是布尔值");
+            if (!ad.imageUrl || !ad.linkUrl || !ad.description) {
+                throw new ValidationError("每个广告必须包含 imageUrl, linkUrl 和 description");
             }
         }
 
-        const adsPath = join(process.cwd(), 'static', 'anti_block.json');
-        await writeFile(adsPath, JSON.stringify(ads, null, 2));
+        const settings = await getSettings();
+        settings.ads = ads;
         
-        return { message: "广告更新成功" };
+        const settingsPath = join(process.cwd(), 'contentConfig.json');
+        await writeFile(settingsPath, JSON.stringify(settings, null, '\t'));
+        
+        return { message: "广告列表更新成功" };
     } catch (error) {
         await logError(error);
         throw error;

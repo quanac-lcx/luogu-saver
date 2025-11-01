@@ -185,7 +185,6 @@ export async function getProblems({ page, accept_solution, difficulty, prefix })
 	const perPage = config.pagination.problem;
 	const currentPage = Math.max(parseInt(page) || 1, 1);
 	
-	// Create cache key based on all parameters
 	const cacheKey = `problems:${currentPage}:${accept_solution || 'any'}:${difficulty || 'any'}:${prefix || 'none'}`;
 	
 	return await withCache({

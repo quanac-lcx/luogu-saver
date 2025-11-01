@@ -18,4 +18,6 @@ export default class User extends BaseModel {
 	async loadRelationships() {
 		// User doesn't have relationships currently, but keep for consistency
 	}
+	
+	// TODO: 用户主页数据分表
 }

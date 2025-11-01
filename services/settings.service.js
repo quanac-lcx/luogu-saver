@@ -14,7 +14,7 @@ import { join } from 'path';
  */
 export async function getSettings() {
     try {
-        const settingsPath = join(process.cwd(), 'settings.json');
+        const settingsPath = join(process.cwd(), 'contentConfig.json');
         const content = await readFile(settingsPath, 'utf8');
         return JSON.parse(content);
     } catch (error) {

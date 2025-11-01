@@ -31,7 +31,6 @@ router.get('/api/at/:username', asyncJsonHandler(async (req, res) => {
 
 router.post('/api/search/advanced', asyncJsonHandler(async (req, res) => {
 	const { keyword, senders, date_before, date_after } = req.body;
-	// TODO: 实现搜索功能
 	res.json(makeResponse(false, { message: "搜索功能尚未实现" }));
 }));
 

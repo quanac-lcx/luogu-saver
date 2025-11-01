@@ -338,7 +338,7 @@ export async function updateAccountsConfig(accounts) {
  */
 export async function getSettings() {
     try {
-        const settingsPath = join(process.cwd(), 'settings.json');
+        const settingsPath = join(process.cwd(), 'contentConfig.json');
         const content = await readFile(settingsPath, 'utf8');
         return JSON.parse(content);
     } catch (error) {
@@ -368,7 +368,7 @@ export async function updateAnnouncement(content, enabled = true) {
             enabled: enabled
         };
         
-        const settingsPath = join(process.cwd(), 'settings.json');
+        const settingsPath = join(process.cwd(), 'contentConfig.json');
         await writeFile(settingsPath, JSON.stringify(settings, null, '\t'));
         
         return { message: "公告更新成功" };
@@ -400,7 +400,6 @@ export async function updateBanners(banners) {
             throw new ValidationError("banners 必须是数组");
         }
 
-        // 验证每个 banner 的结构
         for (const banner of banners) {
             if (!banner.content || typeof banner.content !== 'string') {
                 throw new ValidationError("每个 banner 必须包含 content 字段");
@@ -413,7 +412,7 @@ export async function updateBanners(banners) {
         const settings = await getSettings();
         settings.banners = banners;
         
-        const settingsPath = join(process.cwd(), 'settings.json');
+        const settingsPath = join(process.cwd(), 'contentConfig.json');
         await writeFile(settingsPath, JSON.stringify(settings, null, '\t'));
         
         return { message: "Banners 更新成功" };
@@ -434,7 +433,6 @@ export async function getAds() {
         const content = await readFile(adsPath, 'utf8');
         return JSON.parse(content);
     } catch (error) {
-        // 如果文件不存在，返回空数组
         return [];
     }
 }
@@ -451,7 +449,6 @@ export async function updateAds(ads) {
             throw new ValidationError("广告列表必须是数组");
         }
 
-        // 验证每个广告的结构
         for (const ad of ads) {
             if (!ad.imageUrl || typeof ad.imageUrl !== 'string') {
                 throw new ValidationError("每个广告必须包含 imageUrl 字段");
@@ -462,7 +459,6 @@ export async function updateAds(ads) {
             if (!ad.description || typeof ad.description !== 'string') {
                 throw new ValidationError("每个广告必须包含 description 字段");
             }
-            // enabled 字段是可选的，如果存在则必须是布尔值
             if (ad.enabled !== undefined && typeof ad.enabled !== 'boolean') {
                 throw new ValidationError("广告的 enabled 字段必须是布尔值");
             }

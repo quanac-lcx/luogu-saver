@@ -5,14 +5,18 @@
  */
 
 import { getBanners } from '../services/settings.service.js';
+import { hashContent } from '../core/utils.js';
 
 async function bannersMiddleware(req, res, next) {
     try {
         const banners = await getBanners();
-        // 只传递启用的 banners
-        res.locals.banners = banners.filter(b => b.enabled);
+        res.locals.banners = banners
+            .filter(b => b.enabled)
+            .map(banner => ({
+                ...banner,
+                id: hashContent(banner.content)
+            }));
     } catch (error) {
-        // 如果加载失败，设置为空数组
         res.locals.banners = [];
     }
     next();

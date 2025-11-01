@@ -6,7 +6,7 @@ accounts.json
 package.json
 init_db.js
 config.js
-settings.json
+contentConfig.json
 pnpm-lock.yaml
 dump.rdb
 static/anti_block.json.backup

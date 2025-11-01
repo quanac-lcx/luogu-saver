@@ -30,7 +30,7 @@
 ├── migrate.js                # Database migration script
 ├── config.example.js         # Configuration template (copy to config.js)
 ├── ormconfig.example.json    # TypeORM config template (copy to ormconfig.json)
-├── settings.example.json     # App settings template (copy to settings.json)
+├── contentConfig.example.json     # App settings template (copy to contentConfig.json)
 ├── accounts.example.json     # Accounts config template (copy to accounts.json)
 ├── core/                     # Core utilities and helpers
 │   ├── logger.js             # Logging with chalk (info, warn, error, debug)
@@ -118,7 +118,7 @@
 
 1. **config.js** (from config.example.js) - Main application configuration
 2. **ormconfig.json** (from ormconfig.example.json) - TypeORM database configuration  
-3. **settings.json** (from settings.example.json) - Application settings (announcements, banners)
+3. **contentConfig.json** (from contentConfig.example.json) - Application settings (announcements, banners)
 4. **accounts.json** (from accounts.example.json) - Account credentials for crawling
 
 These files are in .gitignore and must be manually created. Use these commands:
@@ -126,7 +126,7 @@ These files are in .gitignore and must be manually created. Use these commands:
 ```bash
 cp config.example.js config.js
 cp ormconfig.example.json ormconfig.json
-cp settings.example.json settings.json
+cp contentConfig.example.json contentConfig.json
 cp accounts.example.json accounts.json
 ```
 
@@ -177,7 +177,7 @@ npm test          # Currently not implemented - exits with error
 # Create configuration files
 cp config.example.js config.js
 cp ormconfig.example.json ormconfig.json
-cp settings.example.json settings.json
+cp contentConfig.example.json contentConfig.json
 cp accounts.example.json accounts.json
 
 # Edit config.js to set your database and Redis credentials

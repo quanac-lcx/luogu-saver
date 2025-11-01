@@ -1,16 +1,6 @@
-/**
- * 陶片放逐服务模块
- * 
- * 该模块提供陶片放逐管理服务，包括：
- * - 保存陶片放逐记录
- * - 获取最新陶片放逐列表（支持分页）
- * - 缓存支持以提升性能
- * 
- * @author Copilot
- */
-
 import Judgement from "../models/judgement.js";
 import { withCache, invalidateCache, invalidateCacheByPattern } from "../core/cache.js";
+import { ExternalServiceError, logError, SystemError } from "../core/errors.js";
 
 /**
  * 保存陶片放逐记录
@@ -24,17 +14,16 @@ import { withCache, invalidateCache, invalidateCacheByPattern } from "../core/ca
  */
 export async function saveJudgements(task, obj) {
 	if (!obj || typeof obj !== 'object') {
-		logger.error('陶片放逐数据对象为空或无效');
-		throw new Error('陶片放逐数据对象为空或无效');
+		throw new ExternalServiceError('陶片放逐数据对象为空或无效', 'Luogu API');
 	}
 	
 	const logs = obj.logs || [];
 	
 	if (!Array.isArray(logs)) {
-		throw new Error(`陶片放逐数据中 logs 不是数组类型，而是: ${typeof logs}`);
+		throw new ExternalServiceError(`陶片放逐数据中 logs 不是数组类型，而是: ${typeof logs}`, 'Luogu API');
 	}
 	
-	logger.debug(`保存陶片放逐记录，获取到 ${logs.length} 条记录`);
+	logger.debug(`获取到 ${logs.length} 条陶片放逐记录`);
 	
 	if (logs.length === 0) {
 		logger.warn('没有获取到陶片放逐记录，可能是页面结构发生变化或当前没有新记录');
@@ -43,10 +32,13 @@ export async function saveJudgements(task, obj) {
 	
 	let savedCount = 0;
 	let skippedCount = 0;
+	let invalidCount = 0;
+	let errorCount = 0;
 	
 	for (const log of logs) {
 		if (!log || !log.user || !log.user.uid || !log.time) {
 			logger.warn('跳过无效的陶片放逐记录：缺少必要字段');
+			invalidCount++;
 			continue;
 		}
 		
@@ -75,11 +67,12 @@ export async function saveJudgements(task, obj) {
 			logger.debug(`保存陶片放逐记录: 用户 ${log.user.uid}, 时间 ${formatDate(new Date(log.time * 1000))}`);
 			savedCount++;
 		} catch (saveError) {
-			logger.error(`保存单条陶片放逐记录失败 (用户 ${log.user.uid}): ${saveError.message}`);
+			errorCount++;
+			await logError(new SystemError(`保存陶片放逐记录失败 (用户 ${log.user.uid}): ${saveError.message}`), null);
 		}
 	}
 	
-	logger.info(`陶片放逐记录处理完成: 新保存 ${savedCount} 条，跳过 ${skippedCount} 条`);
+	logger.info(`陶片放逐记录处理完成: 新保存 ${savedCount} 条，跳过 ${skippedCount} 条，无效 ${invalidCount} 条，失败 ${errorCount} 条`);
 	
 	if (savedCount > 0) {
 		await Promise.all([

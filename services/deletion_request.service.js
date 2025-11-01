@@ -26,17 +26,14 @@ import { invalidateCache } from "../core/cache.js";
  * @returns {Promise<Object>} 包含成功消息和申请ID的对象
  */
 export async function createDeletionRequest(type, itemId, requesterUid, reason) {
-	// 验证类型
 	if (type !== 'article' && type !== 'paste') {
 		throw new ValidationError("不支持的内容类型");
 	}
 	
-	// 验证理由长度
 	if (!reason || reason.trim().length < 15) {
 		throw new ValidationError("删除理由至少需要15个字符");
 	}
 	
-	// 获取内容并验证存在性
 	const Model = type === 'article' ? Article : Paste;
 	const item = await Model.findById(itemId);
 	
@@ -44,23 +41,15 @@ export async function createDeletionRequest(type, itemId, requesterUid, reason) 
 		throw new NotFoundError(`${type === 'article' ? '文章' : '剪贴板'}不存在`);
 	}
 	
-	// 验证是否已被删除
 	if (item.deleted) {
 		throw new ValidationError("该内容已被删除，无需重复申请");
 	}
 	
-	// 验证作者身份
-	if (item.author_uid !== requesterUid) {
-		throw new ForbiddenError("只有内容作者才能申请删除");
-	}
-	
-	// 检查是否已有待处理的申请
 	const existingRequest = await DeletionRequest.findUserPendingRequest(type, itemId, requesterUid);
 	if (existingRequest) {
 		throw new ValidationError("您已经提交过删除申请，请等待管理员处理");
 	}
 	
-	// 创建删除申请
 	const request = DeletionRequest.create({
 		type,
 		item_id: itemId,

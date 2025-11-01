@@ -178,13 +178,12 @@ router.post('/api/ads', requireAdmin, asyncJsonHandler(async (req, res, next) =>
 	res.json(makeResponse(true, result));
 }));
 
-// 删除申请管理路由
 router.get('/deletion-requests', requireAdmin, asyncHandler(async (req, res, next) => {
 	const page = parseInt(req.query.page) || 1;
 	const status = req.query.status || 'pending';
 	const type = req.query.type || '';
 	
-	const result = await deletionRequestService.getDeletionRequests(page, 20, status, type);
+	const result = await deletionRequestService.getDeletionRequests({ page, limit: 20, status, type });
 	
 	res.render('admin/deletion_requests.njk', {
 		title: "删除申请审核",

@@ -17,7 +17,6 @@ export default class DeletionRequest extends BaseModel {
 	processed_at = null;
 	created_at = null;
 
-	// 关联对象
 	requester = null;
 	admin = null;
 	item = null;
@@ -28,17 +27,14 @@ export default class DeletionRequest extends BaseModel {
 	}
 	
 	async loadRelationships() {
-		// 加载申请人信息
 		if (this.requester_uid) {
 			this.requester = await User.findById(this.requester_uid);
 		}
 		
-		// 加载处理管理员信息
 		if (this.admin_uid) {
 			this.admin = await User.findById(this.admin_uid);
 		}
 		
-		// 加载被申请删除的内容
 		if (this.type && this.item_id) {
 			if (this.type === 'article') {
 				this.item = await Article.findById(this.item_id);

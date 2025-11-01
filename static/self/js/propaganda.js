@@ -87,14 +87,14 @@ document.addEventListener('DOMContentLoaded', () => {
 	ads.addEventListener('mouseenter', () => clearInterval(autoPlayInterval));
 	ads.addEventListener('mouseleave', () => startAutoPlay());
 	
-	fetch('/static/anti_block.json')
+	fetch('/api/ads')
 		.then(response => {
 			if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 			return response.json();
 		})
-		.then(data => {
+		.then(result => {
+			const data = result.data;
 			if (data && data.length > 0) {
-				// 只加载启用的广告（enabled 为 undefined 或 true）
 				adsData = data.filter(ad => ad.enabled !== false);
 				if (adsData.length > 0) {
 					shuffle(adsData);

@@ -26,17 +26,14 @@ import { invalidateCache } from "../core/cache.js";
  * @returns {Promise<Object>} 包含成功消息和申请ID的对象
  */
 export async function createDeletionRequest(type, itemId, requesterUid, reason) {
-	// 验证类型
 	if (type !== 'article' && type !== 'paste') {
 		throw new ValidationError("不支持的内容类型");
 	}
 	
-	// 验证理由长度
 	if (!reason || reason.trim().length < 15) {
 		throw new ValidationError("删除理由至少需要15个字符");
 	}
 	
-	// 获取内容并验证存在性
 	const Model = type === 'article' ? Article : Paste;
 	const item = await Model.findById(itemId);
 	
@@ -44,23 +41,15 @@ export async function createDeletionRequest(type, itemId, requesterUid, reason) 
 		throw new NotFoundError(`${type === 'article' ? '文章' : '剪贴板'}不存在`);
 	}
 	
-	// 验证是否已被删除
 	if (item.deleted) {
 		throw new ValidationError("该内容已被删除，无需重复申请");
 	}
 	
-	// 验证作者身份
-	if (item.author_uid !== requesterUid) {
-		throw new ForbiddenError("只有内容作者才能申请删除");
-	}
-	
-	// 检查是否已有待处理的申请
 	const existingRequest = await DeletionRequest.findUserPendingRequest(type, itemId, requesterUid);
 	if (existingRequest) {
 		throw new ValidationError("您已经提交过删除申请，请等待管理员处理");
 	}
 	
-	// 创建删除申请
 	const request = DeletionRequest.create({
 		type,
 		item_id: itemId,
@@ -80,13 +69,17 @@ export async function createDeletionRequest(type, itemId, requesterUid, reason) 
 /**
  * 获取删除申请列表（带分页和筛选）
  * 
- * @param {number} page - 页码
- * @param {number} limit - 每页数量
- * @param {string} status - 状态筛选（'pending', 'approved', 'rejected', 'ignored'）
- * @param {string} type - 类型筛选（'article', 'paste'）
+ * @param {Object} params - 分页和筛选参数
+ * @param {number|string} [params.page=1] - 页码
+ * @param {number|string} [params.limit=20] - 每页数量
+ * @param {string} [params.status] - 状态筛选（'pending', 'approved', 'rejected', 'ignored'）
+ * @param {string} [params.type] - 类型筛选（'article', 'paste'）
  * @returns {Promise<Object>} 包含申请列表、分页信息的对象
  */
-export async function getDeletionRequests(page = 1, limit = 20, status = '', type = '') {
+export async function getDeletionRequests({ page, limit, status, type }) {
+	const currentPage = Math.max(parseInt(page) || 1, 1);
+	const itemsPerPage = Math.max(parseInt(limit) || 20, 1);
+	
 	const whereCondition = {};
 	
 	if (status) {
@@ -100,8 +93,8 @@ export async function getDeletionRequests(page = 1, limit = 20, status = '', typ
 	return await paginateQuery(DeletionRequest, {
 		where: whereCondition,
 		order: { created_at: 'DESC' },
-		page,
-		limit,
+		page: currentPage,
+		limit: itemsPerPage,
 		extra: { status, type },
 		processItems: async (request) => {
 			await request.loadRelationships();
@@ -131,7 +124,6 @@ export async function approveDeletionRequest(requestId, adminUid, adminNote = ''
 		throw new ValidationError("该申请已被处理");
 	}
 	
-	// 获取对应的内容
 	const Model = request.type === 'article' ? Article : Paste;
 	const item = await Model.findById(request.item_id);
 	
@@ -143,19 +135,16 @@ export async function approveDeletionRequest(requestId, adminUid, adminNote = ''
 		throw new ValidationError("该内容已被删除");
 	}
 	
-	// 软删除内容
 	item.deleted = true;
 	item.deleted_reason = request.reason;
 	await item.save();
 	
-	// 更新申请状态
 	request.status = 'approved';
 	request.admin_uid = adminUid;
 	request.admin_note = adminNote.trim();
 	request.processed_at = new Date();
 	await request.save();
 	
-	// 使缓存失效
 	await invalidateCache(`${request.type}:${request.item_id}`);
 	
 	return {

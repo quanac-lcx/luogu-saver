@@ -45,7 +45,8 @@
 ├── entities/                 # TypeORM entity definitions (JSON format)
 │   ├── index.js              # Entity loader
 │   ├── article.entity.json   # Article entity schema
-│   ├── user.entity.json      # User entity schema
+│   ├── user.entity.json      # User entity schema (basic info only)
+│   ├── user_introduction.entity.json # User introduction data (separate table)
 │   ├── paste.entity.json     # Paste entity schema
 │   ├── problem.entity.json   # Problem entity schema
 │   ├── task.entity.json      # Task entity schema
@@ -55,6 +56,7 @@
 │   ├── common.js             # Common model utilities
 │   ├── article.js            # Article model
 │   ├── user.js               # User model
+│   ├── user_introduction.js  # User introduction model
 │   └── [other models]
 ├── services/                 # Service layer (14 services)
 │   ├── article.service.js    # Article business logic
@@ -118,7 +120,7 @@
 
 1. **config.js** (from config.example.js) - Main application configuration
 2. **ormconfig.json** (from ormconfig.example.json) - TypeORM database configuration  
-3. **contentConfig.json** (from contentConfig.example.json) - Application settings (announcements, banners)
+3. **contentConfig.json** (from contentConfig.example.json) - Application settings (announcements, banners, ads)
 4. **accounts.json** (from accounts.example.json) - Account credentials for crawling
 
 These files are in .gitignore and must be manually created. Use these commands:
@@ -198,12 +200,28 @@ node app.js
 The server listens on port 55086 by default (configurable in config.js).
 
 ### Migration Script
-The `migrate.js` script is used for migrating from old table schemas to new ones. It:
-- Truncates existing tables (user, paste, article_version, task, article)
-- Imports data from old tables (users→user, pastes→paste, etc.)
+The `migrate.js` script is used for database migrations. The current migration:
+- Migrates user introduction data from `user` table to separate `user_introduction` table
+- Extracts the `introduction` column from `user` table into a new dedicated table
 - Requires a working database connection
 
-**Note**: This is likely only needed for initial setup from an existing database.
+**Note**: Run migrations when upgrading from older database schemas.
+
+### contentConfig.json Structure
+The `contentConfig.json` file contains application settings:
+```json
+{
+  "announcement": {
+    "content": "Welcome message",
+    "enabled": true
+  },
+  "banners": [],
+  "ads": []
+}
+```
+- **announcement**: Site-wide announcement configuration
+- **banners**: Top banner notifications with customizable colors
+- **ads**: Advertisement blocks (previously in `static/anti_block.json`, now centralized here)
 
 ## Important Code Patterns and Conventions
 
@@ -226,6 +244,51 @@ Entities are defined as JSON files in `entities/`, not as TypeScript classes:
 - Each `.entity.json` file defines a database table schema
 - `entities/index.js` loads and converts them to TypeORM EntitySchema objects
 - Special handling for CURRENT_TIMESTAMP defaults (converted to functions)
+
+### Service Layer Code Style
+Services follow consistent patterns for maintainability:
+- **Function Parameters**: Use object destructuring for functions with multiple optional parameters
+  - Example: `getProblems({ page, accept_solution, difficulty, prefix })`
+  - Example: `getRecentJudgements({ page, perPage })`
+  - Example: `getDeletionRequests({ page, limit, status, type })`
+- **Pagination**: All paginated services use `paginateQuery` from `core/pagination.js`
+  - Returns standardized object with `items`, `currentPage`, `totalPages`, `extra`
+- **Caching**: Use `withCache` for read operations with appropriate TTL
+- **Documentation**: Include JSDoc comments for all exported functions
+- **Error Handling**: Use typed errors from `core/errors.js` (ValidationError, NotFoundError, etc.)
+
+### Deletion Request System (自助删除)
+
+The self-service deletion system allows users to request removal of content through an admin-moderated workflow:
+
+**Key Features:**
+- **Universal Access**: Any authenticated user can request deletion of any content (articles or pastes), not just their own
+- **Admin Approval**: All deletion requests require admin review and approval
+- **Soft Deletion**: Approved deletions mark content as deleted but preserve data in database
+- **Reason Tracking**: Requires minimum 15-character explanation for deletion request
+- **Status Workflow**: Requests can be pending, approved, rejected, or ignored
+
+**Implementation Details:**
+- **Service**: `services/deletion_request.service.js`
+  - `createDeletionRequest(type, itemId, requesterUid, reason)` - Submit new request
+  - `getDeletionRequests({ page, limit, status, type })` - List requests with filters
+  - `approveDeletionRequest(requestId, adminUid, adminNote)` - Approve and soft-delete
+  - `rejectDeletionRequest(requestId, adminUid, adminNote)` - Reject request
+  - `ignoreDeletionRequest(requestId, adminUid, adminNote)` - Mark as ignored
+- **API Endpoint**: `POST /api/deletion-request/:type/:id` (requires login)
+- **Admin Panel**: `/admin/deletion-requests` (requires admin role)
+- **Entity**: `DeletionRequest` with fields: type, item_id, requester_uid, reason, status, admin_uid, admin_note, processed_at
+
+**Validation Rules:**
+- Content type must be 'article' or 'paste'
+- Deletion reason must be at least 15 characters
+- Content must exist and not already be deleted
+- User cannot have another pending request for the same content
+- NO author verification - any user can request deletion of any content
+
+**Recent Changes:**
+- Removed author-only restriction (previously only content owners could request deletion)
+- Now supports community-driven content moderation where any user can flag inappropriate content
 
 ### Error Handling
 - Logger provides: `info()`, `warn()`, `error()`, `debug()` (debug requires `config.debug = true`)
@@ -258,6 +321,17 @@ Before committing changes:
 - [ ] Ensure all .js files use ES module syntax with .js extensions
 - [ ] If changing entities, verify JSON schema is valid
 - [ ] If adding dependencies, ensure they're compatible with Node.js 22
+
+### Frontend Template Patterns
+- **Pagination**: Use the reusable pagination macro from `views/components/pagination.njk`
+  ```njk
+  {% import "components/pagination.njk" as paginationMacro %}
+  {{ paginationMacro.pagination(currentPage, totalPages, baseUrl, queryParams) }}
+  ```
+- **Banners**: Banner IDs are set via `bannerMiddleware` using content hash
+  - Stored in localStorage to remember closed banners
+  - Banner data comes from `contentConfig.json`
+- **Ads**: Loaded from `/api/ads` endpoint (centralized in contentConfig.json)
 
 ## GitHub Workflows
 
@@ -313,10 +387,33 @@ Only one workflow is configured:
 When working on this codebase, frequently reference:
 1. **app.js** - Application entry point, middleware chain, route registration
 2. **config.example.js** - All configuration options and their defaults
-3. **entities/index.js** - How entities are loaded
-4. **core/logger.js** - Logging API
-5. **core/utils.js** - Common utility functions
-6. **views/layout.njk** - Main page layout and structure
+3. **contentConfig.example.json** - Application settings structure (announcements, banners, ads)
+4. **entities/index.js** - How entities are loaded
+5. **core/logger.js** - Logging API
+6. **core/utils.js** - Common utility functions
+7. **core/pagination.js** - Pagination utilities used across services
+8. **views/layout.njk** - Main page layout and structure
+9. **views/components/pagination.njk** - Reusable pagination macro
+
+## Recent Changes and Patterns
+
+### Ads Configuration Migration
+- **Old**: Ads stored in `static/anti_block.json`
+- **New**: Ads centralized in `contentConfig.json` under `ads` array
+- Frontend loads ads from `/api/ads` endpoint
+- Admin panel manages ads through settings service
+
+### User Data Architecture
+- **User**: Basic info (id, name, color) in `user` table
+- **User Introduction**: Separate table `user_introduction` with foreign key to user
+- This separation allows for better scalability and data management
+
+### Pagination Pattern
+All paginated services should:
+1. Accept object parameters: `{ page, limit/perPage, ...filters }`
+2. Use `paginateQuery` helper from `core/pagination.js`
+3. Return standardized response: `{ items, currentPage, totalPages, extra }`
+4. Frontend uses pagination macro for consistent UI
 
 ## Tips for Efficient Development
 
@@ -328,3 +425,5 @@ When working on this codebase, frequently reference:
 6. **No TypeScript** - Despite using TypeORM, this is pure JavaScript (ES modules)
 7. **Frontend is server-rendered** - Changes to views require server restart
 8. **Global state** - Be aware of globals set in app.js (logger, renderer, worker, redis, listener)
+9. **Service patterns** - Follow existing patterns for consistency (object params, paginateQuery, withCache)
+10. **Minimal comments** - Avoid obvious single-line comments; keep JSDoc for function documentation

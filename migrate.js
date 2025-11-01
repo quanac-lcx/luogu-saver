@@ -3,50 +3,28 @@ import { AppDataSource } from "./app.js";
 export async function migrate() {
 	await AppDataSource.initialize();
 	
-	const truncateQueries = [
-		"SET FOREIGN_KEY_CHECKS = 0;",
-		"TRUNCATE TABLE user;",
-		"TRUNCATE TABLE paste;",
-		"TRUNCATE TABLE article_version;",
-		"TRUNCATE TABLE task;",
-		"TRUNCATE TABLE article;"
-	];
+	logger.info("开始数据迁移：将 user 表的 introduction 列迁移到 user_introduction 表");
 	
-	const insertQueries = [
-		// users → user
-		`INSERT INTO user (id, name, color)
-         SELECT id, name, color FROM users;`,
+	try {
+		logger.info("步骤 1: 创建 user_introduction 表并迁移数据");
+		await AppDataSource.query(`
+			INSERT INTO user_introduction (user_uid, introduction, created_at, updated_at)
+			SELECT id, introduction, created_at, updated_at
+			FROM user
+			WHERE introduction IS NOT NULL
+		`);
 		
-		// pastes → paste
-		`INSERT INTO paste (id, title, content, author_uid, created_at, updated_at, deleted, deleted_reason)
-         SELECT id, title, content, author_uid, created_at, updated_at, deleted, deleted_reason
-         FROM pastes;`,
+		logger.info("步骤 2: 删除 user 表的 introduction 列");
+		await AppDataSource.query(`
+			ALTER TABLE user DROP COLUMN introduction
+		`);
 		
-		// article_versions → article_version
-		`INSERT INTO article_version (id, origin_id, version, content, created_at, title)
-         SELECT id, origin_id, version, content, created_at, title FROM article_versions;`,
-		
-		// tasks → task
-		`INSERT INTO task (id, info, status, created_at, expire_time, type, oid)
-         SELECT id, info, status, created_at, expire_time, type, oid FROM tasks;`,
-		
-		// articles → article
-		`INSERT INTO article (id, title, content, author_uid, category, upvote, favor_count,
-                              solution_for_pid, created_at, updated_at, priority, tags,
-                              deleted, deleted_reason, content_hash)
-         SELECT id, title, content, author_uid, category, upvote, favorCount,
-                solutionFor_pid, created_at, updated_at, priority, tags,
-                deleted, deleted_reason, content_hash
-         FROM articles;`,
-		"SET FOREIGN_KEY_CHECKS = 1;"
-	];
-	
-	for (const sql of [...truncateQueries, ...insertQueries]) {
-		logger.info("Running:", sql.split(" ")[0], sql.includes("TRUNCATE") ? sql.split(" ")[2] : "");
-		await AppDataSource.query(sql);
+		logger.info("迁移完成！");
+	} catch (error) {
+		logger.error("迁移失败:", error.message);
+		throw error;
 	}
 	
-	logger.info("Migration completed!");
 	process.exit(0);
 }
 

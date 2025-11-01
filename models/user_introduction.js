@@ -1,9 +1,9 @@
 import { BaseModel } from "./common.js";
 import { formatDate } from "../core/utils.js";
 
-export default class User extends BaseModel {
+export default class UserIntroduction extends BaseModel {
 
-	static entityName = "User";
+	static entityName = "UserIntroduction";
 	
 	constructor(data) {
 		super();

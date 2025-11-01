@@ -4,11 +4,16 @@ import { asyncJsonHandler } from "../core/errors.js";
 import { makeResponse } from "../core/utils.js";
 import { requireLogin } from "../middleware/permission.js";
 import * as deletionRequestService from "../services/deletion_request.service.js";
+import * as settingsService from "../services/settings.service.js";
 
 const router = express.Router();
 
 router.get("/statistic", asyncJsonHandler(async (req, res) => {
 	res.json(makeResponse(true, await getStatistics()));
+}));
+
+router.get("/ads", asyncJsonHandler(async (req, res) => {
+	res.json(makeResponse(true, await settingsService.getAds()));
 }));
 
 /**

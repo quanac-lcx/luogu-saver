@@ -1,0 +1,329 @@
+{% extends "../layout.njk" %}
+{% from "../components/pagination.njk" import pagination %}
+
+{% block content %}
+<div class="ui grid">
+    <div class="sixteen wide column">
+        <h1 class="ui header">
+            <i class="ui icon file alternate outline"></i>
+            <div class="content">
+                删除申请审核
+                <div class="sub header">用户提交的内容删除申请管理</div>
+            </div>
+        </h1>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="ui form">
+        <div class="inline fields">
+            <label>审核状态：</label>
+            <div class="field">
+                <div class="ui radio checkbox">
+                    <input type="radio" name="status" value="pending" {% if status == 'pending' or not status %}checked{% endif %} onchange="filterStatus('pending')">
+                    <label>待处理</label>
+                </div>
+            </div>
+            <div class="field">
+                <div class="ui radio checkbox">
+                    <input type="radio" name="status" value="approved" {% if status == 'approved' %}checked{% endif %} onchange="filterStatus('approved')">
+                    <label>已批准</label>
+                </div>
+            </div>
+            <div class="field">
+                <div class="ui radio checkbox">
+                    <input type="radio" name="status" value="rejected" {% if status == 'rejected' %}checked{% endif %} onchange="filterStatus('rejected')">
+                    <label>已拒绝</label>
+                </div>
+            </div>
+            <div class="field">
+                <div class="ui radio checkbox">
+                    <input type="radio" name="status" value="ignored" {% if status == 'ignored' %}checked{% endif %} onchange="filterStatus('ignored')">
+                    <label>已忽略</label>
+                </div>
+            </div>
+        </div>
+        <div class="inline fields" style="margin-top: 10px;">
+            <label>内容类型：</label>
+            <div class="field">
+                <div class="ui radio checkbox">
+                    <input type="radio" name="type" value="" {% if not type %}checked{% endif %} onchange="filterType('')">
+                    <label>全部</label>
+                </div>
+            </div>
+            <div class="field">
+                <div class="ui radio checkbox">
+                    <input type="radio" name="type" value="article" {% if type == 'article' %}checked{% endif %} onchange="filterType('article')">
+                    <label>文章</label>
+                </div>
+            </div>
+            <div class="field">
+                <div class="ui radio checkbox">
+                    <input type="radio" name="type" value="paste" {% if type == 'paste' %}checked{% endif %} onchange="filterType('paste')">
+                    <label>剪贴板</label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if items.length > 0 %}
+<div class="card shadow">
+    <div class="ui divided items">
+        {% for request in items %}
+        <div class="item">
+            <div class="ui small image">
+                <div style="display: flex; align-items: center; justify-content: center; width: 80px; height: 80px; background: #f8f9fa; border-radius: 4px;">
+                    <i class="{% if request.type == 'article' %}file alternate{% else %}clipboard{% endif %} icon huge" style="color: 
+                        {% if request.status == 'pending' %}#ffc107
+                        {% elif request.status == 'approved' %}#28a745
+                        {% elif request.status == 'rejected' %}#dc3545
+                        {% else %}#6c757d{% endif %};"></i>
+                </div>
+            </div>
+            <div class="content">
+                <div class="header">
+                    {% if request.item %}
+                        {{ request.item.title or '剪贴板 ' + request.item_id }}
+                    {% else %}
+                        {{ request.type == 'article' and '文章' or '剪贴板' }} {{ request.item_id }}
+                    {% endif %}
+                    {% if request.status == 'pending' %}
+                    <span class="ui mini yellow label">待处理</span>
+                    {% elif request.status == 'approved' %}
+                    <span class="ui mini green label">已批准</span>
+                    {% elif request.status == 'rejected' %}
+                    <span class="ui mini red label">已拒绝</span>
+                    {% elif request.status == 'ignored' %}
+                    <span class="ui mini grey label">已忽略</span>
+                    {% endif %}
+                </div>
+                <div class="meta">
+                    <span>申请 ID: {{ request.id }}</span> • 
+                    <span>类型: {{ request.type == 'article' and '文章' or '剪贴板' }}</span> • 
+                    <span>内容 ID: {{ request.item_id }}</span>
+                </div>
+                <div class="meta" style="margin-top: 5px;">
+                    {% if request.requester %}
+                    <span>申请人: 
+                        <a href="/user/{{ request.requester.id }}" class="user-{{ request.requester.color }}">
+                            {{ request.requester.name }}
+                        </a>
+                    </span> • 
+                    {% endif %}
+                    <span>申请时间: {{ request.created_at }}</span>
+                </div>
+                <div class="description" style="margin-top: 10px;">
+                    <strong>删除理由:</strong>
+                    <div style="margin-top: 5px; padding: 10px; background: #f8f9fa; border-left: 3px solid #667eea; border-radius: 3px;">
+                        {{ request.reason }}
+                    </div>
+                </div>
+                {% if request.admin_note %}
+                <div class="description" style="margin-top: 10px;">
+                    <strong>管理员备注:</strong>
+                    <div style="margin-top: 5px; padding: 10px; background: #fff3cd; border-left: 3px solid #ffc107; border-radius: 3px;">
+                        {{ request.admin_note }}
+                    </div>
+                </div>
+                {% endif %}
+                {% if request.admin %}
+                <div class="meta" style="margin-top: 5px;">
+                    <span>处理人: 
+                        <a href="/user/{{ request.admin.id }}" class="user-{{ request.admin.color }}">
+                            {{ request.admin.name }}
+                        </a>
+                    </span> • 
+                    <span>处理时间: {{ request.processed_at }}</span>
+                </div>
+                {% endif %}
+                <div class="extra" style="margin-top: 15px;">
+                    <div class="ui buttons">
+                        {% if request.item %}
+                        <a href="/{{ request.type }}/{{ request.item_id }}" target="_blank" class="ui basic button">
+                            <i class="eye icon"></i>
+                            查看内容
+                        </a>
+                        {% endif %}
+                        {% if request.status == 'pending' %}
+                        <button class="ui green button" onclick="approveRequest({{ request.id }})">
+                            <i class="check icon"></i>
+                            批准删除
+                        </button>
+                        <button class="ui red button" onclick="rejectRequest({{ request.id }})">
+                            <i class="times icon"></i>
+                            拒绝申请
+                        </button>
+                        <button class="ui grey button" onclick="ignoreRequest({{ request.id }})">
+                            <i class="ban icon"></i>
+                            忽略
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{{ pagination(currentPage, totalPages, '/admin/deletion-requests', {status: status, type: type}) }}
+
+{% else %}
+<div class="card shadow" style="text-align: center; padding: 60px 30px;">
+    <div class="ui icon header">
+        <i class="search icon"></i>
+        没有找到符合条件的删除申请
+    </div>
+</div>
+{% endif %}
+
+<script>
+function filterStatus(status) {
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.set('status', status);
+    currentUrl.searchParams.delete('page');
+    window.location.href = currentUrl.toString();
+}
+
+function filterType(type) {
+    const currentUrl = new URL(window.location);
+    if (type) {
+        currentUrl.searchParams.set('type', type);
+    } else {
+        currentUrl.searchParams.delete('type');
+    }
+    currentUrl.searchParams.delete('page');
+    window.location.href = currentUrl.toString();
+}
+
+function approveRequest(requestId) {
+    Swal.fire({
+        title: '批准删除申请',
+        html: `
+            <p style="margin-bottom: 15px;">确认批准此删除申请？批准后内容将被软删除。</p>
+            <div style="text-align: left;">
+                <label for="admin-note" style="font-weight: bold; margin-bottom: 5px; display: block;">管理员备注（可选）：</label>
+                <input type="text" id="admin-note" class="swal2-input" placeholder="填写处理备注" style="margin: 0;">
+            </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '确认批准',
+        cancelButtonText: '取消',
+        confirmButtonColor: '#28a745',
+        preConfirm: () => {
+            return document.getElementById('admin-note').value.trim();
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const adminNote = result.value || '';
+            $.ajax({
+                url: `/admin/api/deletion-requests/${requestId}/approve`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ admin_note: adminNote })
+            })
+            .done(function(res) {
+                if (res.success) {
+                    Swal.fire('操作成功', res.message, 'success').then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire('操作失败', res.message, 'error');
+                }
+            })
+            .fail(function() {
+                Swal.fire('错误', '网络或服务器异常', 'error');
+            });
+        }
+    });
+}
+
+function rejectRequest(requestId) {
+    Swal.fire({
+        title: '拒绝删除申请',
+        html: `
+            <p style="margin-bottom: 15px;">确认拒绝此删除申请？</p>
+            <div style="text-align: left;">
+                <label for="admin-note" style="font-weight: bold; margin-bottom: 5px; display: block;">拒绝理由（建议填写）：</label>
+                <input type="text" id="admin-note" class="swal2-input" placeholder="填写拒绝理由" style="margin: 0;">
+            </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '确认拒绝',
+        cancelButtonText: '取消',
+        confirmButtonColor: '#dc3545',
+        preConfirm: () => {
+            return document.getElementById('admin-note').value.trim();
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const adminNote = result.value || '';
+            $.ajax({
+                url: `/admin/api/deletion-requests/${requestId}/reject`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ admin_note: adminNote })
+            })
+            .done(function(res) {
+                if (res.success) {
+                    Swal.fire('操作成功', res.message, 'success').then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire('操作失败', res.message, 'error');
+                }
+            })
+            .fail(function() {
+                Swal.fire('错误', '网络或服务器异常', 'error');
+            });
+        }
+    });
+}
+
+function ignoreRequest(requestId) {
+    Swal.fire({
+        title: '忽略删除申请',
+        html: `
+            <p style="margin-bottom: 15px;">确认忽略此删除申请？申请将被标记为已忽略。</p>
+            <div style="text-align: left;">
+                <label for="admin-note" style="font-weight: bold; margin-bottom: 5px; display: block;">管理员备注（可选）：</label>
+                <input type="text" id="admin-note" class="swal2-input" placeholder="填写处理备注" style="margin: 0;">
+            </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: '确认忽略',
+        cancelButtonText: '取消',
+        confirmButtonColor: '#6c757d',
+        preConfirm: () => {
+            return document.getElementById('admin-note').value.trim();
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const adminNote = result.value || '';
+            $.ajax({
+                url: `/admin/api/deletion-requests/${requestId}/ignore`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ admin_note: adminNote })
+            })
+            .done(function(res) {
+                if (res.success) {
+                    Swal.fire('操作成功', res.message, 'success').then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire('操作失败', res.message, 'error');
+                }
+            })
+            .fail(function() {
+                Swal.fire('错误', '网络或服务器异常', 'error');
+            });
+        }
+    });
+}
+</script>
+{% endblock %}

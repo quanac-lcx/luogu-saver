@@ -1,0 +1,80 @@
+{
+	"name": "DeletionRequest",
+	"tableName": "deletion_requests",
+	"columns": {
+		"id": {
+			"type": "int",
+			"primary": true,
+			"generated": true
+		},
+		"type": {
+			"type": "enum",
+			"enum": ["article", "paste"],
+			"nullable": false,
+			"comment": "申请删除的内容类型"
+		},
+		"item_id": {
+			"type": "varchar",
+			"length": 8,
+			"nullable": false,
+			"comment": "被申请删除的内容ID"
+		},
+		"requester_uid": {
+			"type": "int",
+			"nullable": false,
+			"comment": "申请人用户ID"
+		},
+		"reason": {
+			"type": "varchar",
+			"length": 500,
+			"nullable": false,
+			"comment": "申请删除的理由"
+		},
+		"status": {
+			"type": "enum",
+			"enum": ["pending", "approved", "rejected", "ignored"],
+			"default": "pending",
+			"nullable": false,
+			"comment": "审核状态：待处理、已批准、已拒绝、已忽略"
+		},
+		"admin_uid": {
+			"type": "int",
+			"nullable": true,
+			"comment": "处理该申请的管理员ID"
+		},
+		"admin_note": {
+			"type": "varchar",
+			"length": 255,
+			"nullable": true,
+			"comment": "管理员备注"
+		},
+		"processed_at": {
+			"type": "timestamp",
+			"nullable": true,
+			"comment": "处理时间"
+		},
+		"created_at": {
+			"type": "timestamp",
+			"default": "CURRENT_TIMESTAMP",
+			"nullable": false
+		}
+	},
+	"indices": [
+		{
+			"name": "IDX_DELETION_REQUEST_STATUS",
+			"columns": ["status"]
+		},
+		{
+			"name": "IDX_DELETION_REQUEST_TYPE_ITEM",
+			"columns": ["type", "item_id"]
+		},
+		{
+			"name": "IDX_DELETION_REQUEST_REQUESTER",
+			"columns": ["requester_uid"]
+		},
+		{
+			"name": "IDX_DELETION_REQUEST_CREATED",
+			"columns": ["created_at"]
+		}
+	]
+}

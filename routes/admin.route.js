@@ -6,6 +6,7 @@ import * as adminService from "../services/admin.service.js";
 import * as adminWorker from "../workers/admin.worker.js";
 import { invalidateCache } from "../core/cache.js";
 import { updateTokenRole } from "../services/token.service.js";
+import * as deletionRequestService from "../services/deletion_request.service.js";
 
 const router = express.Router();
 
@@ -174,6 +175,47 @@ router.get('/ads', requireAdmin, asyncHandler(async (req, res, next) => {
 router.post('/api/ads', requireAdmin, asyncJsonHandler(async (req, res, next) => {
 	const { ads } = req.body;
 	const result = await adminService.updateAds(ads);
+	res.json(makeResponse(true, result));
+}));
+
+// 删除申请管理路由
+router.get('/deletion-requests', requireAdmin, asyncHandler(async (req, res, next) => {
+	const page = parseInt(req.query.page) || 1;
+	const status = req.query.status || 'pending';
+	const type = req.query.type || '';
+	
+	const result = await deletionRequestService.getDeletionRequests(page, 20, status, type);
+	
+	res.render('admin/deletion_requests.njk', {
+		title: "删除申请审核",
+		...result
+	});
+}));
+
+router.post('/api/deletion-requests/:id/approve', requireAdmin, asyncJsonHandler(async (req, res, next) => {
+	const { id } = req.params;
+	const { admin_note } = req.body;
+	const adminUid = req.user.id;
+	
+	const result = await deletionRequestService.approveDeletionRequest(parseInt(id), adminUid, admin_note);
+	res.json(makeResponse(true, result));
+}));
+
+router.post('/api/deletion-requests/:id/reject', requireAdmin, asyncJsonHandler(async (req, res, next) => {
+	const { id } = req.params;
+	const { admin_note } = req.body;
+	const adminUid = req.user.id;
+	
+	const result = await deletionRequestService.rejectDeletionRequest(parseInt(id), adminUid, admin_note);
+	res.json(makeResponse(true, result));
+}));
+
+router.post('/api/deletion-requests/:id/ignore', requireAdmin, asyncJsonHandler(async (req, res, next) => {
+	const { id } = req.params;
+	const { admin_note } = req.body;
+	const adminUid = req.user.id;
+	
+	const result = await deletionRequestService.ignoreDeletionRequest(parseInt(id), adminUid, admin_note);
 	res.json(makeResponse(true, result));
 }));
 

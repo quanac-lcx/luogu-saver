@@ -1,0 +1,67 @@
+{
+	"name": "Notification",
+	"tableName": "notifications",
+	"columns": {
+		"id": {
+			"type": "int",
+			"primary": true,
+			"generated": true
+		},
+		"uid": {
+			"type": "int",
+			"nullable": false,
+			"comment": "接收用户ID"
+		},
+		"type": {
+			"type": "enum",
+			"enum": ["info", "success", "warning", "error"],
+			"default": "info",
+			"nullable": false,
+			"comment": "通知类型"
+		},
+		"title": {
+			"type": "varchar",
+			"length": 120,
+			"nullable": false,
+			"comment": "标题"
+		},
+		"content": {
+			"type": "varchar",
+			"length": 500,
+			"nullable": false,
+			"comment": "内容"
+		},
+		"link": {
+			"type": "varchar",
+			"length": 255,
+			"nullable": true,
+			"comment": "相关链接"
+		},
+		"read": {
+			"type": "boolean",
+			"default": false,
+			"nullable": false,
+			"comment": "是否已读"
+		},
+		"created_at": {
+			"type": "timestamp",
+			"default": "CURRENT_TIMESTAMP",
+			"nullable": false
+		}
+	},
+	"indices": [
+		{
+			"name": "IDX_NOTIFICATION_UID",
+			"columns": ["uid"]
+		},
+		{
+			"name": "IDX_NOTIFICATION_READ",
+			"columns": ["read"]
+		},
+		{
+			"name": "IDX_NOTIFICATION_CREATED",
+			"columns": ["created_at"]
+		}
+	]
+}
+

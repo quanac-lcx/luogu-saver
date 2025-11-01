@@ -93,6 +93,14 @@
         <a class="item" href="/token/apply">
             <i class="ui icon key"></i> <span>申请密钥</span>
         </a>
+        {% if user %}
+        <a class="item" href="/notification">
+            <i class="ui icon bell"></i> <span>通知</span>
+            {% if unreadNotifications and unreadNotifications > 0 %}
+                <div class="ui mini red circular label" style="position:absolute; right: 25px;">{{ unreadNotifications }}</div>
+            {% endif %}
+        </a>
+        {% endif %}
         {% if user and user.role === 1 %}
         <a class="item" href="/admin">
             <i class="ui icon cog"></i> <span>管理后台</span>
@@ -156,7 +164,6 @@
                         <a href="https://help.luogu.me/docs/license/deletion" class="footer-link">
                             <i class="fa fa-trash-alt"></i> 数据移除政策
                         </a>
-                    </p>
                     </p>
 
                     <p>

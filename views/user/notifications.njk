@@ -1,0 +1,71 @@
+{% extends "../layout.njk" %}
+{% from "../components/pagination.njk" import pagination %}
+
+{% block content %}
+<div class="ui grid">
+	<div class="sixteen wide column">
+		<h1 class="ui header">
+			<i class="ui icon bell"></i>
+			<div class="content">
+			    我的通知
+		 	    <div class="sub header">系统会在申请被处理后通知你</div>
+			</div>
+		</h1>
+	</div>
+</div>
+
+{% if items.length > 0 %}
+<div class="card shadow">
+	<div class="ui relaxed divided list">
+		{% for n in items %}
+		<div class="item">
+			<div class="content">
+			<div class="header">
+                <i class="large {% if n.type == 'success' %}green check circle{% elif n.type == 'warning' %}yellow exclamation triangle{% elif n.type == 'error' %}red times circle{% else %}blue info circle{% endif %} middle aligned icon"></i>
+			    {{ n.title }} {% if not n.read %}<span class="ui mini red label">未读</span>{% endif %}
+            </div>
+			<div class="description" style="margin-top: 6px;">{{ n.content }}</div>
+		 	<div class="extra" style="margin-top: 6px;">
+		 		<span class="mute">{{ n.created_at }}</span>
+		 		{% if n.link %}
+		 		· <a href="{{ n.link }}" target="_blank">查看详情</a>
+		 		{% endif %}
+		 		{% if not n.read %}
+		 		· <a href="javascript:void(0)" onclick="markRead({{ n.id }})">标为已读</a>
+		 		{% endif %}
+		 	</div>
+			</div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
+{{ pagination(currentPage, totalPages, '/notification', {}) }}
+{% else %}
+<div class="card shadow" style="text-align:center; padding: 60px 30px;">
+	<div class="ui icon header">
+		<i class="bell slash outline icon"></i>
+		暂无通知
+	</div>
+</div>
+{% endif %}
+
+<div style="text-align:right; margin-top: 10px;">
+	<button class="ui basic button" onclick="markAllRead()">
+		<i class="check icon"></i> 全部标为已读
+	</button>
+</div>
+
+<script>
+function markRead(id) {
+	$.post('/notification/' + id + '/read')
+		.done(res => { if (res.success) location.reload(); })
+		.fail(() => Swal.fire('错误', '网络或服务器异常', 'error'));
+}
+function markAllRead() {
+	$.post('/notification/read-all')
+		.done(res => { if (res.success) location.reload(); })
+		.fail(() => Swal.fire('错误', '网络或服务器异常', 'error'));
+}
+</script>
+{% endblock %}
+

@@ -17,6 +17,7 @@ import benbenRouter from './routes/benben.route.js';
 import adminRouter from './routes/admin.route.js';
 import judgementRouter from './routes/judgement.route.js';
 import paintboardRouter from "./routes/paintboard.route.js";
+import notificationRouter from './routes/notification.route.js';
 
 import * as renderer from "./core/markdown.js";
 import * as utils from "./core/utils.js";
@@ -41,6 +42,7 @@ import getIP from "./middleware/get_ip.js";
 import cacheContextMiddleware from "./middleware/cache_context.js";
 import mobileDetect from "./middleware/mobile_detect.js";
 import bannersMiddleware from "./middleware/banners.js";
+import notificationsMiddleware from "./middleware/notifications.js";
 
 import * as worker from "./workers/index.worker.js";
 import { startWebSocketWorker } from "./workers/websocket.worker.js";
@@ -72,6 +74,7 @@ app.use(cacheContextMiddleware);
 app.use(mobileDetect);
 app.use(bannersMiddleware);
 app.use(auth);
+app.use(notificationsMiddleware);
 
 app.use('/', indexRouter);
 app.use('/article', articleRouter);
@@ -85,6 +88,7 @@ app.use('/benben', benbenRouter);
 app.use('/admin', adminRouter);
 app.use('/judgement', judgementRouter);
 app.use('/paintboard', paintboardRouter);
+app.use('/notification', notificationRouter);
 
 app.use(notFound);
 app.use(errorDisplay);

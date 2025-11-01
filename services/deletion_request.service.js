@@ -15,6 +15,7 @@ import Paste from "../models/paste.js";
 import { ValidationError, NotFoundError, ForbiddenError } from "../core/errors.js";
 import { paginateQuery } from "../core/pagination.js";
 import { invalidateCache } from "../core/cache.js";
+import { notify } from "./notification.service.js";
 
 /**
  * 用户提交删除申请
@@ -146,6 +147,16 @@ export async function approveDeletionRequest(requestId, adminUid, adminNote = ''
 	await request.save();
 	
 	await invalidateCache(`${request.type}:${request.item_id}`);
+
+	// 新增：通知申请人
+	try {
+		await notify(request.requester_uid, {
+			type: 'success',
+			title: '删除申请已批准',
+			content: `${request.type === 'article' ? '文章' : '剪贴板'} ${request.item_id} 的删除申请已通过。${adminNote ? '管理员备注：' + adminNote : ''}`,
+			link: `/${request.type}/${request.item_id}`
+		});
+	} catch (e) { logger.warn('发送通知失败: ' + e.message); }
 	
 	return {
 		message: "已批准删除申请并删除内容"
@@ -177,6 +188,16 @@ export async function rejectDeletionRequest(requestId, adminUid, adminNote = '')
 	request.processed_at = new Date();
 	await request.save();
 	
+	// 新增：通知申请人
+	try {
+		await notify(request.requester_uid, {
+			type: 'warning',
+			title: '删除申请被拒绝',
+			content: `${request.type === 'article' ? '文章' : '剪贴板'} ${request.item_id} 的删除申请已被拒绝。${adminNote ? '理由：' + adminNote : ''}`,
+			link: `/${request.type}/${request.item_id}`
+		});
+	} catch (e) { logger.warn('发送通知失败: ' + e.message); }
+	
 	return {
 		message: "已拒绝删除申请"
 	};
@@ -206,6 +227,16 @@ export async function ignoreDeletionRequest(requestId, adminUid, adminNote = '')
 	request.admin_note = adminNote.trim();
 	request.processed_at = new Date();
 	await request.save();
+
+	// 新增：通知申请人
+	try {
+		await notify(request.requester_uid, {
+			type: 'info',
+			title: '删除申请已忽略',
+			content: `${request.type === 'article' ? '文章' : '剪贴板'} ${request.item_id} 的删除申请已被忽略。${adminNote ? '备注：' + adminNote : ''}`,
+			link: `/${request.type}/${request.item_id}`
+		});
+	} catch (e) { logger.warn('发送通知失败: ' + e.message); }
 	
 	return {
 		message: "已忽略删除申请"

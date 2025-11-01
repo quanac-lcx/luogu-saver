@@ -257,11 +257,38 @@ Services follow consistent patterns for maintainability:
 - **Documentation**: Include JSDoc comments for all exported functions
 - **Error Handling**: Use typed errors from `core/errors.js` (ValidationError, NotFoundError, etc.)
 
-### Deletion Request System
-- Users can request deletion of **any content** (not just their own)
-- Requests go through admin approval workflow
-- Supports both articles and pastes
-- Soft deletion preserves data in database while hiding from users
+### Deletion Request System (自助删除)
+
+The self-service deletion system allows users to request removal of content through an admin-moderated workflow:
+
+**Key Features:**
+- **Universal Access**: Any authenticated user can request deletion of any content (articles or pastes), not just their own
+- **Admin Approval**: All deletion requests require admin review and approval
+- **Soft Deletion**: Approved deletions mark content as deleted but preserve data in database
+- **Reason Tracking**: Requires minimum 15-character explanation for deletion request
+- **Status Workflow**: Requests can be pending, approved, rejected, or ignored
+
+**Implementation Details:**
+- **Service**: `services/deletion_request.service.js`
+  - `createDeletionRequest(type, itemId, requesterUid, reason)` - Submit new request
+  - `getDeletionRequests({ page, limit, status, type })` - List requests with filters
+  - `approveDeletionRequest(requestId, adminUid, adminNote)` - Approve and soft-delete
+  - `rejectDeletionRequest(requestId, adminUid, adminNote)` - Reject request
+  - `ignoreDeletionRequest(requestId, adminUid, adminNote)` - Mark as ignored
+- **API Endpoint**: `POST /api/deletion-request/:type/:id` (requires login)
+- **Admin Panel**: `/admin/deletion-requests` (requires admin role)
+- **Entity**: `DeletionRequest` with fields: type, item_id, requester_uid, reason, status, admin_uid, admin_note, processed_at
+
+**Validation Rules:**
+- Content type must be 'article' or 'paste'
+- Deletion reason must be at least 15 characters
+- Content must exist and not already be deleted
+- User cannot have another pending request for the same content
+- NO author verification - any user can request deletion of any content
+
+**Recent Changes:**
+- Removed author-only restriction (previously only content owners could request deletion)
+- Now supports community-driven content moderation where any user can flag inappropriate content
 
 ### Error Handling
 - Logger provides: `info()`, `warn()`, `error()`, `debug()` (debug requires `config.debug = true`)

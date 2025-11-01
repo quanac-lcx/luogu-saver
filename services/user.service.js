@@ -14,6 +14,7 @@ import User from "../models/user.js";
 import { withCache, invalidateCache } from "../core/cache.js";
 import { ValidationError, NotFoundError } from "../core/errors.js";
 import { sanitizeLatex } from "../core/utils.js";
+import UserIntroduction from "../models/user_introduction.js";
 
 /**
  * 插入或更新用户数据
@@ -50,12 +51,11 @@ export async function upsertUser(userData) {
  */
 export async function saveUserProfile(task, obj) {
 	const uid = parseInt(task.aid);
-	const user = (await User.findById(uid)) || User.create({ id: uid });
+	const introduction = (await UserIntroduction.findById(uid)) || UserIntroduction.create({ id: uid });
+	await upsertUser(obj.userData);
 	
-	user.name = obj.userData.name;
-	user.color = obj.userData.color;
-	user.introduction = obj.introduction;
-	await user.save();
+	introduction.content = obj.introduction;
+	await introduction.save();
 	
 	await Promise.all([
 		invalidateCache(`user:${uid}`),
@@ -71,7 +71,7 @@ export async function saveUserProfile(task, obj) {
  * 
  * @param {string|number} id - 用户ID
  * @returns {Promise<Object|null>} 包含user和renderedContent的对象，如果未找到则返回null
- * @throws {Error} 如果ID无效
+ * @throws {ValidationError} 如果ID无效
  */
 export async function getUserProfileById(id) {
 	const uid = parseInt(id);
@@ -81,19 +81,16 @@ export async function getUserProfileById(id) {
 		cacheKey: `user:${uid}`,
 		ttl: 1800,
 		fetchFn: async () => {
-			const user = await User.findById(uid);
-			if (!user) return null;
+			const introduction = await UserIntroduction.findById(uid);
+			if (!introduction) return null;
 			
-			await user.loadRelationships();
-			user.formatDate();
+			await introduction.loadRelationships();
+			introduction.formatDate();
 			
-			let renderedContent = null;
-			if (user.introduction) {
-				const sanitizedContent = sanitizeLatex(user.introduction);
-				renderedContent = renderer.renderMarkdown(sanitizedContent);
-			}
+			const sanitizedContent = sanitizeLatex(introduction.content);
+			let renderedContent = renderer.renderMarkdown(sanitizedContent);
 			
-			return { user, renderedContent };
+			return { user: introduction.user, renderedContent };
 		}
 	});
 }

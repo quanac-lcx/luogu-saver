@@ -3,6 +3,7 @@ import { withCache, invalidateCache, invalidateCacheByPattern } from "../core/ca
 import { ExternalServiceError, logError, SystemError } from "../core/errors.js";
 import { paginateQuery } from "../core/pagination.js";
 import { formatDate } from "../core/utils.js";
+import config from "../config.js";
 
 /**
  * 保存陶片放逐记录
@@ -53,7 +54,6 @@ export async function saveJudgements(task, obj) {
 			});
 			
 			if (existing) {
-				logger.debug(`跳过已存在的记录: 用户 ${log.user.uid}, 时间 ${new Date(log.time * 1000)}`);
 				skippedCount++;
 				continue;
 			}
@@ -66,7 +66,6 @@ export async function saveJudgements(task, obj) {
 				time: new Date(log.time * 1000)
 			});
 			await judgement.save();
-			logger.debug(`保存陶片放逐记录: 用户 ${log.user.uid}, 时间 ${formatDate(new Date(log.time * 1000))}`);
 			savedCount++;
 		} catch (saveError) {
 			errorCount++;
@@ -92,14 +91,14 @@ export async function saveJudgements(task, obj) {
  * 
  * @param {Object} params - 分页参数
  * @param {number|string} [params.page=1] - 分页页码
- * @param {number|string} [params.perPage=10] - 每页记录数
+ * @param {number|string} [params.per_page=10] - 每页记录数
  * @returns {Promise<Object>} 包含 judgements 数组、分页信息的对象
  */
-export async function getRecentJudgements({ page, perPage }) {
+export async function getRecentJudgements({ page, per_page }) {
 	const currentPage = Math.max(parseInt(page) || 1, 1);
-	const limit = Math.max(parseInt(perPage) || 10, 1);
+	const perPage = per_page || config.pagination.judgement;
 	
-	const cacheKey = `recent_judgements:${currentPage}:${limit}`;
+	const cacheKey = `recent_judgements:${currentPage}:${perPage}`;
 	
 	return await withCache({
 		cacheKey,
@@ -109,10 +108,11 @@ export async function getRecentJudgements({ page, perPage }) {
 				where: {},
 				order: { time: 'DESC' },
 				page: currentPage,
-				limit: limit,
-				extra: { perPage: limit },
+				limit: perPage,
+				extra: { perPage },
 				processItems: async (judgement) => {
 					await judgement.loadRelationships();
+					judgement.formatDate();
 				}
 			});
 			

@@ -181,8 +181,8 @@ export async function updateAllProblemSets() {
  * @param {string} [params.prefix] - 按题目ID前缀筛选
  * @returns {Promise<Object>} 包含题目数组、分页信息和筛选条件的对象
  */
-export async function getProblems({ page, accept_solution, difficulty, prefix }) {
-	const perPage = config.pagination.problem;
+export async function getProblems({ page, per_page, accept_solution, difficulty, prefix }) {
+	const perPage = per_page || config.pagination.problem;
 	const currentPage = Math.max(parseInt(page) || 1, 1);
 	
 	const cacheKey = `problems:${currentPage}:${accept_solution || 'any'}:${difficulty || 'any'}:${prefix || 'none'}`;

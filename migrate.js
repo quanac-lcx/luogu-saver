@@ -8,7 +8,7 @@ export async function migrate() {
 	try {
 		logger.info("步骤 1: 创建 user_introduction 表并迁移数据");
 		await AppDataSource.query(`
-			INSERT INTO user_introduction (user_uid, introduction, created_at, updated_at)
+			INSERT INTO user_introduction (id, content, created_at, updated_at)
 			SELECT id, introduction, created_at, updated_at
 			FROM user
 			WHERE introduction IS NOT NULL

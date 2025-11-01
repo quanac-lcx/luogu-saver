@@ -17,14 +17,13 @@ router.get('/', asyncHandler(async (req, res, next) => {
 	const page = Math.max(1, parseInt(req.query.page) || 1);
 	const perPage = Math.min(50, Math.max(1, parseInt(req.query.per_page) || 10));
 	
-	const result = await getRecentJudgements({ page, perPage });
-	
+	const result = await getRecentJudgements({ page, per_page: perPage });
 	res.render('content/judgement.njk', {
 		title: "陶片放逐",
 		judgements: result.judgements,
 		currentPage: result.currentPage,
 		totalPages: result.totalPages,
-		perPage: result.extra.perPage
+		perPage: result.perPage
 	});
 }));
 

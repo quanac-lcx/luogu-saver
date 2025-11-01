@@ -7,6 +7,7 @@
     <link rel="shortcut icon" type="image/x-icon" href="/static/self/img/favicon.ico" media="screen"/>
     <script src="/static/jquery/jquery.min.js"></script>
     <script src="/static/sweetalert/sweetalert.js"></script>
+    <script src="/static/self/js/utils.js"></script>
     <link rel="stylesheet" href="/static/fontawesome/css/all.min.css">
     <link rel="stylesheet" href="/static/semantic/semantic.min.css">
     <link rel="stylesheet" href="/static/self/css/namecolor.css">
@@ -208,8 +209,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             const closedBanners = JSON.parse(localStorage.getItem('closedBanners') || '[]');
             closedBanners.forEach(bannerId => {
-                const banner = document.querySelector(`[data-banner-id="${bannerId}"]`);
-                if (banner) {
+                const banners = document.querySelectorAll(`[data-banner-id="${bannerId}"]`);
+                for (const banner of banners) {
                     banner.remove();
                 }
             });

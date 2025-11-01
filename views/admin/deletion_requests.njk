@@ -202,7 +202,7 @@ function approveRequest(requestId) {
         title: '批准删除申请',
         html: `
             <p style="margin-bottom: 15px;">确认批准此删除申请？批准后内容将被软删除。</p>
-            <div style="text-align: left;">
+            <div>
                 <label for="admin-note" style="font-weight: bold; margin-bottom: 5px; display: block;">管理员备注（可选）：</label>
                 <input type="text" id="admin-note" class="swal2-input" placeholder="填写处理备注" style="margin: 0;">
             </div>
@@ -245,7 +245,7 @@ function rejectRequest(requestId) {
         title: '拒绝删除申请',
         html: `
             <p style="margin-bottom: 15px;">确认拒绝此删除申请？</p>
-            <div style="text-align: left;">
+            <div>
                 <label for="admin-note" style="font-weight: bold; margin-bottom: 5px; display: block;">拒绝理由（建议填写）：</label>
                 <input type="text" id="admin-note" class="swal2-input" placeholder="填写拒绝理由" style="margin: 0;">
             </div>
@@ -288,7 +288,7 @@ function ignoreRequest(requestId) {
         title: '忽略删除申请',
         html: `
             <p style="margin-bottom: 15px;">确认忽略此删除申请？申请将被标记为已忽略。</p>
-            <div style="text-align: left;">
+            <div>
                 <label for="admin-note" style="font-weight: bold; margin-bottom: 5px; display: block;">管理员备注（可选）：</label>
                 <input type="text" id="admin-note" class="swal2-input" placeholder="填写处理备注" style="margin: 0;">
             </div>

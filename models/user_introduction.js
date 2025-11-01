@@ -1,5 +1,6 @@
 import { BaseModel } from "./common.js";
 import { formatDate } from "../core/utils.js";
+import User from "./user.js";
 
 export default class UserIntroduction extends BaseModel {
 
@@ -15,6 +16,12 @@ export default class UserIntroduction extends BaseModel {
 		this.updated_at = formatDate(this.updated_at);
 	}
 	
-	async loadRelationships() {
+	static async findById(id) {
+		return await UserIntroduction.findOne({ where: { id } });
 	}
+	
+	async loadRelationships() {
+		this.user = await User.findById(this.id);
+	}
+	
 }

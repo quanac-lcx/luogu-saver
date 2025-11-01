@@ -13,14 +13,10 @@ router.get("/statistic", asyncJsonHandler(async (req, res) => {
 }));
 
 router.get("/ads", asyncJsonHandler(async (req, res) => {
-	res.json(makeResponse(true, await settingsService.getAds()));
+	res.json(makeResponse(true, { data: await settingsService.getAds() }));
 }));
 
-/**
- * 用户提交删除申请
- * POST /api/deletion-request/:type/:id
- */
-router.post("/deletion-request/:type/:id", requireLogin, asyncJsonHandler(async (req, res) => {
+router.post("/deletion/:type/:id", requireLogin, asyncJsonHandler(async (req, res) => {
 	const { type, id } = req.params;
 	const { reason } = req.body;
 	const requesterUid = req.user.id;

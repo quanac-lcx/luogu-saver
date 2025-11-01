@@ -2,8 +2,8 @@
     "name": "UserIntroduction",
     "tableName": "user_introduction",
     "columns": {
-        "user_uid": { "type": "int", "unsigned": true, "primary": true },
-        "introduction": { "type": "mediumtext", "nullable": true },
+        "id": { "type": "int", "unsigned": true, "primary": true },
+        "content": { "type": "mediumtext", "nullable": true },
         "created_at": { "type": "timestamp", "default": "CURRENT_TIMESTAMP", "nullable": false },
         "updated_at": { "type": "timestamp", "default": "CURRENT_TIMESTAMP", "onUpdate": "CURRENT_TIMESTAMP", "nullable": false }
     },

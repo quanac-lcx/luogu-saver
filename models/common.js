@@ -131,6 +131,7 @@ export class BaseModel {
 		if (this.created_at) this.created_at = formatDate(this.created_at);
 		if (this.updated_at) this.updated_at = formatDate(this.updated_at);
 		if (this.expire_time) this.expire_time = formatDate(this.expire_time);
+		if (this.processed_at) this.processed_at = formatDate(this.processed_at);
 		return this;
 	}
 }

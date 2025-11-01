@@ -1,6 +1,8 @@
 import Judgement from "../models/judgement.js";
 import { withCache, invalidateCache, invalidateCacheByPattern } from "../core/cache.js";
 import { ExternalServiceError, logError, SystemError } from "../core/errors.js";
+import { paginateQuery } from "../core/pagination.js";
+import { formatDate } from "../core/utils.js";
 
 /**
  * 保存陶片放逐记录
@@ -88,33 +90,37 @@ export async function saveJudgements(task, obj) {
  * 检索最近的陶片放逐记录，按时间倒序排序。
  * 结果缓存 10 分钟以提高性能。
  * 
- * @param {number} page - 页码（从 1 开始）
- * @param {number} perPage - 每页记录数
- * @returns {Promise<Object>} 包含 judgements 数组和 hasMore 标志的对象
+ * @param {Object} params - 分页参数
+ * @param {number|string} [params.page=1] - 分页页码
+ * @param {number|string} [params.perPage=10] - 每页记录数
+ * @returns {Promise<Object>} 包含 judgements 数组、分页信息的对象
  */
-export async function getRecentJudgements(page = 1, perPage = 10) {
+export async function getRecentJudgements({ page, perPage }) {
+	const currentPage = Math.max(parseInt(page) || 1, 1);
+	const limit = Math.max(parseInt(perPage) || 10, 1);
+	
+	const cacheKey = `recent_judgements:${currentPage}:${limit}`;
+	
 	return await withCache({
-		cacheKey: `recent_judgements:${page}:${perPage}`,
+		cacheKey,
 		ttl: 600,
 		fetchFn: async () => {
-			const skip = (page - 1) * perPage;
-			let judgements = await Judgement.find({
+			const result = await paginateQuery(Judgement, {
+				where: {},
 				order: { time: 'DESC' },
-				skip: skip,
-				take: perPage + 1
+				page: currentPage,
+				limit: limit,
+				extra: { perPage: limit },
+				processItems: async (judgement) => {
+					await judgement.loadRelationships();
+				}
 			});
 			
-			const hasMore = judgements.length > perPage;
-			if (hasMore) {
-				judgements = judgements.slice(0, perPage);
-			}
+			result.judgements = result.items;
+			result.pageCount = result.totalPages;
+			delete result.items;
 			
-			judgements = await Promise.all(judgements.map(async (judgement) => {
-				await judgement.loadRelationships();
-				return judgement;
-			}));
-			
-			return { judgements, hasMore };
+			return result;
 		}
 	});
 }

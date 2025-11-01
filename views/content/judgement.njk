@@ -1,4 +1,5 @@
 {% extends "layout.njk" %}
+{% import "components/pagination.njk" as paginationMacro %}
 
 {% block extra_header %}
     <link rel="stylesheet" href="/static/self/css/namecolor.css">
@@ -45,12 +46,6 @@
             color: #495057;
             font-size: 1.05em;
             line-height: 1.6;
-        }
-        .pagination-container {
-            margin-top: 1.5rem;
-            display: flex;
-            justify-content: center;
-            gap: 0.5rem;
         }
     </style>
     <script src="/static/self/js/request_utils.js"></script>
@@ -156,19 +151,7 @@
             </div>
 
             <div class="sixteen wide column">
-                <div class="pagination-container">
-                    {% if page > 1 %}
-                        <a href="/judgement?page={{ page - 1 }}&per_page={{ perPage }}" class="ui button">
-                            <i class="ui icon arrow left"></i> 上一页
-                        </a>
-                    {% endif %}
-                    <span class="ui button disabled">第 {{ page }} 页</span>
-                    {% if hasMore %}
-                        <a href="/judgement?page={{ page + 1 }}&per_page={{ perPage }}" class="ui button">
-                            下一页 <i class="ui icon arrow right"></i>
-                        </a>
-                    {% endif %}
-                </div>
+                {{ paginationMacro.pagination(currentPage, totalPages, '/judgement', { per_page: perPage }) }}
             </div>
         {% else %}
             <div class="sixteen wide column">

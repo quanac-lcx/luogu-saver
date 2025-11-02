@@ -2,7 +2,6 @@
 
 {% block extra_header %}
 <style>
-    /* 确保所有输入框都可以正常编辑，并移除阴影效果 */
     .ad-item input[type="text"] {
         pointer-events: auto !important;
         cursor: text !important;
@@ -71,7 +70,7 @@
                 <div id="ads-container">
                     {% if ads and ads.length > 0 %}
                         {% for ad in ads %}
-                        <div class="ad-item" data-index="{{ loop.index0 }}" style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-bottom: 20px; position: relative;">
+                        <div class="ad-item" data-index="{{ loop.index0 }}" style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 25px; margin-bottom: 20px; position: relative;">
                             <button type="button" class="ui red icon button" onclick="removeAd({{ loop.index0 }})" style="position: absolute; top: 10px; right: 10px;">
                                 <i class="trash icon"></i>
                             </button>

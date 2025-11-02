@@ -90,7 +90,7 @@ export async function getUserProfileById(id) {
 			const sanitizedContent = sanitizeLatex(introduction.content);
 			let renderedContent = renderer.renderMarkdown(sanitizedContent);
 			
-			return { user: introduction.user, renderedContent };
+			return { introduction, renderedContent };
 		}
 	});
 }

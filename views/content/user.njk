@@ -11,30 +11,30 @@
 {% endblock %}
 
 {% block content %}
-    <input type="hidden" id="url" value="/user/{{ view_user.id }}">
-    <input type="hidden" id="markdown-content" value="{{ view_user.introduction if view_user.introduction else '' }}">
+    <input type="hidden" id="url" value="/user/{{ introduction.user.id }}">
+    <input type="hidden" id="markdown-content" value="{{ introduction.content if introduction.content else '' }}">
     <div class="ui grid">
         <div class="sixteen wide column">
             <div class="card shadow outline">
-                <h1 class="ui header">{{ view_user.name }} 的个人主页</h1>
-                <span class="meta gray"><i class="ui icon calendar colored"></i> 最后更新于 {{ view_user.updated_at }}</span>
+                <h1 class="ui header">{{ introduction.user.name }} 的个人主页</h1>
+                <span class="meta gray"><i class="ui icon calendar colored"></i> 最后更新于 {{ introduction.updated_at }}</span>
                 <div class="ui grid">
                     <div class="sixteen wide column">
                         <div class="card shadow outline padding-15" style="height: 90%;">
                             <span class="meta gray small">用户信息</span>
                             <div class="meta user" style="margin-top: 5px;">
                                 <img class="ui mini circular image"
-                                     src="https://cdn.luogu.com.cn/upload/usericon/{{ view_user.id if view_user.id else 3 }}.png"
+                                     src="https://cdn.luogu.com.cn/upload/usericon/{{ introduction.user.id if introduction.user.id else 3 }}.png"
                                      alt="user_icon">
-								<a href="https://www.luogu.com.cn/user/{{ view_user.id }}"
-                                   class="user-{{ view_user.color }}"
-                                   style="margin-left: 5px; font-weight: 550;">{{ view_user.name }}</a>
+								<a href="https://www.luogu.com.cn/user/{{ introduction.user.id }}"
+                                   class="user-{{ introduction.user.color }}"
+                                   style="margin-left: 5px; font-weight: 550;">{{ introduction.user.name }}</a>
                             </div>
                         </div>
                     </div>
                     <div class="sixteen wide column">
                         {% if not empty %}
-                        <a href="https://www.luogu.com.cn/user/{{ view_user.id }}" class="ui button">
+                        <a href="https://www.luogu.com.cn/user/{{ introduction.user.id }}" class="ui button">
                             <i class="ui icon share square"></i> 查看原主页
                         </a>
                         <a href="javascript:void(0)" onclick="copyMarkdown()" class="ui button">

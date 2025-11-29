@@ -16,13 +16,15 @@
         "tags": { "type": "longtext", "nullable": true },
         "deleted": { "type": "tinyint", "default": 0, "nullable": false },
         "deleted_reason": { "type": "varchar", "length": 255, "default": "作者要求删除", "nullable": false },
-        "content_hash": { "type": "text", "nullable": true }
+        "content_hash": { "type": "text", "nullable": true },
+        "view_count": { "type": "int", "default": 0, "nullable": false }
     },
     "indices": [
         { "name": "idx_articles_author", "columns": ["author_uid"] },
         { "name": "idx_articles_deleted_priority_updated_at", "columns": ["deleted", "priority", "updated_at"] },
         { "name": "idx_created_at", "columns": ["created_at"] },
         { "name": "idx_priority", "columns": ["priority"] },
-        { "name": "idx_updated_at", "columns": ["updated_at"] }
+        { "name": "idx_updated_at", "columns": ["updated_at"] },
+		{ "name": "idx_articles_deleted_view_count", "columns": ["deleted", "view_count"] }
     ]
 }

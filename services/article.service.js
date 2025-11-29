@@ -15,8 +15,8 @@
 
 import Article from "../models/article.js";
 import ArticleVersion from "../models/article_version.js";
-import { withCache, invalidateCache, invalidateCacheByPattern } from "../core/cache.js";
-import { ValidationError, NotFoundError } from "../core/errors.js";
+import { invalidateCache, invalidateCacheByPattern, withCache } from "../core/cache.js";
+import { NotFoundError, ValidationError } from "../core/errors.js";
 import { hashContent, sanitizeLatex } from "../core/utils.js";
 
 /**
@@ -180,14 +180,19 @@ export async function getRecentArticlesByHours(hours, authorUid = null) {
 			const articles = await queryBuilder
 				.orderBy('article.updated_at', 'DESC')
 				.getMany();
-			
-			const result = await Promise.all(articles.map(async (article) => {
+
+			return Promise.all(articles.map(async (article) => {
 				const obj = Object.setPrototypeOf(article, Article.prototype);
 				await obj.loadRelationships();
 				return obj;
 			}));
-			
-			return result;
 		}
 	});
+}
+
+export async function addViewCount(aid) {
+	const article = await Article.findById(aid);
+	if (!article) throw new NotFoundError(`文章 (ID: ${aid}) 未找到`);
+	article.view_count += 1;
+	await article.save();
 }

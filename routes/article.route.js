@@ -1,7 +1,12 @@
 import express from 'express';
 import RSS from 'rss';
 import config from "../config.js";
-import { getArticleById, getRecentArticles, getRecentArticlesByHours } from "../services/article.service.js";
+import {
+	addViewCount,
+	getArticleById,
+	getRecentArticles,
+	getRecentArticlesByHours
+} from "../services/article.service.js";
 import { ValidationError, asyncHandler, asyncJsonHandler, logError } from "../core/errors.js";
 import { makeResponse } from "../core/utils.js";
 
@@ -78,6 +83,8 @@ router.get('/:id', asyncHandler(async (req, res, next) => {
 		});
 		return;
 	}
+	
+	await addViewCount(id);
 	
 	const { article, renderedContent } = result;
 	res.render('content/article.njk', {

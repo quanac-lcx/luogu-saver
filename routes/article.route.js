@@ -7,7 +7,7 @@ import {
 	getRecentArticles,
 	getRecentArticlesByHours
 } from "../services/article.service.js";
-import { ValidationError, asyncHandler, asyncJsonHandler, logError } from "../core/errors.js";
+import { ValidationError, asyncHandler, asyncJsonHandler, logError, NotFoundError } from "../core/errors.js";
 import { makeResponse } from "../core/utils.js";
 
 const router = express.Router();
@@ -82,6 +82,10 @@ router.get('/:id', asyncHandler(async (req, res, next) => {
 			empty: true
 		});
 		return;
+	}
+	
+	if (result.deleted && req.user.role !== 1) {
+		throw new NotFoundError(`文章 (ID: ${id}) 已被删除：${article.deleted_reason}`);
 	}
 	
 	await addViewCount(id);

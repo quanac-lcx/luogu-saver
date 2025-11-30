@@ -152,8 +152,6 @@ export async function getArticleById(id) {
 			await article.loadRelationships();
 			article.formatDate();
 			
-			if (article.deleted) throw new NotFoundError(`文章 (ID: ${id}) 已被删除：${article.deleted_reason}`);
-			
 			const sanitizedContent = sanitizeLatex(article.content);
 			const renderedContent = renderer.renderMarkdown(sanitizedContent);
 			

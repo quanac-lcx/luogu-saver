@@ -316,7 +316,7 @@ $(document).ready(function() {
 			}),
 			complete: (resp) => {
 				resp = resp.responseJSON;
-				if (resp.statusCode !== 200) {
+				if (resp.code !== 200) {
 					console.log(resp);
 					Swal.fire({
 						title: `获取 PaintKey 失败`,

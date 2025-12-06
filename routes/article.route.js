@@ -84,12 +84,8 @@ router.get('/:id', asyncHandler(async (req, res, next) => {
 		return;
 	}
 	
-	const isDel = result && result.article && result.article.deleted;
-	const usrRole = req.user && typeof req.user.role !== 'undefined' ? req.user.role : 0;
-	
-	if (isDel && usrRole !== 1) {
-		const reason = result.article && result.article.deleted_reason ? `：${result.article.deleted_reason}` : '';
-		throw new NotFoundError(`文章 (ID: ${id}) 已被删除${reason}`);
+	if (result.deleted && req.user.role !== 1) {
+		throw new NotFoundError(`文章 (ID: ${id}) 已被删除：${article.deleted_reason}`);
 	}
 	
 	await addViewCount(id);

@@ -3,17 +3,15 @@
 
 {% block content %}
 <div class="ui grid">
-	<div class="sixteen wide column">
-		<h1 class="ui header">
-			<i class="ui icon bell"></i>
-			<div class="content">
-			    我的通知
-		 	    <div class="sub header">系统会在申请被处理后通知你</div>
-			</div>
-		</h1>
-	</div>
+        <div class="sixteen wide column">
+            <div class="card shadow">
+                <h1 class="ui center aligned header">
+                    <span><i class="ui bell icon colored"></i>我的通知</span>
+                    <div class="sub header" style="margin-top: 10px;">系统会在申请被处理后通知你</div>
+                </h1>
+            </div>
+        </div>
 </div>
-
 {% if items.length > 0 %}
 <div class="card shadow">
 	<div class="ui relaxed divided list">

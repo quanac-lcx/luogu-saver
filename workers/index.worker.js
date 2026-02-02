@@ -90,7 +90,10 @@ export async function pushTaskToQueue(task) {
 				url = `https://www.luogu.com/paste/${task.oid}`;
 			} else if (task.type === 3) {
 				url = `https://www.luogu.com.cn/judgement`;
-			} else {
+			} else if (task.type === 4) {
+				url = `https://www.luogu.com/user/${task.oid}`;
+			}
+			else {
 				logger.error(`未知的任务类型: ${task.type}, 任务 #${task.id}`);
 				continue;
 			}

@@ -62,10 +62,10 @@
                     </div>
                 </h1>
                 <div style="text-align: center;">
-                    <a href="javascript:void(0)" id="save-btn" class="ui positive button">
+                    <a href="javascript:void(0)" id="save-btn" class="ui button" title="已不可用" style="cursor: not-allowed" style="cursor: not-allowed">
                         <i class="ui icon sync alternate"></i> 更新陶片放逐记录
                     </a>
-                    <a href="https://www.luogu.com.cn/judgement" target="_blank" class="ui gray button">
+                    <a href="https://www.luogu.com.cn/judgement" target="_blank" class="ui green button">
                         <i class="ui icon code"></i> 查看原网页
                     </a>
                 </div>
@@ -175,11 +175,23 @@
         $('#per-page-dropdown').dropdown('set selected', '{{ perPage }}');
 
         document.getElementById("save-btn")?.addEventListener("click", async () => {
-            await handleTaskRequest('/judgement/save', {
-                loadingTitle: '正在提交...',
-                successTitle: '请求已入队',
-                errorTitle: '保存失败'
+            Swal.fire({
+                title: '不可用',
+                html: '陶片放逐保存功能不可用，你可前往洛谷查看。<br />该功能<b>有可能在新版本修复</b>，也<b>有可能不修复</b>（懒）。<br />如有建议，欢迎提出/贡献。',
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonText: '好',
+                cancelButtonText: '去洛谷查看',
+            }).then((result) => {
+                if (result.isDismissed && result.dismiss === Swal.DismissReason.cancel) {
+                    window.open('https://www.luogu.com.cn', '_blank');
+                }
             });
+            // await handleTaskRequest('/judgement/save', {
+            //     loadingTitle: '正在提交...',
+            //     successTitle: '请求已入队',
+            //     errorTitle: '保存失败'
+            // });
         });
         
         function changePerPage(newPerPage) {

@@ -25,6 +25,7 @@ export function mergeSetCookieToHeaders(response, headers) {
 export async function fetchContent(url, headers = {}, { c3vk = "new", timeout = 30000 } = {}) {
 	logger.debug(`抓取网页: ${url}，c3vk 模式: ${c3vk}`);
 	const h = { ...defaultHeaders, ...headers };
+	
 	let resp;
 	try {
 		resp = await axios.get(url, {
@@ -51,7 +52,7 @@ export async function fetchContent(url, headers = {}, { c3vk = "new", timeout = 
 				timeout
 			});
 		} catch (err) {
-			if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' || 
+			if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' ||
 			    err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' ||
 			    err.code === 'ECONNRESET' || err.message?.includes('timeout')) {
 				throw new NetworkError(`网络请求失败: ${err.message || err.code}`);

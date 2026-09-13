@@ -124,7 +124,7 @@ jobs:
                       fi
 
                       cd "$NEXT_DIR"
-                      npm ci --omit=dev
+                      npm install --omit=dev
                       if [ -f .env ]; then
                         node --env-file=.env -e "require('./dist/config')"
                       else

@@ -14,6 +14,7 @@ const router = useRouter();
 const TABS = [
     { name: 'admin', label: '概览' },
     { name: 'admin-review', label: '内容审核' },
+    { name: 'admin-judgements', label: '陶片记录' },
     { name: 'admin-site', label: '公告与通知' },
     { name: 'admin-users', label: '用户管理' },
     { name: 'admin-ops', label: '系统运维' }

@@ -50,6 +50,37 @@ export interface JudgementPaginationQuery {
     limit: number;
 }
 
+export function parseJudgementVisibilityUids(value: unknown): number[] {
+    if (typeof value !== 'string') {
+        throw new JudgementQueryError('uids must be a string');
+    }
+
+    const values = value
+        .split(/[\r\n,]+/)
+        .map(item => item.trim())
+        .filter(Boolean);
+    if (!values.length) {
+        throw new JudgementQueryError('At least one Luogu UID is required');
+    }
+
+    const uids: number[] = [];
+    const seen = new Set<number>();
+    for (const rawUid of values) {
+        if (!/^[1-9]\d*$/.test(rawUid)) {
+            throw new JudgementQueryError('uids must contain positive Luogu UIDs');
+        }
+        const uid = Number(rawUid);
+        if (!Number.isSafeInteger(uid) || uid > UINT32_MAX) {
+            throw new JudgementQueryError('uids is out of range');
+        }
+        if (!seen.has(uid)) {
+            seen.add(uid);
+            uids.push(uid);
+        }
+    }
+    return uids;
+}
+
 interface JudgementListRecord {
     id: number;
     uid: number;
@@ -64,10 +95,28 @@ interface JudgementListRecord {
     createdAt: Date;
 }
 
-export function toJudgementListItem(record: JudgementListRecord) {
+export function toJudgementListItem(record: JudgementListRecord, hidden = false) {
+    if (hidden) {
+        return {
+            id: record.id,
+            uid: record.uid,
+            hidden: true as const,
+            name: record.name,
+            reason: '此记录已被账号所有者要求隐藏',
+            revoked_permission: 0,
+            added_permission: 0,
+            time: record.time,
+            user: record.userSnapshot,
+            fetch_log_id: record.fetchLogId,
+            log_fetched_at: record.fetchLog?.fetchedAt ?? null,
+            created_at: record.createdAt
+        };
+    }
+
     return {
         id: record.id,
         uid: record.uid,
+        hidden: false as const,
         name: record.name,
         reason: record.reason,
         revoked_permission: record.revokedPermission,

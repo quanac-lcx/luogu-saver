@@ -9,6 +9,8 @@ import { AnnouncementService } from '@/services/announcement.service';
 import { SiteNotificationService } from '@/services/site-notification.service';
 import { AdvertisementService } from '@/services/advertisement.service';
 import { DeletionRequestService } from '@/services/deletion-request.service';
+import { JudgementService } from '@/services/judgement.service';
+import { JudgementQueryError, parseJudgementVisibilityUids } from '@/shared/judgement';
 
 const router = new Router<DefaultState, Context>({ prefix: '/admin' });
 
@@ -187,6 +189,22 @@ router.get(
             ctx.query.pageSize
         );
         ctx.success(result);
+    }
+);
+
+router.post(
+    '/judgements/hide',
+    requiresPermission(Permission.MANAGE_CONTENT),
+    async (ctx: Context) => {
+        try {
+            const { uids } = (ctx.request.body || {}) as { uids?: unknown };
+            ctx.success({
+                items: await JudgementService.hideHistories(parseJudgementVisibilityUids(uids))
+            });
+        } catch (error) {
+            if (!(error instanceof JudgementQueryError)) throw error;
+            ctx.fail(error.status, error.message);
+        }
     }
 );
 

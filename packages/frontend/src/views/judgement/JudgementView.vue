@@ -263,7 +263,14 @@ const columns = computed<DataTableColumns<JudgementItem>>(() => {
         }
         return result;
     }
-    if (displayOptions.value.uid) result.push({ title: 'UID', key: 'uid', width: 100 });
+    if (displayOptions.value.uid) {
+        result.push({
+            title: 'UID',
+            key: 'uid',
+            width: 100,
+            render: row => row.uid
+        });
+    }
     if (displayOptions.value.avatar) {
         result.push({
             title: '头像',

@@ -1,6 +1,7 @@
 import { AppDataSource } from '@/data-source';
 import { JudgementFetchLog } from '@/entities/judgement-fetch-log';
 import { JudgementRecord } from '@/entities/judgement-record';
+import { JudgementVisibilityRequest } from '@/entities/judgement-visibility-request';
 import { logger } from '@/lib/logger';
 import {
     createJudgementDedupKey,
@@ -173,8 +174,18 @@ export class JudgementService {
         });
 
         const [records, total] = await builder.getManyAndCount();
+        const visibilityRequests = records.length
+            ? await JudgementVisibilityRequest.getRepository().findBy({
+                  uid: In([...new Set(records.map(record => record.uid))])
+              })
+            : [];
+        const hiddenUntilByUid = new Map(
+            visibilityRequests.map(request => [request.uid, request.hiddenUntil])
+        );
         return {
-            items: records.map(toJudgementListItem),
+            items: records.map(record =>
+                toJudgementListItem(record, record.time <= (hiddenUntilByUid.get(record.uid) ?? 0))
+            ),
             pagination: {
                 page: query.page,
                 limit: query.limit,
@@ -182,6 +193,29 @@ export class JudgementService {
                 totalPages: Math.ceil(total / query.limit)
             }
         };
+    }
+
+    static async hideHistories(uids: number[]) {
+        const hiddenUntil = Math.floor(Date.now() / 1000);
+        return AppDataSource.transaction(async manager => {
+            for (const uid of uids) {
+                await manager.query(
+                    `INSERT INTO judgement_visibility_request (uid, hidden_until)
+                     VALUES (?, ?)
+                     ON DUPLICATE KEY UPDATE
+                         hidden_until = GREATEST(hidden_until, VALUES(hidden_until)),
+                         updated_at = CURRENT_TIMESTAMP`,
+                    [uid, hiddenUntil]
+                );
+            }
+            const requests = await manager.getRepository(JudgementVisibilityRequest).findBy({
+                uid: In(uids)
+            });
+            const hiddenUntilByUid = new Map(
+                requests.map(request => [request.uid, request.hiddenUntil])
+            );
+            return uids.map(uid => ({ uid, hiddenUntil: hiddenUntilByUid.get(uid)! }));
+        });
     }
 
     static async listLogs(query: JudgementPaginationQuery) {

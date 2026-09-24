@@ -14,6 +14,7 @@ export interface JudgementItem {
     fetch_log_id: number;
     log_fetched_at: string | null;
     created_at: string;
+    hidden: boolean;
 }
 
 export interface JudgementUser {

@@ -22,6 +22,12 @@ export default [
                 meta: { activeMenu: 'admin', title: '内容审核' }
             },
             {
+                path: 'judgements',
+                name: 'admin-judgements',
+                component: () => import('@/views/admin/panels/AdminJudgementPanel.vue'),
+                meta: { activeMenu: 'admin', title: '陶片记录' }
+            },
+            {
                 path: 'site',
                 name: 'admin-site',
                 component: () => import('@/views/admin/panels/AdminSitePanel.vue'),
@@ -32,6 +38,12 @@ export default [
                 name: 'admin-users',
                 component: () => import('@/views/admin/panels/AdminUsersPanel.vue'),
                 meta: { activeMenu: 'admin', title: '用户管理' }
+            },
+            {
+                path: 'judgements',
+                name: 'admin-judgements',
+                component: () => import('@/views/admin/panels/AdminJudgementPanel.vue'),
+                meta: { activeMenu: 'admin', title: '陶片管理' }
             },
             {
                 path: 'ops',

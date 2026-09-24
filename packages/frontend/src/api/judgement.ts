@@ -79,12 +79,3 @@ export async function getJudgementLogs(
 export async function getJudgementStats(): Promise<ApiResponse<JudgementStats>> {
     return (await apiFetch.get('/judgement/stats')) as ApiResponse<JudgementStats>;
 }
-
-export async function hideMyJudgementHistory(): Promise<
-    ApiResponse<{ uid: number; hiddenUntil: number }>
-> {
-    return (await apiFetch.post('/judgement/hide-mine')) as ApiResponse<{
-        uid: number;
-        hiddenUntil: number;
-    }>;
-}

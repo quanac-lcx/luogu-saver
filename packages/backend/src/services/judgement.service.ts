@@ -195,16 +195,27 @@ export class JudgementService {
         };
     }
 
-    static async hideHistory(uid: number) {
+    static async hideHistories(uids: number[]) {
         const hiddenUntil = Math.floor(Date.now() / 1000);
-        const repository = JudgementVisibilityRequest.getRepository();
-        const existing = await repository.findOneBy({ uid });
-        const request = repository.create({
-            uid,
-            hiddenUntil: Math.max(existing?.hiddenUntil ?? 0, hiddenUntil)
+        return AppDataSource.transaction(async manager => {
+            for (const uid of uids) {
+                await manager.query(
+                    `INSERT INTO judgement_visibility_request (uid, hidden_until)
+                     VALUES (?, ?)
+                     ON DUPLICATE KEY UPDATE
+                         hidden_until = GREATEST(hidden_until, VALUES(hidden_until)),
+                         updated_at = CURRENT_TIMESTAMP`,
+                    [uid, hiddenUntil]
+                );
+            }
+            const requests = await manager.getRepository(JudgementVisibilityRequest).findBy({
+                uid: In(uids)
+            });
+            const hiddenUntilByUid = new Map(
+                requests.map(request => [request.uid, request.hiddenUntil])
+            );
+            return uids.map(uid => ({ uid, hiddenUntil: hiddenUntilByUid.get(uid)! }));
         });
-        const saved = await repository.save(request);
-        return { uid: saved.uid, hiddenUntil: saved.hiddenUntil };
     }
 
     static async listLogs(query: JudgementPaginationQuery) {

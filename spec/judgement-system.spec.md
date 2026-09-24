@@ -2,7 +2,7 @@
 
 ## 1. Scope
 
-The judgement system integrates the Luogu judgement history into the main Luogu Saver backend and frontend. It owns persistence, fixed-interval synchronization, public read APIs, account-owner history hiding, and one-time import of the legacy SQLite database.
+The judgement system integrates the Luogu judgement history into the main Luogu Saver backend and frontend. It owns persistence, fixed-interval synchronization, public read APIs, administrator-controlled history hiding, and one-time import of the legacy SQLite database.
 
 The legacy Express server, legacy static pages, the legacy SQLite runtime, and browser requests to `jdmt.luogu.me` are outside the integrated runtime.
 
@@ -54,7 +54,7 @@ Table name: `judgement_visibility_request`.
 
 | Column         | Type         | Constraints | Description                                       |
 | -------------- | ------------ | ----------- | ------------------------------------------------- |
-| `uid`          | INT UNSIGNED | PRIMARY KEY | Luogu UID that owns the requested hidden history  |
+| `uid`          | INT UNSIGNED | PRIMARY KEY | Luogu UID whose history an administrator hid      |
 | `hidden_until` | INT UNSIGNED | NOT NULL    | Inclusive Luogu event-time cutoff in Unix seconds |
 | `created_at`   | DATETIME     | NOT NULL    | First request persistence time                    |
 | `updated_at`   | DATETIME     | NOT NULL    | Most recent request persistence time              |
@@ -148,17 +148,19 @@ For every other record, the endpoint SHALL return `hidden: false` and its persis
 
 The endpoint SHALL NOT return `full_record`. The `full_record` database column SHALL remain the complete immutable upstream snapshot for persistence and forensic recovery. The list query SHALL NOT select the `full_record` column from the database.
 
-### 5.3 POST /judgement/hide-mine
+### 5.3 POST /admin/judgements/hide
 
-The endpoint SHALL require `Permission.LOGIN`. It SHALL derive the requesting Luogu UID from the authenticated registered user's `luogu_uid`; it SHALL accept no UID or record-ID input.
+The endpoint SHALL require `Permission.MANAGE_CONTENT`. The request body SHALL be `{ uids: string }`.
 
-On each request, the service SHALL set that UID's `hidden_until` to the current Unix second, creating the visibility-request row when absent. The update SHALL use the greater of the stored cutoff and the current Unix second. It SHALL return `{ uid, hiddenUntil }`.
+`uids` SHALL contain one or more decimal positive Luogu UIDs, separated by commas, CRLF, or LF. Whitespace surrounding a UID is ignored. Empty segments caused by consecutive separators are ignored. Every UID SHALL be an integer from `1` through `4294967295`. Duplicate UIDs SHALL be processed once in first-occurrence order. Any invalid non-empty segment, an empty result, or a non-string body field SHALL produce application error code `400`.
 
-The operation applies to every current and later-read record for that UID with an event time not later than `hiddenUntil`; it SHALL not support selecting individual records. A record with an event time after the cutoff, including a record first fetched after this request, SHALL remain visible unless a later request advances the cutoff.
+On each request, the service SHALL set every submitted UID's `hidden_until` to the current Unix second, creating a visibility-request row when absent. An update SHALL retain the greater of the stored cutoff and the current Unix second. The response SHALL be `{ items: Array<{ uid: number; hiddenUntil: number }> }`, in normalized input order.
 
-The frontend judgement page SHALL expose one button labelled `申请删除`. It SHALL require login. Before requesting the endpoint, it SHALL present all of these facts in its confirmation UI: only the current logged-in Luogu account's records are affected; every historical record through the request time is hidden as one set and partial selection is unavailable; records are retained on the server; hidden historical entries show `此记录已被账号所有者要求隐藏` on the public list, user profile, and API; and records created after the request time remain visible.
+The operation applies to every current and later-read record for each submitted UID with an event time not later than its `hiddenUntil`; it SHALL not support selecting individual records. A record with an event time after the cutoff, including a record first fetched after this request, SHALL remain visible unless a later administrator request advances the cutoff.
 
-After a successful request, the frontend SHALL reload the active judgement query. For a returned item with `hidden: true`, the judgement list SHALL preserve the UID, avatar, username, and time; render `—` for permission changes; and render the API-supplied placeholder reason. The user-profile judgement timeline SHALL preserve its time and other record layout, omit permission-change tags, and render the API-supplied placeholder reason.
+The public judgement page SHALL NOT expose an account-owner deletion or hiding action. The administrator console SHALL expose a `MANAGE_CONTENT`-guarded control that accepts comma- or newline-separated UIDs and invokes this endpoint.
+
+For a returned item with `hidden: true`, the judgement list SHALL preserve the UID, avatar, username, and time; render `—` for permission changes; and render the API-supplied placeholder reason. The user-profile judgement timeline SHALL preserve its time and other record layout, omit permission-change tags, and render the API-supplied placeholder reason.
 
 ### 5.4 GET /judgement/logs
 

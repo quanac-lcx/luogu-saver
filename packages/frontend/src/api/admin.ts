@@ -53,6 +53,11 @@ export interface AdminAdvertisement {
     updatedAt?: string;
 }
 
+export interface AdminJudgementVisibilityItem {
+    uid: number;
+    hiddenUntil: number;
+}
+
 interface CreateWorkflowTemplateResponse {
     workflowId: string;
     taskIds: Record<string, string>;
@@ -102,6 +107,13 @@ export async function restorePaste(id: string) {
     return (await apiFetch(`/admin/pastes/${id}/restore`, {
         method: 'POST'
     })) as ApiResponse<{ id: string; restored: boolean }>;
+}
+
+export async function hideAdminJudgementHistories(uids: string) {
+    return (await apiFetch('/admin/judgements/hide', {
+        method: 'POST',
+        data: { uids }
+    })) as ApiResponse<{ items: AdminJudgementVisibilityItem[] }>;
 }
 
 export async function getAdminAnnouncement() {

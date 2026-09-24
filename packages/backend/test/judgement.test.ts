@@ -4,6 +4,7 @@ import {
     escapeLikeLiteral,
     LuoguJudgementResponseSchema,
     parseJudgementQuery,
+    parseJudgementVisibilityUids,
     toJudgementListItem
 } from '../src/shared/judgement';
 
@@ -60,6 +61,13 @@ describe('judgement domain helpers', () => {
             parseJudgementQuery({ start_time: '1800000000', end_time: '1700000000' })
         ).toThrow();
         expect(() => parseJudgementQuery({ start_time: '4294967296' })).toThrow();
+    });
+
+    it('parses comma- and newline-separated visibility UIDs', () => {
+        expect(parseJudgementVisibilityUids(' 3,7\n3\r\n 11,, ')).toEqual([3, 7, 11]);
+        expect(() => parseJudgementVisibilityUids('3,0')).toThrow();
+        expect(() => parseJudgementVisibilityUids('3 abc')).toThrow();
+        expect(() => parseJudgementVisibilityUids(' ,\n ')).toThrow();
     });
 
     it('validates required upstream fields while preserving snapshots', () => {

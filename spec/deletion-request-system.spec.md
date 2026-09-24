@@ -4,7 +4,7 @@
 
 This specification defines the backend deletion request subsystem implemented under `packages/backend`.
 
-A deletion request is a moderation ticket filed by an authenticated registered user asking that one archived article or paste be soft-deleted. An administrator with `MANAGE_CONTENT` reviews the request and either approves it (the target content is soft-deleted) or rejects it. Both outcomes create one user notification for the requester as defined by `user-notification-system.spec.md`.
+A deletion request is a moderation ticket filed by an authenticated registered user asking that one archived article or paste be soft-deleted. If the requester's `registered_user.luogu_uid` equals the target row's `author_id`, the system approves the request automatically. Otherwise, an administrator with `MANAGE_CONTENT` reviews the request and either approves it (the target content is soft-deleted) or rejects it. Both automatic and administrator review outcomes create one user notification for the requester as defined by `user-notification-system.spec.md`.
 
 The deletion request system SHALL NOT physically delete `article` or `paste` rows.
 
@@ -12,19 +12,20 @@ The deletion request system SHALL NOT physically delete `article` or `paste` row
 
 Table name: `deletion_request`
 
-| Column               | Type         | Constraints                 | Description                                |
-| -------------------- | ------------ | --------------------------- | ------------------------------------------ |
-| `id`                 | INT UNSIGNED | PRIMARY KEY, AUTO INCREMENT | Deletion request identifier                |
-| `target_type`        | VARCHAR(16)  | NOT NULL                    | `article` or `paste`                       |
-| `target_id`          | VARCHAR(8)   | NOT NULL                    | `article.id` or `paste.id`                 |
-| `requester_id`       | INT UNSIGNED | NOT NULL                    | `registered_user.id` of the requester      |
-| `reason`             | VARCHAR(500) | NOT NULL                    | Requester-provided reason                  |
-| `status`             | VARCHAR(16)  | NOT NULL, DEFAULT `pending` | `pending`, `approved`, or `rejected`       |
-| `resolution_comment` | VARCHAR(500) | NULLABLE                    | Handler-provided comment                   |
-| `handler_id`         | INT UNSIGNED | NULLABLE                    | `registered_user.id` of the handling admin |
-| `handled_at`         | DATETIME     | NULLABLE                    | Time the request left the `pending` status |
-| `created_at`         | DATETIME     | NOT NULL                    | Record creation timestamp                  |
-| `updated_at`         | DATETIME     | NOT NULL                    | Record update timestamp                    |
+| Column               | Type         | Constraints                 | Description                                                        |
+| -------------------- | ------------ | --------------------------- | ------------------------------------------------------------------ |
+| `id`                 | INT UNSIGNED | PRIMARY KEY, AUTO INCREMENT | Deletion request identifier                                        |
+| `target_type`        | VARCHAR(16)  | NOT NULL                    | `article` or `paste`                                               |
+| `target_id`          | VARCHAR(8)   | NOT NULL                    | `article.id` or `paste.id`                                         |
+| `requester_id`       | INT UNSIGNED | NOT NULL                    | `registered_user.id` of the requester                              |
+| `reason`             | VARCHAR(500) | NOT NULL                    | Requester-provided reason                                          |
+| `status`             | VARCHAR(16)  | NOT NULL, DEFAULT `pending` | `pending`, `approved`, or `rejected`                               |
+| `resolution_comment` | VARCHAR(500) | NULLABLE                    | Handler-provided comment                                           |
+| `handler_id`         | INT UNSIGNED | NULLABLE                    | `registered_user.id` of the handling admin                         |
+| `handler_kind`       | VARCHAR(16)  | NULLABLE                    | `user` for administrator review or `system` for automatic approval |
+| `handled_at`         | DATETIME     | NULLABLE                    | Time the request left the `pending` status                         |
+| `created_at`         | DATETIME     | NOT NULL                    | Record creation timestamp                                          |
+| `updated_at`         | DATETIME     | NOT NULL                    | Record update timestamp                                            |
 
 ### 2.1 Indexes
 
@@ -36,8 +37,8 @@ Table name: `deletion_request`
 
 `status` transitions SHALL be exactly:
 
-1. Row creation sets `status='pending'`, `resolution_comment=NULL`, `handler_id=NULL`, `handled_at=NULL`.
-2. `pending -> approved` through `approveRequest`.
+1. Row creation sets `status='pending'`, `resolution_comment=NULL`, `handler_id=NULL`, `handler_kind=NULL`, `handled_at=NULL`.
+2. `pending -> approved` through `approveRequest` or the automatic author-approval path in `createRequest`.
 3. `pending -> rejected` through `rejectRequest`.
 4. `approved` and `rejected` are terminal. No endpoint SHALL modify a non-pending request.
 
@@ -68,11 +69,17 @@ Preconditions:
 5. Load the target row (`article` or `paste` by primary key, direct database read). If no row exists, throw status `404` with message `Target content not found`.
 6. If the target row has `deleted=true`, throw status `400` with message `Target content already deleted`.
 7. If a `deletion_request` row exists with the same `target_type`, `target_id`, `requester_id`, and `status='pending'`, throw status `409` with message `A pending deletion request already exists`.
+8. Load the `registered_user` row whose primary key is `requesterId`. The requester is the target author iff that row exists and `registered_user.luogu_uid === target.author_id`.
 
 Postconditions:
 
 1. Insert one `deletion_request` row with `status='pending'` and the normalized fields.
-2. Return the item in the shape of section 3.2.
+2. If the requester is not the target author, return the pending item in the shape of section 3.2.
+3. If the requester is the target author, immediately run the same target soft-deletion and article deletion-marker synchronization as section 3.4, then finalize the request with `status='approved'`, `handler_id=NULL`, `handler_kind='system'`, and `resolution_comment='自动通过'`.
+4. Automatic finalization SHALL create the approval notification from section 5 in the same transaction that updates the request row.
+5. Return the finalized item in the shape of section 3.2 after successful automatic approval.
+
+If automatic article deletion-marker synchronization fails, `createRequest` SHALL propagate the error and SHALL leave the inserted request pending. The article row MAY already have `deleted=true`. An administrator MAY retry the pending request through `approveRequest`.
 
 ### 3.2 `listMyRequests(requesterId, page, pageSize)`
 
@@ -115,7 +122,7 @@ Postconditions:
 3. Ordering, offset, and limit are as in section 3.2.
 4. Each item SHALL extend the section 3.2 item with:
     - `requester`: `{ id, name, luoguUid, avatarUrl }` from the requester's `registered_user` row, or `null` when that row no longer exists.
-    - `handler`: `{ id, name }` from the handler's `registered_user` row, or `null` when `handler_id` is `NULL` or that row no longer exists.
+    - `handler`: `{ id, name }` from the handler's `registered_user` row for administrator handling; `{ id: null, name: 'system' }` when `handler_kind='system'`; or `null` when neither handler can be resolved.
     - `target`: `{ exists, deleted, title }` where `exists` is whether the target row is present, `deleted` is the target row's `deleted` flag (`false` when `exists=false`), and `title` is `article.title` for existing article targets and `null` otherwise.
     - `requesterIsAuthor`: `true` iff the requester row exists, the target row exists, and `registered_user.luogu_uid === target.author_id`.
 5. Requester, handler, and target rows SHALL be fetched in batch (at most one query per table per call), not per item.
@@ -136,7 +143,7 @@ Postconditions:
 3. For an article target, call the runtime deletion-marker synchronization defined by
    `search-system.spec.md` after the database row has `deleted=true`. This call SHALL also occur when
    the target row was already soft-deleted before this approval attempt.
-4. In one database transaction: update the request row (`status='approved'`, `handler_id=handlerId`, `handled_at=now`, `resolution_comment` per precondition 1) and create the approval notification defined in section 5.
+4. In one database transaction: update the request row (`status='approved'`, `handler_id=handlerId`, `handler_kind='user'`, `handled_at=now`, `resolution_comment` per precondition 1) and create the approval notification defined in section 5.
 5. Return the request in the item shape of section 3.3.
 
 If article deletion-marker synchronization fails, `approveRequest` SHALL propagate the error and
@@ -149,7 +156,7 @@ Preconditions 1-3 are identical to section 3.4. The target row is not loaded and
 
 Postconditions:
 
-1. In one database transaction: update the request row (`status='rejected'`, `handler_id=handlerId`, `handled_at=now`, `resolution_comment` per section 3.4 precondition 1) and create the rejection notification defined in section 5.
+1. In one database transaction: update the request row (`status='rejected'`, `handler_id=handlerId`, `handler_kind='user'`, `handled_at=now`, `resolution_comment` per section 3.4 precondition 1) and create the rejection notification defined in section 5.
 2. Return the request in the item shape of section 3.3.
 
 ### 3.6 `restoreArticle(articleId)`
@@ -286,6 +293,7 @@ The permission bitmask SHALL include `MANAGE_CONTENT = 1 << 7`.
    Chroma vectors, Chroma documents, or embeddings.
 6. Restoring an article SHALL NOT change the terminal state of any deletion request.
 7. Restoring a paste SHALL NOT change the terminal state of any deletion request.
+8. Every automatically approved request SHALL remain queryable through `listAdminRequests` with `status='approved'` and SHALL identify its handler as `system`.
 
 ## 8. File Locations
 

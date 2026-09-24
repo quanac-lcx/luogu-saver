@@ -18,7 +18,7 @@ export interface DeletionRequestItem {
 
 export interface AdminDeletionRequestItem extends DeletionRequestItem {
     requester: { id: number; name: string; luoguUid: number; avatarUrl: string | null } | null;
-    handler: { id: number; name: string } | null;
+    handler: { id: number | null; name: string } | null;
     target: { exists: boolean; deleted: boolean; title: string | null };
     requesterIsAuthor: boolean;
 }

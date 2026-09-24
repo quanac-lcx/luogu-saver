@@ -1,6 +1,7 @@
 import { In } from 'typeorm';
 import {
     DeletionRequest,
+    type DeletionRequestHandlerKind,
     type DeletionRequestStatus,
     type DeletionRequestTargetType
 } from '@/entities/deletion-request';
@@ -20,6 +21,7 @@ import {
 import { clampInt } from '@/utils/number';
 
 const TARGET_DELETE_REASON = '应用户申请删除';
+const AUTOMATIC_APPROVAL_COMMENT = '自动通过';
 
 type CreateRequestInput = {
     targetType?: unknown;
@@ -40,7 +42,7 @@ type DeletionRequestItem = {
 
 type AdminDeletionRequestItem = DeletionRequestItem & {
     requester: { id: number; name: string; luoguUid: number; avatarUrl: string | null } | null;
-    handler: { id: number; name: string } | null;
+    handler: { id: number | null; name: string } | null;
     target: { exists: boolean; deleted: boolean; title: string | null };
     requesterIsAuthor: boolean;
 };
@@ -85,18 +87,35 @@ export class DeletionRequestService {
             });
         }
 
-        const repository = getServiceRepository<DeletionRequest>(DeletionRequest);
-        const request = repository.create({
-            targetType,
-            targetId,
-            requesterId,
-            reason,
-            status: 'pending' as DeletionRequestStatus,
-            resolutionComment: null,
-            handlerId: null,
-            handledAt: null
+        const requester = await findOneServiceEntity<RegisteredUser>(RegisteredUser, {
+            where: { id: requesterId }
         });
-        return this.toItem(await repository.save(request));
+        const repository = getServiceRepository<DeletionRequest>(DeletionRequest);
+        const request = await repository.save(
+            repository.create({
+                targetType,
+                targetId,
+                requesterId,
+                reason,
+                status: 'pending' as DeletionRequestStatus,
+                resolutionComment: null,
+                handlerId: null,
+                handlerKind: null,
+                handledAt: null
+            })
+        );
+
+        if (requester?.luoguUid === target.authorId) {
+            await this.approveTargetAndFinalize(
+                request,
+                target,
+                null,
+                'system',
+                AUTOMATIC_APPROVAL_COMMENT
+            );
+        }
+
+        return this.toItem(request);
     }
 
     static async listMyRequests(
@@ -177,23 +196,7 @@ export class DeletionRequestService {
             throw Object.assign(new Error('Target content not found'), { status: 404 });
         }
 
-        // The soft delete goes through the owning service (outside the transaction
-        // below) so its @CacheEvict keys are dropped. If the later request update
-        // fails, re-approving is safe: an already-deleted target is left untouched.
-        if (!target.deleted) {
-            target.deleted = true;
-            target.deleteReason = TARGET_DELETE_REASON;
-            if (request.targetType === 'article') {
-                await ArticleService.saveArticle(target as Article);
-            } else {
-                await PasteService.savePaste(target as Paste);
-            }
-        }
-        if (request.targetType === 'article') {
-            await this.syncArticleDeletionState(target as Article);
-        }
-
-        await this.finalizeRequest(request, 'approved', handlerId, resolutionComment);
+        await this.approveTargetAndFinalize(request, target, handlerId, 'user', resolutionComment);
         return (await this.buildAdminItems([request]))[0];
     }
 
@@ -245,7 +248,7 @@ export class DeletionRequestService {
         const resolutionComment = this.normalizeComment(comment);
         const request = await this.findPendingRequest(requestId);
 
-        await this.finalizeRequest(request, 'rejected', handlerId, resolutionComment);
+        await this.finalizeRequest(request, 'rejected', handlerId, 'user', resolutionComment);
         return (await this.buildAdminItems([request]))[0];
     }
 
@@ -265,12 +268,14 @@ export class DeletionRequestService {
     private static async finalizeRequest(
         request: DeletionRequest,
         outcome: 'approved' | 'rejected',
-        handlerId: number,
+        handlerId: number | null,
+        handlerKind: DeletionRequestHandlerKind,
         resolutionComment: string | null
     ): Promise<void> {
         await DeletionRequest.transaction(async manager => {
             request.status = outcome;
             request.handlerId = handlerId;
+            request.handlerKind = handlerKind;
             request.handledAt = new Date();
             request.resolutionComment = resolutionComment;
             await getServiceRepository<DeletionRequest>(DeletionRequest, manager).save(request);
@@ -291,6 +296,32 @@ export class DeletionRequestService {
                 manager
             );
         });
+    }
+
+    private static async approveTargetAndFinalize(
+        request: DeletionRequest,
+        target: Article | Paste,
+        handlerId: number | null,
+        handlerKind: DeletionRequestHandlerKind,
+        resolutionComment: string | null
+    ): Promise<void> {
+        // The soft delete goes through the owning service (outside the transaction
+        // below) so its @CacheEvict keys are dropped. If the later request update
+        // fails, re-approving is safe: an already-deleted target is left untouched.
+        if (!target.deleted) {
+            target.deleted = true;
+            target.deleteReason = TARGET_DELETE_REASON;
+            if (request.targetType === 'article') {
+                await ArticleService.saveArticle(target as Article);
+            } else {
+                await PasteService.savePaste(target as Paste);
+            }
+        }
+        if (request.targetType === 'article') {
+            await this.syncArticleDeletionState(target as Article);
+        }
+
+        await this.finalizeRequest(request, 'approved', handlerId, handlerKind, resolutionComment);
     }
 
     private static buildReviewContent(
@@ -381,7 +412,12 @@ export class DeletionRequestService {
                           avatarUrl: requester.avatarUrl
                       }
                     : null,
-                handler: handler ? { id: handler.id, name: handler.name } : null,
+                handler:
+                    row.handlerKind === 'system'
+                        ? { id: null, name: 'system' }
+                        : handler
+                          ? { id: handler.id, name: handler.name }
+                          : null,
                 target: {
                     exists: Boolean(target),
                     deleted: Boolean(target?.deleted),

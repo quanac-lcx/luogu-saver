@@ -12,6 +12,8 @@ export type DeletionRequestTargetType = 'article' | 'paste';
 
 export type DeletionRequestStatus = 'pending' | 'approved' | 'rejected';
 
+export type DeletionRequestHandlerKind = 'user' | 'system';
+
 @Entity({ name: 'deletion_request' })
 @Index('idx_deletion_request_status_created_at', ['status', 'createdAt'])
 @Index('idx_deletion_request_target', ['targetType', 'targetId'])
@@ -40,6 +42,9 @@ export class DeletionRequest extends BaseEntity {
 
     @Column({ name: 'handler_id', type: 'int', unsigned: true, nullable: true })
     handlerId: number | null;
+
+    @Column({ name: 'handler_kind', type: 'varchar', length: 16, nullable: true })
+    handlerKind: DeletionRequestHandlerKind | null;
 
     @Column({ name: 'handled_at', type: 'datetime', nullable: true })
     handledAt: Date | null;

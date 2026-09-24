@@ -2,7 +2,7 @@ import { SaveTask } from '@/shared/task';
 import { TaskHandler, TaskTextResult, WorkflowResult } from '@/workers/types';
 import { fetch } from '@/utils/fetch';
 import { C3vkMode } from '@/shared/c3vk';
-import type { Paste as LuoguPaste, DataResponse } from '@/types/luogu-api';
+import type { Paste as LuoguPaste, LentilleDataResponse } from '@/types/luogu-api';
 import { PasteService } from '@/services/paste.service';
 import { buildUser } from '@/utils/luogu-api';
 import { UserService } from '@/services/user.service';
@@ -15,8 +15,8 @@ export class PasteHandler implements TaskHandler<SaveTask> {
 
     public async handle(task: SaveTask): Promise<WorkflowResult<TaskTextResult>> {
         const url = `https://www.luogu.com/paste/${task.payload.targetId}`;
-        const resp: DataResponse<{ paste: LuoguPaste }> = await fetch(url, C3vkMode.MODERN);
-        const data = resp.currentData?.paste;
+        const resp: LentilleDataResponse<{ paste: LuoguPaste }> = await fetch(url, C3vkMode.MODERN);
+        const data = resp.data?.paste;
 
         if (!data) {
             throw new UnrecoverableError('剪贴板不存在');

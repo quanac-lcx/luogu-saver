@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { NBadge, NIcon, NSpace, NTag } from 'naive-ui';
-import { CircleCheck, Wrench, Megaphone, Users } from 'lucide-vue-next';
+import { CircleCheck, Wrench, Megaphone, Users, Hammer } from 'lucide-vue-next';
 import Card from '@/components/Card.vue';
 import { getAdminDeletionRequests } from '@/api/deletion-request.ts';
 import { currentAuth } from '@/utils/auth.ts';
@@ -56,6 +56,13 @@ const entries = computed(() => [
         title: '用户管理',
         description: '查看注册用户并调整权限位。',
         icon: Users,
+        badge: 0
+    },
+    {
+        name: 'admin-judgements',
+        title: '陶片管理',
+        description: '隐藏陶片放逐记录',
+        icon: Hammer,
         badge: 0
     },
     {

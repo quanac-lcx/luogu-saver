@@ -40,6 +40,12 @@ export default [
                 meta: { activeMenu: 'admin', title: '用户管理' }
             },
             {
+                path: 'judgements',
+                name: 'admin-judgements',
+                component: () => import('@/views/admin/panels/AdminJudgementPanel.vue'),
+                meta: { activeMenu: 'admin', title: '陶片管理' }
+            },
+            {
                 path: 'ops',
                 name: 'admin-ops',
                 component: () => import('@/views/admin/panels/AdminOpsPanel.vue'),

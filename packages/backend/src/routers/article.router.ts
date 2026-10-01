@@ -20,7 +20,7 @@ async function getViewableArticle(
     articleId: string,
     allowDeletedForAdmin: boolean = false
 ): Promise<Article | null> {
-    const article = await ArticleService.getArticleByIdWithAuthorWithoutCache(articleId);
+    const article = await ArticleService.getArticleByIdWithoutCache(articleId);
     if (!article) {
         ctx.fail(404, 'Article not found');
         return null;

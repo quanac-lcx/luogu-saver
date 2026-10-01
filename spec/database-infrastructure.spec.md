@@ -113,17 +113,20 @@ Behavior:
 5. If key deletion succeeds, log deleted keys at debug level.
 6. If key deletion throws, log the error and still return the original method result.
 
+`evictCache(keys)` SHALL accept one logical Redis key or an array of logical Redis keys. It SHALL
+skip empty arrays, delete non-empty keys in one Redis `del` call, log successful deletion at debug
+level, and log deletion failures without throwing. `CacheEvict` SHALL use this operation.
+
+`CacheEvict` waits for the decorated method, not for a transaction owned by its caller.
+Article-history writes performed with an externally supplied transaction manager SHALL leave
+post-commit cache eviction to the operation that owns and awaits that transaction.
+
 ## 8. Repository Helper
 
 `getServiceRepository(entity, manager?)` SHALL return `manager.getRepository(entity)` when `manager` exists; otherwise it SHALL return `entity.getRepository()`.
 
-`createServiceEntity(entity, data, manager?)` SHALL create an entity through `getServiceRepository`.
-
-`findOneServiceEntity(entity, options, manager?)` SHALL call `findOne(options)` through `getServiceRepository`.
-
-`findServiceEntities(entity, options, manager?)` SHALL call `find(options)` through `getServiceRepository`.
-
-`saveServiceEntity(entity, value, manager?)` SHALL call `save(value)` through `getServiceRepository`.
+Callers SHALL use the returned TypeORM repository directly for create, find, save, and other
+repository operations. The helper module SHALL NOT export separate CRUD forwarding functions.
 
 ## 9. Duplicate Key Helpers
 
@@ -182,6 +185,9 @@ wrapped in `driverError`.
 9. Update the row with `options.incomingData`, `id`, `content`, and `contentHash`.
 10. Merge `options.defaults` only into inserted rows.
 11. Return `{ skipped: false, entity }` after an insert or update.
+
+Every successful return SHALL contain a non-null `entity`. If the existing row disappears before
+the locked read completes, the helper SHALL throw instead of returning a null entity.
 
 The helper SHALL NOT issue `SELECT ... FOR UPDATE` for a missing row. Concurrent creation of the
 same ID SHALL resolve as one insert followed by the existing-row path, not as symmetric gap-lock

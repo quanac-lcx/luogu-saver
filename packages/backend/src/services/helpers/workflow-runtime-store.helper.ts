@@ -1,26 +1,19 @@
 import { Task as TaskEntity } from '@/entities/task';
 import { Workflow } from '@/entities/workflow';
-import { getQueueByName } from '@/lib/queue-factory';
 import { logger } from '@/lib/logger';
 import { redisClient } from '@/lib/redis';
 import { QUEUE_NAMES } from '@/shared/constants';
 import { CommonTask, TaskStatus, TaskType } from '@/shared/task';
 import { getServiceRepository } from '@/services/helpers/repository.helper';
-import { getRandomString } from '@/utils/string';
 import { TaskDefinition, WorkflowDefinition } from '@/utils/flow-validator';
 
-interface FlowTask extends TaskDefinition {
-    track?: boolean;
-    type?: string;
-}
-
-export type RuntimeWorkflowTask = CommonTask & {
+type RuntimeWorkflowTask = CommonTask & {
     priority: number;
 };
 
 type RuntimeBuildOptions = {
     completedTaskNames?: Set<string>;
-    taskResults?: Record<string, any>;
+    taskResults?: Record<string, unknown>;
 };
 
 type RuntimePlan = {
@@ -30,29 +23,7 @@ type RuntimePlan = {
     entryPointIds: string[];
 };
 
-const TERMINAL_WORKFLOW_STATUSES = new Set(['completed', 'failed', 'expired']);
-const TERMINAL_TASK_STATUSES = new Set([TaskStatus.COMPLETED, TaskStatus.FAILED]);
-
-export class WorkflowHelper {
-    static createTaskIds(definition: WorkflowDefinition): Record<string, string> {
-        return Object.fromEntries(definition.tasks.map(task => [task.name, getRandomString(16)]));
-    }
-
-    static pickTaskIds(
-        taskIds: Record<string, string>,
-        taskNames: string[]
-    ): Record<string, string> {
-        return Object.fromEntries(taskNames.map(name => [name, taskIds[name]]));
-    }
-
-    static resolveQueueName(task: FlowTask): string {
-        const queueName = task.queueName || QUEUE_NAMES[task.data?.type as TaskType];
-        if (!queueName) {
-            throw new Error(`No queue name defined for workflow task: ${task.name}`);
-        }
-        return queueName;
-    }
-
+export class WorkflowRuntimeStore {
     static async initializeRuntime(
         definition: WorkflowDefinition,
         workflowId: string,
@@ -121,13 +92,15 @@ export class WorkflowHelper {
         }
         await multi.exec();
 
-        const reportTaskIds = this.pickTaskIds(
-            taskIds,
-            definition.tasks.filter(task => task.report === true).map(task => task.name)
+        const reportTaskIds = Object.fromEntries(
+            definition.tasks
+                .filter(task => task.report === true)
+                .map(task => [task.name, taskIds[task.name]])
         );
-        const trackTaskIds = this.pickTaskIds(
-            taskIds,
-            definition.tasks.filter(task => task.track === true).map(task => task.name)
+        const trackTaskIds = Object.fromEntries(
+            definition.tasks
+                .filter(task => task.track === true)
+                .map(task => [task.name, taskIds[task.name]])
         );
         const entryPointIds = definition.tasks
             .filter(task => !task.fathers || task.fathers.length === 0)
@@ -152,86 +125,6 @@ export class WorkflowHelper {
         };
     }
 
-    static async dispatchEntryPoints(entrypointIds: string[]) {
-        logger.info({ entrypointIds }, 'Dispatching workflow entrypoint tasks');
-        await Promise.all(entrypointIds.map(id => this.dispatchTaskById(id, 'entrypoint')));
-    }
-
-    static async dispatchTaskById(taskId: string, reason = 'ready') {
-        const runtimeTask = await this.getRuntimeTask(taskId);
-        const taskRow = await getServiceRepository<TaskEntity>(TaskEntity).findOne({
-            where: { id: taskId },
-            select: ['id', 'status']
-        });
-        if (!taskRow) {
-            logger.warn(
-                {
-                    workflowId: runtimeTask.workflowId,
-                    taskId,
-                    taskName: runtimeTask.taskName,
-                    reason
-                },
-                'Workflow task dispatch skipped because task row is missing'
-            );
-            return;
-        }
-        if (TERMINAL_TASK_STATUSES.has(taskRow.status)) {
-            logger.debug(
-                {
-                    workflowId: runtimeTask.workflowId,
-                    taskId,
-                    taskName: runtimeTask.taskName,
-                    status: taskRow.status,
-                    reason
-                },
-                'Workflow task dispatch skipped because task row is terminal'
-            );
-            return;
-        }
-
-        if (runtimeTask.workflowId) {
-            const workflow = await getServiceRepository<Workflow>(Workflow).findOne({
-                where: { id: runtimeTask.workflowId },
-                select: ['id', 'status']
-            });
-            if (!workflow || TERMINAL_WORKFLOW_STATUSES.has(workflow.status)) {
-                logger.debug(
-                    {
-                        workflowId: runtimeTask.workflowId,
-                        taskId,
-                        taskName: runtimeTask.taskName,
-                        workflowStatus: workflow?.status || null,
-                        reason
-                    },
-                    'Workflow task dispatch skipped because workflow is unavailable or terminal'
-                );
-                return;
-            }
-        }
-
-        const queueName = QUEUE_NAMES[runtimeTask.type];
-        if (!queueName) throw new Error(`No queue name defined for workflow task ID ${taskId}`);
-
-        const queueWrapper = getQueueByName(queueName);
-        const { priority, ...jobData } = runtimeTask;
-        logger.info(
-            {
-                workflowId: runtimeTask.workflowId,
-                taskId: runtimeTask.id,
-                taskName: runtimeTask.taskName,
-                type: runtimeTask.type,
-                queueName,
-                priority,
-                reason
-            },
-            'Dispatching workflow task'
-        );
-        await queueWrapper.add(runtimeTask.taskName || runtimeTask.type, jobData, {
-            jobId: runtimeTask.id,
-            priority
-        });
-    }
-
     static async getFatherResults(task: CommonTask) {
         const fatherIds = task.fatherIds || {};
         const entries = Object.entries(fatherIds);
@@ -250,7 +143,7 @@ export class WorkflowHelper {
 
         const resultKeys = entries.map(([, taskId]) => this.taskResultKey(taskId));
         const redisResults = await redisClient.mget(resultKeys);
-        const result: Record<string, any> = {};
+        const result: Record<string, unknown> = {};
         let redisHitCount = 0;
         let dbHitCount = 0;
         const missingFatherNames: string[] = [];
@@ -291,74 +184,16 @@ export class WorkflowHelper {
         return result;
     }
 
-    static async storeTaskResult(taskId: string, returnvalue: any) {
-        await redisClient.set(
-            this.taskResultKey(taskId),
-            JSON.stringify(this.unwrapStoredResult(returnvalue))
-        );
+    static async storeTaskResult(taskId: string, returnvalue: unknown) {
+        const result = this.unwrapStoredResult(returnvalue);
+        await redisClient.set(this.taskResultKey(taskId), JSON.stringify(result));
         logger.debug(
             {
                 taskId,
-                resultKeys: this.getResultKeys(this.unwrapStoredResult(returnvalue))
+                resultKeys: this.getResultKeys(result)
             },
             'Stored workflow task result in runtime cache'
         );
-    }
-
-    static async releaseDescendants(taskId: string) {
-        const runtimeTask = await this.getRuntimeTask(taskId);
-        const releaseResult = await redisClient.set(this.taskReleasedKey(taskId), '1', 'NX');
-        if (releaseResult !== 'OK') {
-            logger.debug(
-                {
-                    workflowId: runtimeTask.workflowId,
-                    taskId,
-                    taskName: runtimeTask.taskName
-                },
-                'Workflow task descendants already released'
-            );
-            return [];
-        }
-
-        const descendantIds = await this.getDescendantIds(taskId);
-        const dispatchedTaskIds: string[] = [];
-        const descendantCounters: Array<{ taskId: string; remaining: number }> = [];
-
-        for (const descendantId of descendantIds) {
-            const remaining = await redisClient.decr(this.taskCounterKey(descendantId));
-            descendantCounters.push({ taskId: descendantId, remaining });
-            if (remaining <= 0) {
-                if (remaining < 0) await redisClient.set(this.taskCounterKey(descendantId), '0');
-                if (await this.areFathersCompleted(descendantId)) {
-                    await this.dispatchTaskById(descendantId, 'father-counter-zero');
-                    dispatchedTaskIds.push(descendantId);
-                } else {
-                    logger.debug(
-                        {
-                            workflowId: runtimeTask.workflowId,
-                            taskId,
-                            taskName: runtimeTask.taskName,
-                            descendantId
-                        },
-                        'Workflow descendant counter reached zero but fathers are not all completed'
-                    );
-                }
-            }
-        }
-
-        logger.info(
-            {
-                workflowId: runtimeTask.workflowId,
-                taskId,
-                taskName: runtimeTask.taskName,
-                descendantIds,
-                descendantCounters,
-                dispatchedTaskIds
-            },
-            'Released workflow task descendants'
-        );
-
-        return dispatchedTaskIds;
     }
 
     static async rebuildRuntimeFromRows(workflow: Workflow, taskRows: TaskEntity[]) {
@@ -412,93 +247,6 @@ export class WorkflowHelper {
         return plan;
     }
 
-    static async dispatchReadyTasksForWorkflow(workflow: Workflow, taskRows: TaskEntity[]) {
-        if (TERMINAL_WORKFLOW_STATUSES.has(workflow.status)) return [];
-
-        logger.info(
-            {
-                workflowId: workflow.id,
-                status: workflow.status,
-                taskCount: taskRows.length,
-                statusCounts: this.countTaskStatuses(taskRows)
-            },
-            'Scanning workflow for ready tasks'
-        );
-
-        const taskByName = new Map(taskRows.map(task => [task.taskName, task]));
-        const dispatchedTaskIds: string[] = [];
-
-        for (const taskDef of (workflow.definition as WorkflowDefinition).tasks) {
-            const taskRow = taskByName.get(taskDef.name);
-            if (!taskRow) {
-                logger.warn(
-                    {
-                        workflowId: workflow.id,
-                        taskName: taskDef.name
-                    },
-                    'Workflow ready-task scan skipped task because task row is missing'
-                );
-                continue;
-            }
-            if (TERMINAL_TASK_STATUSES.has(taskRow.status)) {
-                logger.debug(
-                    {
-                        workflowId: workflow.id,
-                        taskId: taskRow.id,
-                        taskName: taskDef.name,
-                        status: taskRow.status
-                    },
-                    'Workflow ready-task scan skipped terminal task'
-                );
-                continue;
-            }
-            if (!(await this.areTaskDefFathersCompleted(taskDef, taskByName))) {
-                logger.debug(
-                    {
-                        workflowId: workflow.id,
-                        taskId: taskRow.id,
-                        taskName: taskDef.name,
-                        fathers: taskDef.fathers || []
-                    },
-                    'Workflow ready-task scan skipped task with incomplete fathers'
-                );
-                continue;
-            }
-
-            const runtimeTask = await this.getRuntimeTask(taskRow.id);
-            const queueName = QUEUE_NAMES[runtimeTask.type];
-            const queueWrapper = getQueueByName(queueName);
-            const existingJob = await queueWrapper.getJob(taskRow.id);
-            const existingState = await existingJob?.getState();
-            if (existingState && existingState !== 'completed' && existingState !== 'failed') {
-                logger.debug(
-                    {
-                        workflowId: workflow.id,
-                        taskId: taskRow.id,
-                        taskName: taskDef.name,
-                        queueName,
-                        existingState
-                    },
-                    'Workflow ready-task scan skipped task with existing non-terminal job'
-                );
-                continue;
-            }
-
-            await this.dispatchTaskById(taskRow.id, 'recovery-ready');
-            dispatchedTaskIds.push(taskRow.id);
-        }
-
-        logger.info(
-            {
-                workflowId: workflow.id,
-                dispatchedTaskIds
-            },
-            'Workflow ready-task scan completed'
-        );
-
-        return dispatchedTaskIds;
-    }
-
     static async cleanupRuntime(taskIds: string[]) {
         if (taskIds.length === 0) return;
 
@@ -523,6 +271,22 @@ export class WorkflowHelper {
         return JSON.parse(taskDefStr) as RuntimeWorkflowTask;
     }
 
+    static async claimDescendantRelease(taskId: string): Promise<boolean> {
+        return (await redisClient.set(this.taskReleasedKey(taskId), '1', 'NX')) === 'OK';
+    }
+
+    static async getDescendantIds(taskId: string): Promise<string[]> {
+        const descendantIdsStr = await redisClient.get(this.taskDescendantsKey(taskId));
+        if (!descendantIdsStr) return [];
+        return JSON.parse(descendantIdsStr) as string[];
+    }
+
+    static async decrementFatherCounter(taskId: string): Promise<number> {
+        const remaining = await redisClient.decr(this.taskCounterKey(taskId));
+        if (remaining < 0) await redisClient.set(this.taskCounterKey(taskId), '0');
+        return remaining;
+    }
+
     private static buildDescendants(
         definition: WorkflowDefinition,
         taskIds: Record<string, string>
@@ -542,7 +306,7 @@ export class WorkflowHelper {
     }
 
     private static toRuntimeTask(
-        task: FlowTask,
+        task: TaskDefinition,
         workflowId: string,
         taskIds: Record<string, string>,
         priority: number
@@ -568,34 +332,7 @@ export class WorkflowHelper {
         };
     }
 
-    private static async getDescendantIds(taskId: string): Promise<string[]> {
-        const descendantIdsStr = await redisClient.get(this.taskDescendantsKey(taskId));
-        if (!descendantIdsStr) return [];
-        return JSON.parse(descendantIdsStr) as string[];
-    }
-
-    private static async areFathersCompleted(taskId: string) {
-        const runtimeTask = await this.getRuntimeTask(taskId);
-        const fatherIds = Object.values(runtimeTask.fatherIds || {});
-        if (fatherIds.length === 0) return true;
-
-        const fatherRows = await getServiceRepository<TaskEntity>(TaskEntity).findByIds(fatherIds);
-        const statusById = new Map(fatherRows.map(task => [task.id, task.status]));
-        return fatherIds.every(fatherId => statusById.get(fatherId) === TaskStatus.COMPLETED);
-    }
-
-    private static async areTaskDefFathersCompleted(
-        taskDef: TaskDefinition,
-        taskByName: Map<string | null, TaskEntity>
-    ) {
-        for (const fatherName of taskDef.fathers || []) {
-            const fatherTask = taskByName.get(fatherName);
-            if (!fatherTask || fatherTask.status !== TaskStatus.COMPLETED) return false;
-        }
-        return true;
-    }
-
-    private static getResultKeys(value: any) {
+    private static getResultKeys(value: unknown) {
         if (!value || typeof value !== 'object') return [];
         return Object.keys(value);
     }
@@ -628,7 +365,7 @@ export class WorkflowHelper {
         }
     }
 
-    private static unwrapStoredResult(value: any) {
+    private static unwrapStoredResult(value: unknown) {
         if (value && typeof value === 'object' && '__result' in value) return value.__result;
         if (value && typeof value === 'object' && 'result' in value && 'name' in value) {
             return value.result;

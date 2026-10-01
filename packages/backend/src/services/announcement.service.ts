@@ -1,5 +1,5 @@
 import { Announcement } from '@/entities/announcement';
-import { findOneServiceEntity, saveServiceEntity } from '@/services/helpers/repository.helper';
+import { getServiceRepository } from '@/services/helpers/repository.helper';
 
 export type AnnouncementInput = {
     title?: unknown;
@@ -46,12 +46,12 @@ export class AnnouncementService {
         announcement.content = String(input.content ?? '');
         announcement.enabled = this.normalizeEnabled(input.enabled);
 
-        await saveServiceEntity<Announcement>(Announcement, announcement);
+        await getServiceRepository<Announcement>(Announcement).save(announcement);
         return this.toResponse(announcement, true);
     }
 
     private static async getStoredAnnouncement(): Promise<Announcement | null> {
-        return await findOneServiceEntity<Announcement>(Announcement, {
+        return await getServiceRepository<Announcement>(Announcement).findOne({
             where: { id: ANNOUNCEMENT_ID }
         });
     }

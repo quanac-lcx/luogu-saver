@@ -128,6 +128,9 @@ Postconditions:
 Each PasteService read/write method that accepts an optional `manager` argument SHALL use that `EntityManager` for database access when it is provided.
 When a cached read method receives a manager argument, it SHALL bypass Redis cache reads and writes.
 
+PasteService SHALL perform repository operations directly through
+`getServiceRepository(Paste, manager?)`; it SHALL NOT use separate CRUD forwarding helpers.
+
 ### 4.2 Method Specifications
 
 #### getPasteById(id: string): Promise<Paste | null>
@@ -167,6 +170,11 @@ specification: `t` equals `data.time` when that value is an integer satisfying
 7. When step 2 skips and `t` is not `null`, execute exactly one additional statement inside the same transaction: `UPDATE paste SET publish_time = :t WHERE id = :id AND publish_time IS NULL`. It SHALL leave `updated_at` unchanged and SHALL affect zero rows once `publish_time` is set.
 8. After the method returns successfully, evict Redis keys `paste:${data.id}` and `paste:count`,
    including when the result has `skipped=true`.
+9. A successful hashed-content save SHALL always provide a non-null paste entity. Paste unchanged
+   detection SHALL compare only the content hash unless `forceUpdate=true`; it SHALL NOT compare
+   article titles or create article-history versions.
+10. Redis eviction failures SHALL be logged without changing the successful save result. A failed
+    transaction SHALL roll back the paste write and SHALL NOT evict the paste or count cache.
 
 ## 5. Raw Markdown Delivery
 

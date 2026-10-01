@@ -9,11 +9,7 @@ import { TaskService } from '@/services/task.service';
 import { ArticleDiscoveryBroadcaster } from '@/services/article-discovery-broadcaster.service';
 import { DiscoverTarget, TaskType } from '@/shared/task';
 import { isDuplicateKeyError } from '@/utils/db-errors';
-import {
-    findOneServiceEntity,
-    getServiceRepository,
-    saveServiceEntity
-} from '@/services/helpers/repository.helper';
+import { getServiceRepository } from '@/services/helpers/repository.helper';
 import { normalizeErrorReason } from '@/utils/error-reason';
 import { logger } from '@/lib/logger';
 
@@ -50,8 +46,7 @@ export class DiscoveryService {
         const forceUpdate = normalizeBool(input.forceUpdate, false);
         const seedUrl = `https://www.luogu.com/user/${uid}/article`;
 
-        const run = await saveServiceEntity<DiscoveryRun>(
-            DiscoveryRun,
+        const run = await getServiceRepository<DiscoveryRun>(DiscoveryRun).save(
             DiscoveryRun.create({
                 seedUrl,
                 status: DiscoveryRunStatus.ACTIVE,
@@ -85,7 +80,7 @@ export class DiscoveryService {
     }
 
     static async getRunById(runId: string) {
-        const run = await findOneServiceEntity<DiscoveryRun>(DiscoveryRun, {
+        const run = await getServiceRepository<DiscoveryRun>(DiscoveryRun).findOne({
             where: { id: runId }
         });
         return this.normalizeRunForOutput(run);
@@ -175,8 +170,7 @@ export class DiscoveryService {
 
         let row: DiscoveredArticle;
         try {
-            row = await saveServiceEntity<DiscoveredArticle>(
-                DiscoveredArticle,
+            row = await getServiceRepository<DiscoveredArticle>(DiscoveredArticle).save(
                 DiscoveredArticle.create({
                     runId: input.runId,
                     articleId: input.articleId,

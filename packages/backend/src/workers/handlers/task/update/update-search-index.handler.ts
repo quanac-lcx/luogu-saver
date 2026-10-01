@@ -1,7 +1,6 @@
 import { UpdateTask } from '@/shared/task';
 import { ChildrenValues, TaskCommonResult, TaskHandler, WorkflowResult } from '@/workers/types';
 import { Job, UnrecoverableError } from 'bullmq';
-import { ArticleService } from '@/services/article.service';
 import { SearchService } from '@/services/search.service';
 import { shouldSkip } from '@/workers/helpers/common.helper';
 
@@ -24,13 +23,11 @@ export class UpdateSearchIndexHandler implements TaskHandler<UpdateTask> {
         }
 
         const articleId = task.payload.targetId;
-        const article = await ArticleService.getArticleByIdWithAuthorWithoutCache(articleId);
+        const { exists, indexed } = await SearchService.upsertArticleById(articleId);
 
-        if (!article) {
+        if (!exists) {
             throw new UnrecoverableError(`Article with id ${articleId} not found for search index`);
         }
-
-        const indexed = await SearchService.upsertArticle(article);
 
         return {
             skipNextStep: false,

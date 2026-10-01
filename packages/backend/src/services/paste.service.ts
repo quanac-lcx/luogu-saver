@@ -2,11 +2,7 @@ import { Cacheable } from '@/decorators/cacheable';
 import { Paste } from '@/entities/paste';
 import { CacheEvict } from '@/decorators/cache-evict';
 import { EntityManager } from 'typeorm';
-import {
-    findOneServiceEntity,
-    getServiceRepository,
-    saveServiceEntity
-} from '@/services/helpers/repository.helper';
+import { getServiceRepository } from '@/services/helpers/repository.helper';
 import { saveHashedContent } from '@/services/helpers/hashed-content.helper';
 import { backfillPublishTime, normalizePublishTime } from '@/services/helpers/publish-time.helper';
 import type { Paste as LuoguPaste } from '@/types/luogu-api';
@@ -15,11 +11,10 @@ import { retryOnTransactionConflict } from '@/utils/db-errors';
 export class PasteService {
     @Cacheable(600, id => `paste:${id}`, Paste)
     static async getPasteById(id: string, manager?: EntityManager): Promise<Paste | null> {
-        return await findOneServiceEntity<Paste>(
-            Paste,
-            { where: { id }, relations: ['author'] },
-            manager
-        );
+        return await getServiceRepository<Paste>(Paste, manager).findOne({
+            where: { id },
+            relations: ['author']
+        });
     }
 
     @Cacheable(600, () => 'paste:count')
@@ -35,7 +30,7 @@ export class PasteService {
 
     @CacheEvict((paste: Paste) => [`paste:${paste.id}`, `paste:count`])
     static async savePaste(paste: Paste, manager?: EntityManager): Promise<Paste> {
-        return await saveServiceEntity<Paste>(Paste, paste, manager);
+        return await getServiceRepository<Paste>(Paste, manager).save(paste);
     }
 
     @CacheEvict((paste: LuoguPaste) => [`paste:${paste.id}`, `paste:count`])
@@ -63,7 +58,7 @@ export class PasteService {
                     }
                 });
 
-                if (saveResult.skipped || !saveResult.entity) {
+                if (saveResult.skipped) {
                     await backfillPublishTime(manager, Paste, data.id, data.time);
                     return { skipped: true, content: '' };
                 }

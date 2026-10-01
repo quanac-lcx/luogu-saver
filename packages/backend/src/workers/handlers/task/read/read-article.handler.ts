@@ -10,7 +10,7 @@ export class ReadArticleHandler implements TaskHandler<ReadTask> {
         const articleId = task.payload.targetId;
         if (!articleId) throw new UnrecoverableError('Article read task requires targetId');
 
-        const article = await ArticleService.getArticleByIdWithAuthorWithoutCache(articleId);
+        const article = await ArticleService.getArticleByIdWithoutCache(articleId);
         if (!article) throw new UnrecoverableError(`Article ${articleId} not found`);
 
         return {

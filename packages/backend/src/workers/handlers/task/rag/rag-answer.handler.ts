@@ -257,7 +257,7 @@ ${context.text}
         if (!id) return this.toolError('read_article', args, 'id is required');
 
         const maxChars = clampInt(args.maxChars, DEFAULT_READ_CHARS, 500, 3000);
-        const article = await ArticleService.getArticleByIdWithAuthorWithoutCache(id);
+        const article = await ArticleService.getArticleByIdWithoutCache(id);
         if (!article || article.deleted) {
             return this.toolError('read_article', { id, maxChars }, 'Article not found');
         }

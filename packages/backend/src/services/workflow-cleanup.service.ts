@@ -4,7 +4,7 @@ import { Workflow } from '@/entities/workflow';
 import { WorkflowDeduplication } from '@/entities/workflow-deduplication';
 import { logger } from '@/lib/logger';
 import { getServiceRepository } from '@/services/helpers/repository.helper';
-import { WorkflowHelper } from '@/services/helpers/workflow.helper';
+import { WorkflowRuntimeStore } from '@/services/helpers/workflow-runtime-store.helper';
 import { TaskStatus } from '@/shared/task';
 import { In, IsNull, LessThan } from 'typeorm';
 
@@ -83,7 +83,7 @@ export class WorkflowCleanupService {
             select: ['id']
         });
 
-        await WorkflowHelper.cleanupRuntime(taskRows.map(task => task.id));
+        await WorkflowRuntimeStore.cleanupRuntime(taskRows.map(task => task.id));
     }
 
     private static async cleanupTerminalWorkflows() {
@@ -121,7 +121,7 @@ export class WorkflowCleanupService {
         });
         const taskIds = taskRows.map(task => task.id);
 
-        await WorkflowHelper.cleanupRuntime(taskIds);
+        await WorkflowRuntimeStore.cleanupRuntime(taskIds);
 
         await Workflow.transaction(async manager => {
             await getServiceRepository<WorkflowDeduplication>(

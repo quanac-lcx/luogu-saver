@@ -4,13 +4,16 @@ import { WorkflowDeduplication } from '@/entities/workflow-deduplication';
 import { getQueueByName } from '@/lib/queue-factory';
 import { WORKFLOW_TEMPLATES } from '@/lib/workflow-templates';
 import { logger } from '@/lib/logger';
-import { WorkflowHelper } from '@/services/helpers/workflow.helper';
-import { findOneServiceEntity, getServiceRepository } from '@/services/helpers/repository.helper';
-import { TaskStatus } from '@/shared/task';
+import { WorkflowRuntimeStore } from '@/services/helpers/workflow-runtime-store.helper';
+import { WorkflowScheduler } from '@/services/workflow-scheduler.service';
+import { getServiceRepository } from '@/services/helpers/repository.helper';
+import { QUEUE_NAMES } from '@/shared/constants';
+import { TaskStatus, TaskType } from '@/shared/task';
 import { validateFlowStructure, WorkflowDefinition } from '@/utils/flow-validator';
 import { normalizeErrorReason } from '@/utils/error-reason';
 import { randomUUID } from 'node:crypto';
 import { isDuplicateKeyError } from '@/utils/db-errors';
+import { getRandomString } from '@/utils/string';
 
 type WorkflowCreateOptions = {
     priority?: number;
@@ -34,7 +37,9 @@ export class WorkflowService {
 
         const priority = options.priority ?? USER_WORKFLOW_PRIORITY;
         const workflowId = randomUUID();
-        const taskIds = WorkflowHelper.createTaskIds(definition);
+        const taskIds = Object.fromEntries(
+            definition.tasks.map(task => [task.name, getRandomString(16)])
+        );
 
         logger.info(
             {
@@ -91,13 +96,13 @@ export class WorkflowService {
                 'Workflow database rows created'
             );
 
-            const runtimePlan = await WorkflowHelper.initializeRuntime(
+            const runtimePlan = await WorkflowRuntimeStore.initializeRuntime(
                 definition,
                 workflowId,
                 taskIds,
                 priority
             );
-            await WorkflowHelper.dispatchEntryPoints(runtimePlan.entryPointIds);
+            await WorkflowScheduler.dispatchEntryPoints(runtimePlan.entryPointIds);
 
             logger.info(
                 {
@@ -171,7 +176,7 @@ export class WorkflowService {
     }
 
     static async getWorkflowById(id: string) {
-        const workflow = await findOneServiceEntity<Workflow>(Workflow, { where: { id } });
+        const workflow = await getServiceRepository<Workflow>(Workflow).findOne({ where: { id } });
         if (!workflow) return null;
 
         const taskRows = await getServiceRepository<Task>(Task).find({
@@ -233,7 +238,7 @@ export class WorkflowService {
         ).findOne({ where: { key } });
         if (!claim) return null;
 
-        const workflow = await findOneServiceEntity<Workflow>(Workflow, {
+        const workflow = await getServiceRepository<Workflow>(Workflow).findOne({
             where: { id: claim.workflowId }
         });
         if (!workflow) {
@@ -260,13 +265,15 @@ export class WorkflowService {
         return {
             workflowId: workflow.id,
             taskIds,
-            reportTaskIds: WorkflowHelper.pickTaskIds(
-                taskIds,
-                definition.tasks.filter(task => task.report === true).map(task => task.name)
+            reportTaskIds: Object.fromEntries(
+                definition.tasks
+                    .filter(task => task.report === true)
+                    .map(task => [task.name, taskIds[task.name]])
             ),
-            trackTaskIds: WorkflowHelper.pickTaskIds(
-                taskIds,
-                definition.tasks.filter(task => task.track === true).map(task => task.name)
+            trackTaskIds: Object.fromEntries(
+                definition.tasks
+                    .filter(task => task.track === true)
+                    .map(task => [task.name, taskIds[task.name]])
             ),
             deduplicated: true
         };
@@ -276,7 +283,10 @@ export class WorkflowService {
         const jobsByQueue = new Map<string, number>();
 
         for (const task of definition.tasks) {
-            const queueName = WorkflowHelper.resolveQueueName(task);
+            const queueName = task.queueName || QUEUE_NAMES[task.data?.type as TaskType];
+            if (!queueName) {
+                throw new Error(`No queue name defined for workflow task: ${task.name}`);
+            }
             jobsByQueue.set(queueName, (jobsByQueue.get(queueName) || 0) + 1);
         }
 
@@ -311,7 +321,7 @@ export class WorkflowService {
 
     private static async cleanupFailedCreate(workflowId: string, taskIds: string[]) {
         try {
-            await WorkflowHelper.cleanupRuntime(taskIds);
+            await WorkflowRuntimeStore.cleanupRuntime(taskIds);
             await getServiceRepository<WorkflowDeduplication>(WorkflowDeduplication).delete({
                 workflowId
             });

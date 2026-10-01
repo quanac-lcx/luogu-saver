@@ -130,15 +130,28 @@ Task `reindex-search` SHALL:
 
 ### 7.1 `update:search_index`
 
-1. Load the article by `targetId` with author relation.
-2. If the article does not exist, fail permanently.
-3. Before writing, read the current article row by ID without cache. Upsert one article search
-   document with `deleted=currentArticle.deleted`; a stale task input SHALL NOT override the current
-   database deletion state.
-4. After writing, read the article row again. If `deleted` changed during the Meilisearch write,
-   upsert the latest state before returning.
-5. Return `{ indexed: true, articleId }` when the upsert is executed.
-6. Return `{ indexed: false, articleId }` only when `meilisearch.enable=false`.
+1. If an upstream result has `skipNextStep=true`, return
+   `{ skipNextStep: true, data: { indexed: false, articleId: targetId } }` without loading an article
+   or writing to Meilisearch.
+2. Otherwise call `SearchService.upsertArticleById(targetId)` without a separate article lookup.
+3. If the service returns `exists=false`, fail permanently with
+   `Article with id {targetId} not found for search index`, including when search is disabled.
+4. Return `{ skipNextStep: false, data: { indexed, articleId: targetId } }` using the service's
+   `indexed` result.
+
+`SearchService.upsertArticleById(articleId)` SHALL return `{ exists: boolean, indexed: boolean }`:
+
+1. Read the authoritative article row with author relation through
+   `ArticleService.getArticleByIdWithoutCache(articleId)`.
+2. If no row exists, return `{ exists: false, indexed: false }` without writing to Meilisearch.
+3. If the row exists and search is disabled, return `{ exists: true, indexed: false }` without
+   writing to Meilisearch.
+4. When search is enabled, ensure the article index and upsert the authoritative article document,
+   including its current `deleted` value. Wait for the Meilisearch document addition task to finish.
+5. After writing, read the article row again without cache. If `deleted` changed during the write,
+   upsert the latest complete document and wait for that addition task to finish before returning.
+6. Return `{ exists: true, indexed: true }` after the enabled upsert and any deletion-state repair
+   complete. Provider or database errors SHALL propagate.
 
 ### 7.2 `update:search_reindex`
 
@@ -278,8 +291,9 @@ Load a paste by `payload.targetId` and return `{ id, content, text }`.
 
 For an article row `article`, runtime deletion-state synchronization SHALL:
 
-1. Call `SearchService.upsertArticle(article)`. The complete Meilisearch document SHALL be retained
-   and its `deleted` field SHALL equal `article.deleted`.
+1. Call `SearchService.upsertArticleById(article.id)`. The complete Meilisearch document SHALL be
+   retained and its `deleted` field SHALL follow the authoritative database state, including the
+   post-write repair specified in section 7.1.
 2. Call `EmbeddingService.updateArticleDeletionState(article.id, article.deleted)`.
 3. Load every existing Chroma vector whose metadata has `articleId=article.id`.
 4. Preserve every existing metadata field and set only `deleted=article.deleted`.

@@ -184,14 +184,13 @@ export class SearchService {
         return output;
     }
 
-    static async upsertArticle(article: Article): Promise<boolean> {
-        if (!this.enabled) return false;
+    static async upsertArticleById(
+        articleId: string
+    ): Promise<{ exists: boolean; indexed: boolean }> {
+        const currentArticle = await ArticleService.getArticleByIdWithoutCache(articleId);
+        if (!currentArticle) return { exists: false, indexed: false };
+        if (!this.enabled) return { exists: true, indexed: false };
         await this.ensureArticleIndex();
-
-        const currentArticle = await ArticleService.getArticleByIdWithAuthorWithoutCache(
-            article.id
-        );
-        if (!currentArticle) return false;
 
         const index = await this.getArticleIndex();
         await index
@@ -200,13 +199,13 @@ export class SearchService {
 
         // A deletion can commit while the Meilisearch task is queued. Re-read the flag and
         // repair the document when that race occurs.
-        const latestArticle = await ArticleService.getArticleByIdWithAuthorWithoutCache(article.id);
+        const latestArticle = await ArticleService.getArticleByIdWithoutCache(articleId);
         if (latestArticle && latestArticle.deleted !== currentArticle.deleted) {
             await index
                 .addDocuments([this.toDocument(latestArticle)], { primaryKey: 'id' })
                 .waitTask({ timeout: config.network.timeout, interval: 100 });
         }
-        return true;
+        return { exists: true, indexed: true };
     }
 
     static async reindexArticles(batchSize: number = 100): Promise<number> {

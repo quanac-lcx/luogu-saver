@@ -1,71 +1,40 @@
 import { ArticleHistory } from '@/entities/article-history';
-import { CacheEvict } from '@/decorators/cache-evict';
 import { Cacheable } from '@/decorators/cacheable';
-import { Article } from '@/entities/article'; // Import Article for locking
+import { Article } from '@/entities/article';
 import { EntityManager } from 'typeorm';
-import {
-    createServiceEntity,
-    findOneServiceEntity,
-    findServiceEntities,
-    saveServiceEntity
-} from '@/services/helpers/repository.helper';
+import { getServiceRepository } from '@/services/helpers/repository.helper';
 
 export class ArticleHistoryService {
-    /*
-     * Push a new version of the article content to the history
-     *
-     * Will evict the cache for the article history
-     *
-     * @param articleId - The ID of the article
-     * @param title - The title of the article
-     * @param content - The content of the article
+    /**
+     * Append a history version within the caller-owned transaction.
+     * The transaction owner must evict the history cache after committing.
      */
-    @CacheEvict((articleId: string) => `article_history:${articleId}`)
     public static async pushNewVersion(
         articleId: string,
         title: string,
         content: string,
-        transactionalEntityManager?: EntityManager
+        manager: EntityManager
     ): Promise<void> {
-        const run = async (manager: EntityManager) => {
-            await findOneServiceEntity<Article>(
-                Article,
-                {
-                    where: { id: articleId },
-                    select: ['id'],
-                    lock: { mode: 'pessimistic_write' }
-                },
-                manager
-            );
+        await getServiceRepository<Article>(Article, manager).findOne({
+            where: { id: articleId },
+            select: ['id'],
+            lock: { mode: 'pessimistic_write' }
+        });
 
-            const latestHistory = await findOneServiceEntity<ArticleHistory>(
-                ArticleHistory,
-                {
-                    where: { articleId },
-                    order: { version: 'DESC' },
-                    select: ['version']
-                },
-                manager
-            );
-            const newVersion = latestHistory ? latestHistory.version + 1 : 1;
-            const newHistory = createServiceEntity<ArticleHistory>(
-                ArticleHistory,
-                {
-                    articleId,
-                    version: newVersion,
-                    title,
-                    content
-                },
-                manager
-            );
-            await saveServiceEntity<ArticleHistory>(ArticleHistory, newHistory, manager);
-        };
-
-        if (transactionalEntityManager) {
-            await run(transactionalEntityManager);
-        } else {
-            await ArticleHistory.transaction(run);
-        }
+        const repository = getServiceRepository<ArticleHistory>(ArticleHistory, manager);
+        const latestHistory = await repository.findOne({
+            where: { articleId },
+            order: { version: 'DESC' },
+            select: ['version']
+        });
+        const newVersion = latestHistory ? latestHistory.version + 1 : 1;
+        const newHistory = repository.create({
+            articleId,
+            version: newVersion,
+            title,
+            content
+        });
+        await repository.save(newHistory);
     }
 
     /*
@@ -81,13 +50,9 @@ export class ArticleHistoryService {
         articleId: string,
         manager?: EntityManager
     ): Promise<ArticleHistory[]> {
-        return await findServiceEntities<ArticleHistory>(
-            ArticleHistory,
-            {
-                where: { articleId },
-                order: { version: 'ASC' }
-            },
-            manager
-        );
+        return await getServiceRepository<ArticleHistory>(ArticleHistory, manager).find({
+            where: { articleId },
+            order: { version: 'ASC' }
+        });
     }
 }

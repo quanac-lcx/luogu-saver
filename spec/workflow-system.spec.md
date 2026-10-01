@@ -10,6 +10,15 @@ The `fathers` field defines task readiness and upstream data visibility. A task 
 
 Redis stores workflow runtime keys for dispatch acceleration. The database is the durable source of truth. For every non-terminal workflow, the backend MUST be able to reconstruct Redis runtime keys from `workflow` and `task` rows after a process restart.
 
+### 1.1 Responsibility Boundaries
+
+1. `WorkflowService` SHALL own workflow definition validation, task ID generation, queue capacity checks, transactional SQL creation, deduplication descriptors, and SQL-backed workflow queries.
+2. `WorkflowRuntimeStore` SHALL own Redis runtime key generation, initialization and reconstruction from SQL rows, reads, writes, deletion, release-once markers, father counters, and upstream result loading with SQL fallback. Graph construction and stored-result normalization SHALL remain private to this store.
+3. `WorkflowScheduler` SHALL own task dispatch, SQL-backed readiness checks, descendant release, and ready-task dispatch during recovery. `FlowManager` SHALL retain worker completion/failure synchronization, tracked SQL results, terminal workflow status writes, and batched restart recovery. Recovery SHALL call the same completion/failure synchronization methods as worker events.
+4. `WorkflowScheduler` MAY call `WorkflowRuntimeStore`. `WorkflowRuntimeStore` MUST NOT import the scheduler, queue factory, or worker orchestration modules.
+5. `WorkflowCleanupService` SHALL delete runtime keys through `WorkflowRuntimeStore`. Task processors SHALL load father results through `WorkflowRuntimeStore`. `FlowManager` SHALL use the runtime store for result persistence and runtime reconstruction, and the scheduler for descendant release and ready-task dispatch.
+6. These boundaries SHALL use workflow-specific methods. They SHALL NOT introduce a generic orchestration framework or forwarding compatibility modules.
+
 ## 2. Workflow Entity
 
 Table name: `workflow`
@@ -444,7 +453,7 @@ Read task handlers SHALL be the only task handlers that load article or paste co
 
 ## 7. Runtime Redis Keys
 
-For each workflow task ID `taskId`, the scheduler MAY create these Redis keys:
+For each workflow task ID `taskId`, the runtime store MAY create these Redis keys:
 
 1. `workflow:task:def:{taskId}` stores the complete BullMQ job data and priority for the task.
 2. `workflow:task:counter:{taskId}` stores the number of incomplete father tasks.
@@ -453,6 +462,13 @@ For each workflow task ID `taskId`, the scheduler MAY create these Redis keys:
 5. `workflow:task:released:{taskId}` stores a marker that descendant counters were released for `taskId`.
 
 Runtime keys for active workflows SHALL NOT require a fixed expiration time. Runtime keys SHALL be deleted after the workflow reaches a terminal status. The scheduled workflow cleanup pass SHALL also delete runtime keys for terminal workflows before deleting SQL rows.
+
+Redis operation order SHALL remain:
+
+1. Initialization SHALL process tasks in definition order in one transaction pipeline. For each task, write definition, incomplete-father counter, and descendants in that order. For a completed task, write the release marker and then its normalized result when present; otherwise delete its release marker and result in that order.
+2. Descendant release SHALL claim the source task marker with `SET ... NX` before reading descendants. It SHALL decrement descendants in stored order. A negative counter SHALL be reset to zero before checking SQL father status and dispatching that descendant. An existing release marker SHALL prevent all decrements.
+3. Cleanup SHALL process task IDs in caller order in one transaction pipeline, deleting definition, counter, descendants, result, and release marker in that order for each task.
+4. Upstream result loading SHALL preserve `Object.entries(task.fatherIds)` order. A Redis result SHALL take precedence over SQL fallback. Stored results SHALL unwrap `__result` first, then `{ name, result }`, and otherwise remain unchanged.
 
 ## 8. Restart Recovery
 

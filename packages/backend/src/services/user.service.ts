@@ -2,12 +2,7 @@ import { Cacheable } from '@/decorators/cacheable';
 import { CacheEvict } from '@/decorators/cache-evict';
 import { User } from '@/entities/user';
 import { EntityManager } from 'typeorm';
-import {
-    createServiceEntity,
-    findOneServiceEntity,
-    getServiceRepository,
-    saveServiceEntity
-} from '@/services/helpers/repository.helper';
+import { getServiceRepository } from '@/services/helpers/repository.helper';
 import { PROFILE_TTL_MS, UserColor, UserPrize } from '@/shared/user';
 
 export interface SaveLuoguUserProfileInput {
@@ -32,7 +27,7 @@ export class UserService {
      */
     @Cacheable(600, id => `user:${id}`, User)
     static async getUserById(id: number, manager?: EntityManager): Promise<User | null> {
-        return await findOneServiceEntity<User>(User, { where: { id } }, manager);
+        return await getServiceRepository<User>(User, manager).findOne({ where: { id } });
     }
 
     static async getUserByIdWithoutCache(id: number): Promise<User | null> {
@@ -49,11 +44,11 @@ export class UserService {
      */
     @CacheEvict((user: User) => `user:${user.id}`)
     static async saveUser(user: User, manager?: EntityManager): Promise<User> {
-        return await saveServiceEntity<User>(User, user, manager);
+        return await getServiceRepository<User>(User, manager).save(user);
     }
 
     static createUser(data: Partial<User>, manager?: EntityManager): User {
-        return createServiceEntity<User>(User, data, manager);
+        return getServiceRepository<User>(User, manager).create(data);
     }
 
     /*

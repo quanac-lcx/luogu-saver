@@ -2,7 +2,7 @@ import { UpdateTask } from '@/shared/task';
 import { TaskCommonResult, TaskHandler, WorkflowResult } from '@/workers/types';
 import { ArticleService } from '@/services/article.service';
 import { SearchService } from '@/services/search.service';
-import { generateArticleSummary } from '@/workers/handlers/task/llm/summary.handler';
+import { ArticleSummaryService } from '@/services/article-summary.service';
 import { logger } from '@/lib/logger';
 import { runWithConcurrency } from '@/utils/concurrency';
 import { clampInt } from '@/utils/number';
@@ -19,16 +19,16 @@ export class UpdateArticleSummaryRebuildHandler implements TaskHandler<UpdateTas
         let afterId: string | null = null;
 
         while (true) {
-            const articles = await ArticleService.getArticlesForSummaryRebuild(afterId, batchSize);
+            const articles = await ArticleService.getArticlesForContentRebuild(afterId, batchSize);
             if (articles.length === 0) break;
             afterId = articles[articles.length - 1].id;
 
             await runWithConcurrency(articles, concurrency, async article => {
                 processed += 1;
                 try {
-                    article.summary = await generateArticleSummary(article.content);
+                    article.summary = await ArticleSummaryService.generate(article.content);
                     await ArticleService.saveArticle(article);
-                    await SearchService.upsertArticle(article);
+                    await SearchService.upsertArticleById(article.id);
                     updated += 1;
                 } catch (error) {
                     failedArticleIds.push(article.id);

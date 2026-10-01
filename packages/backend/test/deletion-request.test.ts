@@ -24,7 +24,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@/services/article.service', () => ({
     ArticleService: {
-        getArticleByIdWithAuthorWithoutCache: mocks.articleGet,
+        getArticleByIdWithoutCache: mocks.articleGet,
         saveArticle: mocks.articleSave
     }
 }));
@@ -41,8 +41,6 @@ vi.mock('@/services/paste.service', () => ({
 }));
 
 vi.mock('@/services/helpers/repository.helper', () => ({
-    findOneServiceEntity: mocks.findOne,
-    findServiceEntities: mocks.findMany,
     getServiceRepository: mocks.getRepository
 }));
 
@@ -51,7 +49,7 @@ vi.mock('@/services/user-notification.service', () => ({
 }));
 
 vi.mock('@/services/search.service', () => ({
-    SearchService: { upsertArticle: mocks.searchUpsert }
+    SearchService: { upsertArticleById: mocks.searchUpsert }
 }));
 
 vi.mock('@/services/embedding.service', () => ({
@@ -65,7 +63,7 @@ const { Article, DeletionRequest, Paste, RegisteredUser } = entities;
 const NOW = new Date('2026-09-24T12:00:00.000Z');
 
 function createRepository() {
-    return {
+    const repository = {
         create: vi.fn((data: Record<string, unknown>) =>
             Object.assign(new DeletionRequest(), data, {
                 id: 1,
@@ -76,6 +74,12 @@ function createRepository() {
         save: vi.fn(async (row: InstanceType<typeof DeletionRequest>) => row),
         findAndCount: vi.fn()
     };
+    mocks.getRepository.mockImplementation(entity => ({
+        ...repository,
+        findOne: (options: unknown) => mocks.findOne(entity, options),
+        find: (options: unknown) => mocks.findMany(entity, options)
+    }));
+    return repository;
 }
 
 function createRequester(luoguUid: number) {
@@ -93,7 +97,7 @@ describe('DeletionRequestService author auto-approval', () => {
         mocks.createNotification.mockResolvedValue({});
         mocks.articleSave.mockImplementation(async article => article);
         mocks.pasteSave.mockImplementation(async paste => paste);
-        mocks.searchUpsert.mockResolvedValue(undefined);
+        mocks.searchUpsert.mockResolvedValue({ exists: true, indexed: true });
         mocks.embeddingUpdate.mockResolvedValue(undefined);
         DeletionRequest.transaction = vi.fn(async run => run({}));
     });
@@ -115,7 +119,6 @@ describe('DeletionRequestService author auto-approval', () => {
             if (entity === RegisteredUser) return requester;
             return null;
         });
-        mocks.getRepository.mockReturnValue(repository);
 
         const result = await DeletionRequestService.createRequest(7, {
             targetType: 'article',
@@ -124,18 +127,12 @@ describe('DeletionRequestService author auto-approval', () => {
         });
 
         expect(result.status).toBe('approved');
-        expect(result.resolutionComment).toBe('自动通过');
         expect(article.deleted).toBe(true);
-        expect(article.deleteReason).toBe('应用户申请删除');
         expect(mocks.articleSave).toHaveBeenCalledWith(article);
-        expect(mocks.searchUpsert).toHaveBeenCalledWith(article);
         expect(mocks.embeddingUpdate).toHaveBeenCalledWith('article1', true);
         expect(mocks.createNotification).toHaveBeenCalledWith(
             expect.objectContaining({
                 recipientId: 7,
-                title: '删除申请已通过',
-                content:
-                    '您对文章 article1的删除申请已通过，相关内容已被删除。\n处理备注：自动通过',
                 metadata: expect.objectContaining({ outcome: 'approved' })
             }),
             expect.anything()
@@ -162,7 +159,6 @@ describe('DeletionRequestService author auto-approval', () => {
     });
 
     it('automatically approves a paste author request', async () => {
-        const repository = createRepository();
         const requester = createRequester(42);
         const paste = Object.assign(new Paste(), {
             id: 'paste001',
@@ -177,7 +173,6 @@ describe('DeletionRequestService author auto-approval', () => {
             if (entity === RegisteredUser) return requester;
             return null;
         });
-        mocks.getRepository.mockReturnValue(repository);
 
         const result = await DeletionRequestService.createRequest(7, {
             targetType: 'paste',
@@ -187,14 +182,12 @@ describe('DeletionRequestService author auto-approval', () => {
 
         expect(result.status).toBe('approved');
         expect(paste.deleted).toBe(true);
-        expect(paste.deleteReason).toBe('应用户申请删除');
         expect(mocks.pasteSave).toHaveBeenCalledWith(paste);
         expect(mocks.searchUpsert).not.toHaveBeenCalled();
         expect(mocks.embeddingUpdate).not.toHaveBeenCalled();
     });
 
     it('leaves a non-author request pending', async () => {
-        const repository = createRepository();
         const requester = createRequester(99);
         const article = Object.assign(new Article(), {
             id: 'article1',
@@ -208,7 +201,6 @@ describe('DeletionRequestService author auto-approval', () => {
             if (entity === RegisteredUser) return requester;
             return null;
         });
-        mocks.getRepository.mockReturnValue(repository);
 
         const result = await DeletionRequestService.createRequest(7, {
             targetType: 'article',

@@ -69,7 +69,7 @@ No TTL is set on the PointGuard Redis hash.
 2. Update job progress to `Fetching handler`.
 3. Resolve handler key as `{task.type}:{task.payload.target}` when `task.payload.target` is truthy; otherwise use `task.type`.
 4. If no handler exists for the key, throw `UnrecoverableError('No handler registered for task type: {key}')`.
-5. If `task.workflowId` exists, override `job.getChildrenValues` to return `WorkflowHelper.getFatherResults(task)`.
+5. If `task.workflowId` exists, override `job.getChildrenValues` to return `WorkflowRuntimeStore.getFatherResults(task)`.
 6. Update job progress to `Sending to handler`.
 7. Call `handler.handle(task, job)`.
 8. If the handler throws `UnrecoverableError`, normalize its reason and throw a new `UnrecoverableError(reason)`.
@@ -137,6 +137,8 @@ On QueueEvents `waiting`, log the queued job ID.
 
 `shouldEmitTaskEvent(job)` SHALL return true for non-workflow jobs. For workflow jobs it SHALL return true only when `job.data.report === true`.
 
+`FlowManager` SHALL retain workflow SQL completion/result/status synchronization and restart recovery. It SHALL use `WorkflowScheduler` for descendant readiness and release and recovery-ready task dispatch, and `WorkflowRuntimeStore` for runtime reconstruction and result persistence. Task processors SHALL use `WorkflowRuntimeStore` for upstream result loading. Worker hosts SHALL NOT perform workflow scheduling or access runtime Redis keys directly.
+
 ## 8. Common Worker Helpers
 
 `shouldSkip(childrenValues)` SHALL return true when any direct child value is truthy and has `skipNextStep` truthy. Otherwise it SHALL return false.
@@ -159,6 +161,9 @@ On QueueEvents `waiting`, log the queued job ID.
 - Worker bootstrap: `packages/backend/src/workers/index.ts`
 - Worker host: `packages/backend/src/workers/worker-host.ts`
 - Task processor: `packages/backend/src/workers/task-processor.ts`
+- Workflow event and recovery manager: `packages/backend/src/workers/flow-manager.ts`
+- Workflow scheduler: `packages/backend/src/services/workflow-scheduler.service.ts`
+- Workflow runtime store: `packages/backend/src/services/helpers/workflow-runtime-store.helper.ts`
 - PointGuard: `packages/backend/src/lib/point-guard.ts`
 - Common helpers: `packages/backend/src/workers/helpers/common.helper.ts`
 - Concurrency helper: `packages/backend/src/utils/concurrency.ts`

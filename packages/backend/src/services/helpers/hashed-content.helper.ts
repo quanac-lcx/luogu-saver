@@ -30,7 +30,7 @@ type SaveHashedContentOptions<TEntity extends HashedContentEntity> = {
 
 export async function saveHashedContent<TEntity extends HashedContentEntity>(
     options: SaveHashedContentOptions<TEntity>
-): Promise<{ skipped: boolean; entity: TEntity | null }> {
+): Promise<{ skipped: boolean; entity: TEntity }> {
     const repository = options.manager.getRepository<TEntity>(options.entity);
     const hash = createHash('sha256').update(options.content).digest('hex');
     const select = { id: true, contentHash: true } as FindOptionsSelect<TEntity>;
@@ -73,7 +73,7 @@ export async function saveHashedContent<TEntity extends HashedContentEntity>(
     if (!entity) throw new Error(`Concurrent row for ${options.id} disappeared before update`);
 
     const isUnchanged = options.isUnchanged || ((item: TEntity) => item.contentHash === hash);
-    if (!options.forceUpdate && entity && isUnchanged(entity, hash)) {
+    if (!options.forceUpdate && isUnchanged(entity, hash)) {
         return { skipped: true, entity };
     }
 

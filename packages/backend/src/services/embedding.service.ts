@@ -451,10 +451,7 @@ export class EmbeddingService {
         let afterId: string | null = null;
 
         while (true) {
-            const articles = await ArticleService.getArticlesForEmbeddingRebuild(
-                afterId,
-                batchSize
-            );
+            const articles = await ArticleService.getArticlesForContentRebuild(afterId, batchSize);
             if (articles.length === 0) break;
             afterId = articles[articles.length - 1].id;
 

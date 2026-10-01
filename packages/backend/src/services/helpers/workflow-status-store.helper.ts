@@ -1,6 +1,6 @@
 import { Workflow } from '@/entities/workflow';
 import { In, Not } from 'typeorm';
-import { findOneServiceEntity, getServiceRepository } from '@/services/helpers/repository.helper';
+import { getServiceRepository } from '@/services/helpers/repository.helper';
 
 const TERMINAL_WORKFLOW_STATUSES = ['completed', 'failed', 'expired'];
 
@@ -19,7 +19,7 @@ export class WorkflowStatusStore {
     }
 
     private static async getStatusById(id: string): Promise<string | null> {
-        const workflow = await findOneServiceEntity<Workflow>(Workflow, {
+        const workflow = await getServiceRepository<Workflow>(Workflow).findOne({
             where: { id },
             select: ['status']
         });

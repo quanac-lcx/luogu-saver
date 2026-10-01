@@ -1,33 +1,9 @@
 import { ChildrenValues, TaskHandler, TaskTextResult, WorkflowResult } from '@/workers/types';
 import { AiTask } from '@/shared/task';
 import { UnrecoverableError, Job } from 'bullmq';
-import { llm } from '@/lib/llm';
+import { ArticleSummaryService } from '@/services/article-summary.service';
 import { extractUpsteamData, shouldSkip } from '@/workers/helpers/common.helper';
 import { logger } from '@/lib/logger';
-
-export async function generateArticleSummary(content: string): Promise<string> {
-    const prompt = `
-<prompt>
-Please provide a concise summary for the text in \`<content>\`.
-The summary should always be in Chinese.
-</prompt>
-<content>
-${content}
-</content>
-        `;
-
-    const result = await llm.chat(
-        [
-            {
-                role: 'user',
-                content: prompt
-            }
-        ],
-        'summary'
-    );
-
-    return result.content || '';
-}
 
 export class SummaryHandler implements TaskHandler<AiTask> {
     public taskType = 'llm:summary';
@@ -58,7 +34,7 @@ export class SummaryHandler implements TaskHandler<AiTask> {
             );
         }
 
-        const result = await generateArticleSummary(content);
+        const result = await ArticleSummaryService.generate(content);
         logger.info(
             { jobId: job.id, inputLength: content.length, summaryLength: result.length },
             'Generated article summary'

@@ -6,7 +6,8 @@ import { getQueueByName } from '@/lib/queue-factory';
 import { logger } from '@/lib/logger';
 import { QUEUE_NAMES } from '@/shared/constants';
 import { TaskStatus } from '@/shared/task';
-import { WorkflowHelper } from '@/services/helpers/workflow.helper';
+import { WorkflowRuntimeStore } from '@/services/helpers/workflow-runtime-store.helper';
+import { WorkflowScheduler } from '@/services/workflow-scheduler.service';
 import { WorkflowStatusStore } from '@/services/helpers/workflow-status-store.helper';
 import { getServiceRepository } from '@/services/helpers/repository.helper';
 import { TaskService } from '@/services/task.service';
@@ -38,7 +39,7 @@ export class FlowManager {
                 'Workflow task completion received'
             );
 
-            await WorkflowHelper.storeTaskResult(job.id, returnvalue);
+            await WorkflowRuntimeStore.storeTaskResult(job.id, returnvalue);
             const changed = await TaskService.completeTask(
                 job.id,
                 'Task completed successfully',
@@ -51,7 +52,7 @@ export class FlowManager {
 
             let dispatchedTaskIds: string[] = [];
             if (changed) {
-                dispatchedTaskIds = await WorkflowHelper.releaseDescendants(job.id);
+                dispatchedTaskIds = await WorkflowScheduler.releaseDescendants(job.id);
             }
 
             logger.info(
@@ -312,7 +313,7 @@ export class FlowManager {
             'Recovering workflow'
         );
 
-        await WorkflowHelper.rebuildRuntimeFromRows(workflow, taskRows);
+        await WorkflowRuntimeStore.rebuildRuntimeFromRows(workflow, taskRows);
 
         for (const task of taskRows) {
             if (TERMINAL_TASK_STATUSES.includes(task.status)) continue;
@@ -400,7 +401,7 @@ export class FlowManager {
             return;
         }
 
-        const dispatchedTaskIds = await WorkflowHelper.dispatchReadyTasksForWorkflow(
+        const dispatchedTaskIds = await WorkflowScheduler.dispatchReadyTasksForWorkflow(
             workflow,
             latestTaskRows
         );

@@ -4,11 +4,7 @@ import { getQueueByType } from '@/lib/queue-factory';
 import { getRandomString } from '@/utils/string';
 import { retryOnDuplicateKey } from '@/utils/db-errors';
 import { EntityManager, In, Not } from 'typeorm';
-import {
-    findOneServiceEntity,
-    getServiceRepository,
-    saveServiceEntity
-} from '@/services/helpers/repository.helper';
+import { getServiceRepository } from '@/services/helpers/repository.helper';
 import { normalizeErrorReason } from '@/utils/error-reason';
 
 export class TaskService {
@@ -20,7 +16,7 @@ export class TaskService {
             task.type = type;
             task.payload = payload;
             task.status = TaskStatus.PENDING;
-            await saveServiceEntity<Task>(Task, task, manager);
+            await getServiceRepository<Task>(Task, manager).save(task);
             return task;
         }, 5);
     }
@@ -91,7 +87,9 @@ export class TaskService {
     }
 
     static async getTaskById(taskId: string, manager?: EntityManager): Promise<Task | null> {
-        const task = await findOneServiceEntity<Task>(Task, { where: { id: taskId } }, manager);
+        const task = await getServiceRepository<Task>(Task, manager).findOne({
+            where: { id: taskId }
+        });
         if (task?.status === TaskStatus.FAILED && task.info) {
             task.info = normalizeErrorReason(task.info);
         }

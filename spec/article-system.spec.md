@@ -188,12 +188,22 @@ Get total count of non-deleted articles.
 Each ArticleService read/write method that accepts an optional `manager` argument SHALL use that `EntityManager` for database access when it is provided.
 When a cached read method receives a manager argument, it SHALL bypass Redis cache reads and writes.
 
+`getArticleById(id, manager?)` SHALL delegate its database lookup to
+`getArticleByIdWithoutCache(id, manager?)`. The uncached method SHALL query by ID with the `author`
+relation using the supplied manager when present and SHALL NOT read or write Redis. It SHALL be
+the only uncached single-article ID lookup method.
+
+`getArticlesForContentRebuild(afterId, take, manager?)` SHALL load non-deleted articles with the
+`author` relation in ascending `id` order, restricted to `id > afterId` when `afterId` is non-null,
+with at most `take` rows. Summary and embedding rebuilds SHALL use this one selector. Search
+reindexing SHALL retain its separate `(updatedAt, id)` cursor selector.
+
 ### 5.2 ArticleHistoryService
 
-| Method                             | Cache TTL | Cache Key Pattern              |
-| ---------------------------------- | --------- | ------------------------------ |
-| `getHistoryByArticleId(articleId)` | 600s      | `article_history:${articleId}` |
-| `pushNewVersion(articleId, ...)`   | evicts    | `article_history:${articleId}` |
+| Method                                               | Cache TTL | Cache Key Pattern              |
+| ---------------------------------------------------- | --------- | ------------------------------ |
+| `getHistoryByArticleId(articleId)`                   | 600s      | `article_history:${articleId}` |
+| `pushNewVersion(articleId, title, content, manager)` | -         | -                              |
 
 ### 5.3 Version Management
 
@@ -203,10 +213,22 @@ When `pushNewVersion` is called:
 2. Query only the `version` column from the latest history entry for the article, ordered by version DESC.
 3. Calculate `newVersion = latestVersion + 1` (or 1 if no history exists).
 4. Create and save a new `ArticleHistory` record.
-5. Evict the history cache.
 
-If ArticleHistoryService receives an optional `manager` argument, it SHALL use that `EntityManager` for database access.
-When a cached read method receives a manager argument, it SHALL bypass Redis cache reads and writes.
+`pushNewVersion` SHALL require the manager of the caller-owned transaction. It SHALL NOT create
+its own transaction or evict Redis keys. A failed transaction SHALL roll back both the article
+write and its history version.
+
+`saveLuoguArticle` SHALL await the complete retrying transaction before evicting
+`article_history:${data.lid}`. It SHALL evict that key only when the successful transaction saved
+a new version; a skipped save, including a publish-time-only backfill, SHALL leave the history
+cache unchanged. Failed or rolled-back attempts SHALL NOT evict the history cache. A previously
+committed history value already written to Redis before post-commit invalidation SHALL be deleted
+when that invalidation succeeds. This operation SHALL NOT synchronize concurrent history cache
+fills that finish after invalidation. Redis eviction errors SHALL be logged without changing the
+successful save result.
+
+`getHistoryByArticleId(articleId, manager?)` SHALL use the supplied manager when present. When a
+manager is supplied, it SHALL bypass Redis cache reads and writes.
 
 ## 6. Raw Markdown Delivery
 
@@ -239,7 +261,11 @@ When saving an article:
 5. For an existing or concurrently inserted row, acquire a pessimistic row lock before updating.
 6. Retry the complete database transaction at most three times for MariaDB deadlock or lock-wait timeout errors.
 7. Otherwise, save the new content and update `contentHash`.
-8. After `saveLuoguArticle` returns successfully, delete Redis keys `article:${data.lid}` and `article:count` before returning, including when the result has `skipped=true`.
+8. After the retrying transaction commits, delete Redis keys `article:${data.lid}` and
+   `article:count` before returning successfully, including when the result has `skipped=true`.
+9. A successful hashed-content save SHALL always provide a non-null article entity. Article
+   unchanged detection SHALL compare both the content hash and title; history creation SHALL
+   remain article-specific and SHALL NOT be part of the shared hashed-content helper.
 
 Article candidate methods used by recommendation SHALL select article IDs only. They SHALL NOT
 select `content`, `summary`, or author relations. Full article rows SHALL be loaded only for the
@@ -276,7 +302,8 @@ payload.
 
 1. `version` numbers are strictly monotonically increasing per article.
 2. Non-deleted articles (`deleted = false`) are returned in queries unless explicitly filtered.
-3. All article queries include the `author` relation.
+3. Cached and uncached single-article lookups and content-rebuild selectors SHALL include the
+   `author` relation. Recommendation candidate queries SHALL select IDs only, as defined in section 7.
 4. Content truncation preserves UTF-8 character boundaries.
 5. `publish_time` and `created_at` denote different instants and SHALL NOT be substituted for one
    another. `publish_time` is the instant Luogu reports for the article itself; `created_at` is the
@@ -315,11 +342,31 @@ The update handler for `article_summary_rebuild` SHALL:
 
 1. Load non-deleted articles from the database in ascending `id` order.
 2. Process each loaded batch with at most `metadata.concurrency` articles running at the same time.
-3. For each article, call the summary LLM scenario with the same summary prompt semantics as `llm:summary`.
+3. For each article, call `ArticleSummaryService.generate(article.content)`.
 4. Persist the generated summary to `article.summary`.
-5. After persisting a summary, update the search index document for that article if search indexing is enabled.
+5. After persisting a summary, call `SearchService.upsertArticleById(article.id)` to update the
+   search index if search indexing is enabled.
 6. Continue processing if one article fails and record that article ID in `failedArticleIds`.
-7. Return `{ processed, updated, failed, failedArticleIds }`.
+7. Return `{ processed, updated, failed, failedArticleIds }`. `updated` SHALL count articles whose
+   summary persistence and search operation completed, including when search indexing is disabled.
+
+`ArticleSummaryService.generate(content: string): Promise<string>` SHALL be the shared summary
+operation used by `llm:summary` and `article_summary_rebuild`. It SHALL make exactly one
+`llm.chat` call with scenario `summary` and one user message containing this prompt:
+
+```text
+<prompt>
+Please provide a concise summary for the text in `<content>`.
+The summary should always be in Chinese.
+</prompt>
+<content>
+${content}
+</content>
+```
+
+The operation SHALL return `result.content || ''` and SHALL propagate provider errors. The
+ordinary summary handler SHALL propagate those errors; the rebuild handler SHALL catch them per
+article and record the failed article ID.
 
 ## 10. Embedding Rebuild Workflow
 
@@ -372,4 +419,5 @@ The update handler for `article_embedding` SHALL:
 - Article router: `packages/backend/src/routers/article.router.ts`
 - Article service: `packages/backend/src/services/article.service.ts`
 - Article history service: `packages/backend/src/services/article-history.service.ts`
+- Article summary service: `packages/backend/src/services/article-summary.service.ts`
 - Article category enum: `packages/backend/src/shared/article.ts`

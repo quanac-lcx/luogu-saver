@@ -1,6 +1,6 @@
 import { type CommonTask } from '@/shared/task';
 import { logger } from '@/lib/logger';
-import { WorkflowHelper } from '@/services/helpers/workflow.helper';
+import { WorkflowRuntimeStore } from '@/services/helpers/workflow-runtime-store.helper';
 import { type TaskHandler } from '@/workers/types';
 import { Job, UnrecoverableError } from 'bullmq';
 import { normalizeErrorReason } from '@/utils/error-reason';
@@ -35,7 +35,11 @@ export class TaskProcessor<T extends CommonTask> {
         }
 
         if (task.workflowId) {
-            job.getChildrenValues = async () => WorkflowHelper.getFatherResults(task);
+            job.getChildrenValues = async <CT>() => {
+                const fatherResults = await WorkflowRuntimeStore.getFatherResults(task);
+                // BullMQ lets each handler choose the type of its stored upstream results.
+                return fatherResults as unknown as Record<string, CT>;
+            };
             logger.debug(
                 {
                     jobId: job.id,

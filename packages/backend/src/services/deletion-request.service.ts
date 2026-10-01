@@ -13,11 +13,7 @@ import { PasteService } from '@/services/paste.service';
 import { UserNotificationService } from '@/services/user-notification.service';
 import { SearchService } from '@/services/search.service';
 import { EmbeddingService } from '@/services/embedding.service';
-import {
-    findOneServiceEntity,
-    findServiceEntities,
-    getServiceRepository
-} from '@/services/helpers/repository.helper';
+import { getServiceRepository } from '@/services/helpers/repository.helper';
 import { clampInt } from '@/utils/number';
 
 const TARGET_DELETE_REASON = '应用户申请删除';
@@ -78,7 +74,9 @@ export class DeletionRequestService {
             throw Object.assign(new Error('Target content already deleted'), { status: 400 });
         }
 
-        const pendingDuplicate = await findOneServiceEntity<DeletionRequest>(DeletionRequest, {
+        const pendingDuplicate = await getServiceRepository<DeletionRequest>(
+            DeletionRequest
+        ).findOne({
             where: { targetType, targetId, requesterId, status: 'pending' }
         });
         if (pendingDuplicate) {
@@ -87,7 +85,7 @@ export class DeletionRequestService {
             });
         }
 
-        const requester = await findOneServiceEntity<RegisteredUser>(RegisteredUser, {
+        const requester = await getServiceRepository<RegisteredUser>(RegisteredUser).findOne({
             where: { id: requesterId }
         });
         const repository = getServiceRepository<DeletionRequest>(DeletionRequest);
@@ -206,7 +204,7 @@ export class DeletionRequestService {
             throw Object.assign(new Error('Valid article id is required'), { status: 400 });
         }
 
-        const article = await ArticleService.getArticleByIdWithAuthorWithoutCache(normalizedId);
+        const article = await ArticleService.getArticleByIdWithoutCache(normalizedId);
         if (!article) {
             throw Object.assign(new Error('Article not found'), { status: 404 });
         }
@@ -253,7 +251,7 @@ export class DeletionRequestService {
     }
 
     private static async findPendingRequest(requestId: number): Promise<DeletionRequest> {
-        const request = await findOneServiceEntity<DeletionRequest>(DeletionRequest, {
+        const request = await getServiceRepository<DeletionRequest>(DeletionRequest).findOne({
             where: { id: requestId }
         });
         if (!request) {
@@ -352,14 +350,14 @@ export class DeletionRequestService {
         targetId: string
     ): Promise<Article | Paste | null> {
         if (targetType === 'article') {
-            return await ArticleService.getArticleByIdWithAuthorWithoutCache(targetId);
+            return await ArticleService.getArticleByIdWithoutCache(targetId);
         }
-        return await findOneServiceEntity<Paste>(Paste, { where: { id: targetId } });
+        return await getServiceRepository<Paste>(Paste).findOne({ where: { id: targetId } });
     }
 
     private static async syncArticleDeletionState(article: Article): Promise<void> {
         await Promise.all([
-            SearchService.upsertArticle(article),
+            SearchService.upsertArticleById(article.id),
             EmbeddingService.updateArticleDeletionState(article.id, Boolean(article.deleted))
         ]);
     }
@@ -373,7 +371,7 @@ export class DeletionRequestService {
             if (row.handlerId) userIds.add(row.handlerId);
         }
         const users = userIds.size
-            ? await findServiceEntities<RegisteredUser>(RegisteredUser, {
+            ? await getServiceRepository<RegisteredUser>(RegisteredUser).find({
                   where: { id: In([...userIds]) }
               })
             : [];
@@ -386,10 +384,10 @@ export class DeletionRequestService {
             ...new Set(rows.filter(r => r.targetType === 'paste').map(r => r.targetId))
         ];
         const articles = articleIds.length
-            ? await findServiceEntities<Article>(Article, { where: { id: In(articleIds) } })
+            ? await getServiceRepository<Article>(Article).find({ where: { id: In(articleIds) } })
             : [];
         const pastes = pasteIds.length
-            ? await findServiceEntities<Paste>(Paste, { where: { id: In(pasteIds) } })
+            ? await getServiceRepository<Paste>(Paste).find({ where: { id: In(pasteIds) } })
             : [];
         const articleById = new Map(articles.map(article => [article.id, article]));
         const pasteById = new Map(pastes.map(paste => [paste.id, paste]));

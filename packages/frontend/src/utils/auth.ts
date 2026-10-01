@@ -26,5 +26,9 @@ export function setCurrentAuth(auth: AuthMeResponse | null) {
 }
 
 export function startCpOAuthLogin(redirect: string = window.location.pathname) {
-    window.location.href = getApiUrl(`/auth/cp/login?redirect=${encodeURIComponent(redirect)}`);
+    const query = new URLSearchParams({
+        redirect,
+        frontendOrigin: window.location.origin
+    });
+    window.location.href = getApiUrl(`/auth/cp/login?${query}`);
 }

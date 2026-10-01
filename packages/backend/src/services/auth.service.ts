@@ -10,9 +10,10 @@ type DiscoveryDocument = {
     userinfo_endpoint: string;
 };
 
-type StoredOAuthState = {
+export type StoredOAuthState = {
     codeVerifier: string;
     redirect: string;
+    frontendOrigin: string;
 };
 
 type CpOAuthTokenResponse = {
@@ -37,7 +38,6 @@ type LocalLoginResult = {
     token: string;
     uid: number;
     role: number;
-    redirect: string;
 };
 
 const STATE_KEY_PREFIX = 'auth:cp:state:';
@@ -83,6 +83,21 @@ export class AuthService {
         return redirect;
     }
 
+    static isAllowedFrontendOrigin(origin: unknown): origin is string {
+        if (typeof origin !== 'string') return false;
+        if (this.cpOAuthConfig.allowedFrontendOrigins.includes(origin)) return true;
+
+        try {
+            const callbackUrl = new URL(this.cpOAuthConfig.frontendRedirectUri);
+            return (
+                (callbackUrl.protocol === 'https:' || callbackUrl.protocol === 'http:') &&
+                callbackUrl.origin === origin
+            );
+        } catch {
+            return false;
+        }
+    }
+
     private static async storeState(state: string, data: StoredOAuthState) {
         await redisClient.set(
             this.getStateKey(state),
@@ -92,15 +107,19 @@ export class AuthService {
         );
     }
 
-    private static async consumeState(state: string): Promise<StoredOAuthState | null> {
+    static async consumeState(state: string): Promise<StoredOAuthState | null> {
         const key = this.getStateKey(state);
         const rawState = await redisClient.getdel(key);
         if (!rawState) return null;
 
-        return JSON.parse(rawState) as StoredOAuthState;
+        const storedState = JSON.parse(rawState) as StoredOAuthState;
+        return this.isAllowedFrontendOrigin(storedState.frontendOrigin) ? storedState : null;
     }
 
-    static async createAuthorizationUrl(redirect: unknown): Promise<string> {
+    static async createAuthorizationUrl(
+        redirect: unknown,
+        frontendOrigin: string
+    ): Promise<string> {
         if (!this.cpOAuthConfig.clientId) throw new Error('CP OAuth clientId is not configured');
         if (!this.cpOAuthConfig.redirectUri) {
             throw new Error('CP OAuth redirectUri is not configured');
@@ -115,7 +134,8 @@ export class AuthService {
 
         await this.storeState(state, {
             codeVerifier,
-            redirect: this.normalizeRedirect(redirect)
+            redirect: this.normalizeRedirect(redirect),
+            frontendOrigin
         });
 
         const authorizationUrl = new URL(discovery.authorization_endpoint);
@@ -170,11 +190,11 @@ export class AuthService {
         return luoguAccount;
     }
 
-    static async completeCpOAuthLogin(code: string, state: string): Promise<LocalLoginResult> {
-        const storedState = await this.consumeState(state);
-        if (!storedState) throw new Error('Invalid or expired OAuth state');
-
-        const accessToken = await this.exchangeCode(code, storedState.codeVerifier);
+    static async completeCpOAuthLogin(
+        code: string,
+        codeVerifier: string
+    ): Promise<LocalLoginResult> {
+        const accessToken = await this.exchangeCode(code, codeVerifier);
         const userInfo = await this.fetchUserInfo(accessToken);
         if (!userInfo.sub) throw new Error('CP OAuth did not return sub');
 
@@ -201,8 +221,7 @@ export class AuthService {
         return {
             token: registeredUser.token,
             uid: registeredUser.id,
-            role: registeredUser.role,
-            redirect: storedState.redirect
+            role: registeredUser.role
         };
     }
 }

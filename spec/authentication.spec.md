@@ -94,15 +94,20 @@ The `RegisteredUserService.upsertCpOAuthUser(data)` method SHALL:
 
 The `auth.cpOAuth` configuration object SHALL contain:
 
-| Field                 | Type     | Default                                                    | Description                                                                                       |
-| --------------------- | -------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `discoveryUrl`        | string   | `https://www.cpoauth.com/.well-known/openid-configuration` | OpenID Connect discovery document URL                                                             |
-| `clientId`            | string   | empty string                                               | CP OAuth client ID                                                                                |
-| `clientSecret`        | string   | empty string                                               | CP OAuth client secret for confidential clients                                                   |
-| `redirectUri`         | string   | empty string                                               | Backend callback URL registered at CP OAuth                                                       |
-| `frontendRedirectUri` | string   | `/auth/callback`                                           | Frontend URL receiving the issued local token. It may be an absolute URL or a root-relative path. |
-| `scopes`              | string[] | `['openid', 'profile', 'link:luogu']`                      | Scopes requested from CP OAuth                                                                    |
-| `stateExpireSeconds`  | number   | 600                                                        | Redis TTL for OAuth state and PKCE verifier                                                       |
+| Field                    | Type     | Default                                                    | Description                                                                                                     |
+| ------------------------ | -------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `discoveryUrl`           | string   | `https://www.cpoauth.com/.well-known/openid-configuration` | OpenID Connect discovery document URL                                                                           |
+| `clientId`               | string   | empty string                                               | CP OAuth client ID                                                                                              |
+| `clientSecret`           | string   | empty string                                               | CP OAuth client secret for confidential clients                                                                 |
+| `redirectUri`            | string   | empty string                                               | Backend callback URL registered at CP OAuth                                                                     |
+| `frontendRedirectUri`    | string   | `/auth/callback`                                           | Frontend callback path, query, and fragment template. Its origin, when absolute HTTP(S), is implicitly allowed. |
+| `allowedFrontendOrigins` | string[] | `[]`                                                       | Additional allowed frontend origins, matched exactly by scheme, hostname, and port.                             |
+| `scopes`                 | string[] | `['openid', 'profile', 'link:luogu']`                      | Scopes requested from CP OAuth                                                                                  |
+| `stateExpireSeconds`     | number   | 600                                                        | Redis TTL for OAuth state and PKCE verifier                                                                     |
+
+Each `allowedFrontendOrigins` entry SHALL be a canonical HTTP(S) origin equal to `new URL(entry).origin`. Entries SHALL NOT contain credentials, paths, query parameters, fragments, or wildcards. Invalid entries SHALL reject configuration loading. HTTP origins MAY be configured for local development; production deployments SHOULD use HTTPS.
+
+`frontendRedirectUri` SHALL remain the callback path template, not a fixed destination origin. An absolute HTTP(S) template implicitly allows its own origin. A root-relative template requires every frontend origin to be listed in `allowedFrontendOrigins`.
 
 For the checked-in local `config.yml`, `redirectUri` SHALL be `http://127.0.0.1:30010/auth/cp/callback`, which is the configured backend listener, and `frontendRedirectUri` SHALL be `http://localhost:5173/auth/callback`, which is the Vite development-server route. The CP OAuth client registration SHALL contain the same backend `redirectUri` value.
 
@@ -113,17 +118,20 @@ Start the CP OAuth authorization code flow.
 **Request:**
 
 - Query parameter: `redirect` (string, optional) - Frontend path used after login. If absent, use `/`.
+- Query parameter: `frontendOrigin` (string, required) - The frontend's `window.location.origin`.
 
 **Behavior:**
 
-1. If `auth.cpOAuth.clientId` is empty, return 500.
-2. If `auth.cpOAuth.redirectUri` is empty, return 500.
-3. Fetch the CP OAuth discovery document from `discoveryUrl`.
-4. Generate `state` as at least 128 bits of random data encoded as hex.
-5. Generate a PKCE `code_verifier` as at least 256 bits of random data encoded as base64url.
-6. Compute `code_challenge = BASE64URL(SHA256(code_verifier))`.
-7. Store JSON `{ codeVerifier, redirect }` in Redis key `auth:cp:state:{state}` with TTL `stateExpireSeconds`.
-8. Redirect to the discovered `authorization_endpoint` with these query parameters:
+1. Require `frontendOrigin` to be a single string equal to an entry in `allowedFrontendOrigins` or the origin of an absolute HTTP(S) `frontendRedirectUri`. Otherwise return application error code 400 without creating state or contacting CP OAuth.
+2. Do not infer the frontend origin from `Origin`, `Referer`, `Host`, or forwarded headers.
+3. If `auth.cpOAuth.clientId` or `auth.cpOAuth.redirectUri` is empty, return application error code 500.
+4. Fetch the CP OAuth discovery document from `discoveryUrl`.
+5. Generate `state` as at least 128 bits of random data encoded as hex.
+6. Generate a PKCE `code_verifier` as at least 256 bits of random data encoded as base64url.
+7. Compute `code_challenge = BASE64URL(SHA256(code_verifier))`.
+8. Normalize `redirect` to `/` unless it is a string starting with `/` but not `//`.
+9. Store JSON `{ codeVerifier, redirect, frontendOrigin }` in Redis key `auth:cp:state:{state}` with TTL `stateExpireSeconds`.
+10. Redirect to the discovered `authorization_endpoint` with these query parameters:
     - `response_type=code`
     - `client_id=auth.cpOAuth.clientId`
     - `redirect_uri=auth.cpOAuth.redirectUri`
@@ -138,43 +146,49 @@ Complete the CP OAuth authorization code flow.
 
 **Request:**
 
-- Query parameter: `code` (string, required)
-- Query parameter: `state` (string, required)
+- Query parameter: `state` (string, required, including authorization-error callbacks)
+- Query parameter: `code` (string, required unless `error` is present)
 - Query parameter: `error` (string, optional)
+- Query parameter: `error_description` (string, optional)
 
 **Behavior:**
 
-1. If `frontendRedirectUri` is an absolute URL, preserve its origin, path, and existing query parameters when appending callback query parameters.
-2. If `frontendRedirectUri` is a root-relative path, redirect to that path with appended callback query parameters.
-3. If `error` is present, redirect to `frontendRedirectUri` with query parameters `error` and `message`.
-4. If `code` or `state` is absent, redirect to `frontendRedirectUri` with `error=invalid_request`.
-5. Atomically read and delete Redis key `auth:cp:state:{state}` in one Redis command.
-6. If no state data exists, redirect to `frontendRedirectUri` with `error=invalid_state`.
-7. The callback SHALL NOT exchange the authorization code unless the atomic read-and-delete operation returned state data.
-8. Exchange `code` at the discovered `token_endpoint` using JSON request body:
+1. If `state` is absent, empty, or not a single string, return application error code 400 without redirecting or exchanging a code.
+2. Atomically read and delete Redis key `auth:cp:state:{state}` in one Redis command, before handling success, provider errors, or missing codes.
+3. If no state data exists, or its `frontendOrigin` is not currently allowed by section 6.2, return application error code 400 without redirecting or exchanging a code. A state without `frontendOrigin`, including one issued before this change, SHALL be rejected.
+4. If consuming state fails, return application error code 500 without redirecting or exchanging a code.
+5. Construct the frontend callback URL from the stored `frontendOrigin` and the path, query, and fragment of `frontendRedirectUri`. The resulting URL SHALL retain the stored origin even when the configured pathname begins with `//`.
+6. Ignore callback query parameters that attempt to override the frontend origin or return path.
+7. If a non-empty string `error` is present, redirect to the constructed callback URL with `error` and `message`. Use a non-empty string `error_description` as the message when provided; otherwise use `error`.
+8. If `error` is present but not a non-empty string, or if no error is present and `code` is absent, empty, or not a single string, redirect to the constructed callback URL with `error=invalid_request`.
+9. The callback SHALL NOT exchange an authorization code unless state was consumed successfully and steps 7 and 8 did not terminate the request.
+10. Exchange `code` at the discovered `token_endpoint` using JSON request body:
     - `grant_type=authorization_code`
     - `code=code`
     - `redirect_uri=auth.cpOAuth.redirectUri`
     - `client_id=auth.cpOAuth.clientId`
     - `code_verifier=stored codeVerifier`
     - `client_secret=auth.cpOAuth.clientSecret` only when non-empty
-9. Require a string `access_token` in the token response.
-10. Fetch the discovered `userinfo_endpoint` with header `Authorization: Bearer {access_token}`.
-11. Require a non-empty string `sub` in the userinfo response.
-12. Require `linked_accounts` to contain an object with `platform='luogu'` and numeric `platformUid`.
-13. Upsert a registered user using:
+11. Require a string `access_token` in the token response.
+12. Fetch the discovered `userinfo_endpoint` with header `Authorization: Bearer {access_token}`.
+13. Require a non-empty string `sub` in the userinfo response.
+14. Require `linked_accounts` to contain an object with `platform='luogu'` and numeric `platformUid`.
+15. Upsert a registered user using:
     - `cpOAuthSub = sub`
     - `luoguUid = Number(platformUid)`
     - `name = platformUsername` when present, otherwise `display_name`, otherwise `username`, otherwise `User {luoguUid}`
     - `avatarUrl = avatar_url` when present
-14. The callback SHALL NOT write to the `user` table.
-15. Require `registered_user.token` to be non-empty after the upsert.
-16. The callback SHALL NOT read or write the `token` table.
-17. Redirect to `frontendRedirectUri` with query parameters:
+16. The callback SHALL NOT write to the `user` table or read or write the `token` table.
+17. Require `registered_user.token` to be non-empty after the upsert.
+18. On success, redirect to the constructed callback URL with query parameters:
     - `token=registered_user.token`
     - `uid=registered user ID`
     - `role=local role`
     - `redirect=stored redirect`
+19. If code exchange, userinfo retrieval, or local login fails, redirect to the same constructed callback URL with `error=login_failed` and the failure message.
+20. State remains consumed after success, cancellation, malformed callbacks with valid state, or login failure. A repeated callback SHALL NOT exchange the code again or emit a token.
+
+Application error responses in this section SHALL use the existing response envelope: HTTP 200 with `{ code: 400 | 500, message, data: null }`. These responses SHALL NOT contain a `Location` header or a local token.
 
 ### 6.4 GET /auth/me
 

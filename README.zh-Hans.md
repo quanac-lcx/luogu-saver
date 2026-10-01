@@ -155,6 +155,27 @@ node dist/index.js
 
 **关键步骤：** 必须配置 Web 服务器（Nginx/Caddy）将以 `/api` 开头的请求反向代理到正在运行的后端服务（例如 `localhost:3000`）。
 
+#### 多前端域名的 OAuth 配置
+
+在 CP OAuth 中仍只登记一个固定的后端回调地址。将下列配置合并到后端 `config.yml` 已有的 `auth.cpOAuth` 中，保留原有的 client ID 和 secret：
+
+```yaml
+auth:
+    cpOAuth:
+        redirectUri: https://api.luogu.me/auth/cp/callback
+        frontendRedirectUri: https://www.luogu.me/auth/callback
+        allowedFrontendOrigins:
+            - https://mirror.example
+```
+
+将 `https://mirror.example` 替换为实际的备用前端 origin，可填写多项。每项只能包含协议、域名和可选的非默认端口，不得包含末尾斜杠、路径、账号密码、查询参数、片段或通配符。生产环境使用 HTTPS。
+
+绝对地址 `frontendRedirectUri` 自身的 origin 默认允许，其路径、查询参数和片段作为所有前端的回调模板。如果该项使用 `/auth/callback` 等相对路径，必须在 `allowedFrontendOrigins` 中明确列出所有前端 origin。每个前端都需要提供对应的回调路由；跨域请求时，API 反向代理的 CORS 配置还需要允许这些 origin 和前端使用的请求头。
+
+前端发起登录时传递自身 origin，后端校验后将其与一次性 OAuth state 一起保存。登录成功、取消授权和登录失败均返回该 origin，不能通过修改回调查询参数更换目标域名。过期、重复使用或其他无效 state 直接返回 API 错误，不执行跳转。无需增加 `landing` 域名；授权和兑换授权码时的 `redirectUri` 始终保持固定。
+
+新版前后端需要一起部署，配置修改后重启后端。旧版页面需要刷新后再登录；升级前已经发起的登录因 state 缺少来源 origin，需要重新发起。各前端域名仍分别保存浏览器中的登录 token，不会自动共享跨域登录状态。
+
 ### 5. 自动部署
 
 配置好 `production` 环境 Secrets 后，每次推送到 `master` 都会先构建 Markdown renderer、前端和后端，再开始部署。工作流先部署前端，在当前后端继续运行时暂存并验证新后端，随后显式停止旧 PM2 进程并启动已暂存的后端。后端切换期间会在进程停止、数据库结构同步和启动阶段产生有限的计划内中断。

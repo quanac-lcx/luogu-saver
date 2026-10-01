@@ -162,6 +162,27 @@ If you did not set the `VITE_API_URL` variable during the frontend build, the ap
 
 **Crucial Step:** You must configure your web server (Nginx/Caddy) to reverse proxy requests starting with `/api` to the running backend service (e.g., `localhost:3000`).
 
+#### OAuth with multiple frontend domains
+
+Keep one backend callback URL registered at CP OAuth. Merge the following settings into the existing `auth.cpOAuth` section of the backend `config.yml`, retaining the client ID and secret:
+
+```yaml
+auth:
+    cpOAuth:
+        redirectUri: https://api.luogu.me/auth/cp/callback
+        frontendRedirectUri: https://www.luogu.me/auth/callback
+        allowedFrontendOrigins:
+            - https://mirror.example
+```
+
+Replace `https://mirror.example` with each actual alternate frontend origin. Entries must contain only the scheme, hostname, and optional non-default port: no trailing slash, path, credentials, query, fragment, or wildcard. Use HTTPS in production.
+
+The absolute `frontendRedirectUri` implicitly allows its own origin and supplies the callback path, query, and fragment for every frontend. If it is a relative path such as `/auth/callback`, list every frontend origin explicitly in `allowedFrontendOrigins`. Each frontend must serve that callback route, and the API's reverse proxy must allow these origins and the frontend's request headers through CORS when requests are cross-origin.
+
+The frontend sends its origin when login starts. The backend validates and stores it with the one-time OAuth state; successful logins, authorization cancellations, and login failures return to that origin. Changing callback query parameters cannot select another destination. Expired, replayed, or otherwise invalid state returns an API error without redirecting. A `landing` domain is not required, and `redirectUri` remains fixed for both authorization and code exchange.
+
+Deploy the updated frontend and backend together and restart the backend after changing configuration. Refresh older frontend pages before logging in. Logins started before this update must be restarted because their stored state lacks the frontend origin. Tokens remain stored separately on each frontend origin; this does not share browser login state across domains.
+
 ### 5. Automatic Deployment
 
 After the `production` environment secrets are configured, every push to `master` builds the Markdown renderer, frontend, and backend before deployment. The workflow deploys the frontend, stages and validates the backend while the current backend remains running, then explicitly stops the old PM2 process and starts the staged backend. The backend cutover has a bounded outage during process stop, schema synchronization, and startup.
